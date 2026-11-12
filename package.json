@@ -18,15 +18,18 @@
     "typecheck": "npm run typecheck --workspaces",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.65.0",
     "@types/node": "22.20.5",
+    "@vitest/coverage-v8": "5.1.0",
     "concurrently": "10.0.7",
     "eslint": "10.14.0",
     "globals": "17.14.0",
+    "pixelfx": "github:patch-gg/pixelfx#044e12a45dc9cc312cec50ee606dfc98afe5adc2",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.2",
     "vitest": "5.1.0"

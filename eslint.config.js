@@ -12,7 +12,7 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['eslint.config.js', 'vitest.config.ts', 'shared/vitest.config.ts', 'server/vitest.config.ts'],
+          allowDefaultProject: ['eslint.config.js', 'vitest.config.ts', 'shared/vitest.config.ts', 'server/vitest.config.ts', 'server/scripts/*.mjs', 'client/scripts/*.mjs'],
         },
         tsconfigRootDir: import.meta.dirname,
       },
@@ -25,7 +25,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['server/**/*.ts', 'shared/**/*.ts', '*.js', '*.ts'],
+    files: ['server/**/*.ts', 'server/**/*.mjs', 'client/scripts/**/*.mjs', 'tools/**/*.mjs', 'shared/**/*.ts', '*.js', '*.ts'],
     languageOptions: { globals: globals.node },
   },
   {
@@ -33,7 +33,7 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['**/*.js'],
+    files: ['**/*.js', '**/*.mjs'],
     extends: [tseslint.configs.disableTypeChecked],
   },
 );
