@@ -1,0 +1,492 @@
+import Phaser from 'phaser';
+import { citadelStageFor, MOVEMENT_SKILL_IDS, SYSTEM_FX, type BuildingId, type CitadelStage, type MeResponse, type MovementSkillId } from '@herox/shared';
+import { HERO_FRAME_SIZE } from '../config/display';
+import { FxPlayer, isFxAssetKey, queueFxAssets } from '../fx/fx-player';
+import { InputController } from '../input/input-controller';
+import { facingFromVector, type Facing, type MovementVector } from '../input/movement-vector';
+import {
+  findEntities,
+  findSpawn,
+  LdtkFormatError,
+  parseLdtkLevel,
+  resolveAssetPath,
+  type MapEntity,
+  type MapLevel,
+  type MapLevelRef,
+} from '../maps/ldtk-loader';
+import { buildLevelTilemap } from '../maps/ldtk-tilemap-builder';
+import { mapAssetUrl } from '../maps/map-asset-urls';
+import { DarkAtmosphere } from '../render/dark-atmosphere';
+import { BUILDING_TEXTURE_KEYS, TEXTURE_KEYS } from '../render/placeholder-textures';
+import {
+  DASH_SPEED,
+  facingVector,
+  findBlinkDestination,
+  isAreaWalkable,
+  MovementSkillState,
+  unlockedMovementSkills,
+  type Point,
+  type Rect,
+} from '../world/movement-skills';
+import { buildingDoorRect, TriggerZones } from '../world/trigger-zones';
+import type { BattleSceneData } from './battle-scene';
+import type { CitadelSceneData } from './citadel-scene';
+import { REGISTRY_KEYS, SCENE_KEYS, type LoadedMapProject } from './scene-keys';
+import type { UiScene } from './ui-scene';
+
+export interface WorldSceneData {
+  readonly levelId?: string;
+  readonly spawnId?: string;
+}
+
+type PortalEntity = Extract<MapEntity, { kind: 'Portal' }>;
+
+/** Hiệu ứng bản đồ cần; phần còn lại của bộ hiệu ứng chỉ nạp khi vào trận. */
+const WORLD_FX = [SYSTEM_FX.dashDust, SYSTEM_FX.blinkOut, SYSTEM_FX.blinkIn] as const;
+const FX_DEPTH_OFFSET = 1;
+/** Bóng mờ sau lưng khi lướt: 3 bóng dùng lại, cách nhau 45 ms, mờ dần trong 220 ms. */
+const DASH_GHOST_COUNT = 3;
+const DASH_GHOST_INTERVAL_MS = 45;
+const DASH_GHOST_FADE_MS = 220;
+const DASH_GHOST_ALPHA = 0.45;
+const SKILL_KEY_CODES: Readonly<Record<MovementSkillId, number>> = {
+  dash: Phaser.Input.Keyboard.KeyCodes.SPACE,
+  blink: Phaser.Input.Keyboard.KeyCodes.E,
+};
+
+/** Tốc độ đi bộ, pixel/giây (khoảng 3,4 ô mỗi giây). */
+const HERO_SPEED = 110;
+/** Hitbox ở chân trong khung LPC 64×64: hẹp và thấp để đi sát tường, đi sau cột tự nhiên. */
+const HERO_BODY_WIDTH = 20;
+const HERO_BODY_HEIGHT = 12;
+/** Khoảng trống dưới chân trong khung LPC. */
+const HERO_FEET_PADDING = 2;
+/** NPC, rương chỉ chắn ở phần chân, hẹp hơn ô một chút mỗi bên để hero lách qua khe một ô. */
+const PROP_BODY_HEIGHT = 12;
+const PROP_BODY_SIDE_INSET = 2;
+const FADE_MS = 250;
+const HERO_LIGHT_RADIUS = 120;
+const TORCH_LIGHT_RADIUS = 96;
+const HERO_LIGHT_OFFSET_Y = -24;
+const CAMERA_FADE_COLOR = { r: 0, g: 0, b: 0 } as const;
+const ERROR_TEXT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
+  fontFamily: 'sans-serif',
+  fontSize: '14px',
+  color: '#e8d9a8',
+  align: 'center',
+  wordWrap: { width: 520 },
+};
+
+/** Khoá cache có namespace theo file map để nhiều file `.ldtk` không đè nhau. */
+function levelCacheKey(mapPath: string, levelId: string): string {
+  return `ldtk-level:${mapPath}:${levelId}`;
+}
+
+function tilesetTextureKeyFor(mapPath: string): (tilesetUid: number) => string {
+  return (tilesetUid) => `ldtk-tileset:${mapPath}:${tilesetUid}`;
+}
+
+/** Level nhỏ hơn khung nhìn thì nới biên camera đều hai phía để level nằm giữa màn hình thay vì dồn về góc. */
+function cameraBoundsFor(level: MapLevel, view: { width: number; height: number }): [number, number, number, number] {
+  const width = Math.max(level.widthPx, view.width);
+  const height = Math.max(level.heightPx, view.height);
+  return [(level.widthPx - width) / 2, (level.heightPx - height) / 2, width, height];
+}
+
+/** Hero đứng trong vùng cổng tính theo hitbox chân. */
+function bodyOverlapsRect(body: Phaser.Physics.Arcade.Body, rect: MapEntity): boolean {
+  return body.right > rect.x && body.x < rect.x + rect.width && body.bottom > rect.y && body.y < rect.y + rect.height;
+}
+
+/** Scene đi lại trên map LDtk: dựng level, hero, va chạm, camera và chuyển level qua cổng. */
+export class WorldScene extends Phaser.Scene {
+  private map!: LoadedMapProject;
+  private levelRef!: MapLevelRef;
+  private spawnId: string | undefined;
+  private level: MapLevel | null = null;
+  private loadError: string | null = null;
+  private hero: Phaser.Physics.Arcade.Sprite | null = null;
+  private movementInput!: InputController;
+  private atmosphere: DarkAtmosphere | null = null;
+  private facing: Facing = 'down';
+  private portals: PortalEntity[] = [];
+  /** Cổng chỉ kích hoạt sau khi hero đã rời mọi cổng, tránh vừa tới đã bị đẩy về. */
+  private portalsArmed = false;
+  private transitioning = false;
+  private battleTriggers = new TriggerZones<string>([]);
+  private buildingDoors = new TriggerZones<BuildingId>([]);
+  private buildingImages: Phaser.GameObjects.Image[] = [];
+  /** Đã mở màn trận hoặc panel trong khung này: các vùng khác không mở thêm lớp phủ nữa. */
+  private overlayOpen = false;
+  /** Giữ qua các lần đổi level để hồi chiêu không reset khi qua cổng. */
+  private movementSkills: MovementSkillState | null = null;
+  private skillKeys = new Map<MovementSkillId, Phaser.Input.Keyboard.Key>();
+  private fx: FxPlayer | null = null;
+  private blockers: Rect[] = [];
+  private dashVector: MovementVector = { x: 0, y: 0 };
+  private dashGhosts: Phaser.GameObjects.Image[] = [];
+  private nextGhostAtMs = 0;
+  private ghostIndex = 0;
+
+  constructor() {
+    super(SCENE_KEYS.world);
+  }
+
+  init(data: WorldSceneData): void {
+    this.map = this.registry.get(REGISTRY_KEYS.mapProject) as LoadedMapProject;
+    const { levels } = this.map.project;
+    const levelRef = levels.find((level) => level.identifier === data.levelId) ?? levels[0];
+    if (!levelRef) throw new LdtkFormatError(`${this.map.sourcePath}: không có level nào (chưa hỗ trợ project nhiều world)`);
+    this.levelRef = levelRef;
+    this.spawnId = data.spawnId;
+    this.level = null;
+    this.loadError = null;
+    this.hero = null;
+    this.atmosphere = null;
+    this.facing = 'down';
+    this.portals = [];
+    this.portalsArmed = false;
+    this.transitioning = false;
+    this.battleTriggers = new TriggerZones<string>([]);
+    this.buildingDoors = new TriggerZones<BuildingId>([]);
+    this.buildingImages = [];
+    this.overlayOpen = false;
+    this.fx = null;
+    this.blockers = [];
+    this.dashGhosts = [];
+  }
+
+  preload(): void {
+    queueFxAssets(this, WORLD_FX);
+    // Loader thuộc scene và sống qua các lần restart: gỡ listener cũ trước khi gắn lại.
+    this.load.off(Phaser.Loader.Events.FILE_LOAD_ERROR);
+    this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
+      // Thiếu hiệu ứng chỉ làm mất hình kỹ năng, bản đồ vẫn chơi được.
+      if (isFxAssetKey(file.key)) return;
+      this.loadError = `Không tải được ${file.key}`;
+    });
+    const { externalRelPath, identifier } = this.levelRef;
+    const cacheKey = levelCacheKey(this.map.sourcePath, identifier);
+    if (externalRelPath === null || this.cache.json.exists(cacheKey)) {
+      this.queueTilesets();
+      return;
+    }
+    // Tileset phụ thuộc layer của level nên chỉ biết sau khi file .ldtkl về; loader vẫn chạy tiếp hàng đợi mới thêm.
+    this.load.once(`${Phaser.Loader.Events.FILE_KEY_COMPLETE}json-${cacheKey}`, () => this.queueTilesets());
+    this.load.json(cacheKey, mapAssetUrl(resolveAssetPath(this.map.sourcePath, externalRelPath)));
+  }
+
+  create(): void {
+    const level = this.level;
+    if (this.loadError !== null || level === null) {
+      this.showLoadError(this.loadError ?? `Không đọc được level ${this.levelRef.identifier}`);
+      return;
+    }
+    this.cameras.main.setBackgroundColor(level.backgroundColor);
+    const built = buildLevelTilemap(this, this.map.project, level, {
+      tilesetTextureKey: tilesetTextureKeyFor(this.map.sourcePath),
+      collisionTextureKey: TEXTURE_KEYS.collisionTile,
+    });
+
+    this.physics.world.setBounds(0, 0, level.widthPx, level.heightPx);
+    const hero = this.createHero(level);
+    this.hero = hero;
+    if (built.collisionLayer) this.physics.add.collider(hero, built.collisionLayer);
+    const props = this.createProps(level);
+    this.physics.add.collider(hero, props);
+    this.blockers = props.getChildren().map((child) => {
+      const body = (child as Phaser.Physics.Arcade.Sprite).body as Phaser.Physics.Arcade.StaticBody;
+      return { x: body.x, y: body.y, width: body.width, height: body.height };
+    });
+    this.portals = findEntities(level, 'Portal');
+    this.battleTriggers = new TriggerZones(findEntities(level, 'BattleTrigger').map((trigger) => ({ rect: trigger, value: trigger.encounterId })));
+    this.buildingDoors = new TriggerZones(this.createBuildings(level));
+
+    const camera = this.cameras.main;
+    camera.setBounds(...cameraBoundsFor(level, this.scale.gameSize)).startFollow(hero, true);
+    camera.fadeIn(FADE_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);
+
+    this.atmosphere = new DarkAtmosphere(this, { enabled: true });
+    // Nguồn sáng đọc vị trí hero mỗi frame nên dùng getter thay vì chép toạ độ.
+    this.atmosphere.addLight(
+      {
+        get x(): number {
+          return hero.x;
+        },
+        get y(): number {
+          return hero.y + HERO_LIGHT_OFFSET_Y;
+        },
+      },
+      HERO_LIGHT_RADIUS,
+    );
+    for (const torch of findEntities(level, 'Torch')) {
+      this.atmosphere.addLight({ x: torch.x + torch.width / 2, y: torch.y + torch.height / 2 }, TORCH_LIGHT_RADIUS, true);
+    }
+
+    const ui = this.scene.get(SCENE_KEYS.ui) as UiScene;
+    this.movementInput = new InputController(this, () => ui.movement);
+    this.setUpMovementSkills(ui);
+    this.events.on(Phaser.Scenes.Events.RESUME, this.handleResume);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(Phaser.Scenes.Events.RESUME, this.handleResume));
+  }
+
+  /** Về từ màn trận: phím nhả trong lúc bản đồ dừng không được ghi nhận, phải xoá để hero không tự chạy. */
+  private readonly handleResume = (): void => {
+    this.input.keyboard?.resetKeys();
+    this.overlayOpen = false;
+    // Panel thành trì có thể vừa tải số từ đã học mới hơn lúc boot.
+    const textureKey = BUILDING_TEXTURE_KEYS[this.citadelStage()];
+    for (const image of this.buildingImages) image.setTexture(textureKey);
+  };
+
+  private citadelStage(): CitadelStage {
+    const latest = this.registry.get(REGISTRY_KEYS.citadelStage) as CitadelStage | undefined;
+    if (latest !== undefined) return latest;
+    const me = this.registry.get(REGISTRY_KEYS.me) as MeResponse | undefined;
+    return citadelStageFor(me?.learning.learned ?? 0);
+  }
+
+  override update(time: number): void {
+    if (!this.hero) return;
+    this.useMovementSkills(this.hero, time);
+    this.moveHero(this.hero, time);
+    this.checkPortals(this.hero);
+    this.checkBattleTriggers(this.hero);
+    this.checkBuildingDoors(this.hero);
+  }
+
+  /** Đọc level (đã nạp hoặc nhúng trong project) rồi xếp hàng chỉ những tileset level dùng. */
+  private queueTilesets(): void {
+    const level = this.parseLevel();
+    if (!level) return;
+    this.level = level;
+    const textureKey = tilesetTextureKeyFor(this.map.sourcePath);
+    for (const tilesetUid of new Set(level.tileLayers.map((layer) => layer.tilesetUid))) {
+      const tileset = this.map.project.tilesets.get(tilesetUid);
+      if (!tileset) {
+        this.loadError = `Level ${level.identifier} dùng tileset ${tilesetUid} không có ảnh`;
+        return;
+      }
+      const key = textureKey(tilesetUid);
+      if (!this.textures.exists(key)) this.load.image(key, mapAssetUrl(resolveAssetPath(this.map.sourcePath, tileset.relPath)));
+    }
+  }
+
+  private parseLevel(): MapLevel | null {
+    const { externalRelPath, identifier } = this.levelRef;
+    const raw: unknown = externalRelPath === null
+      ? this.map.project.inlineLevels.get(identifier)
+      : this.cache.json.get(levelCacheKey(this.map.sourcePath, identifier));
+    try {
+      return parseLdtkLevel(raw);
+    } catch (error) {
+      this.loadError = error instanceof LdtkFormatError ? error.message : `Không đọc được level ${identifier}`;
+      return null;
+    }
+  }
+
+  private showLoadError(message: string): void {
+    const { width, height } = this.scale.gameSize;
+    this.add.text(width / 2, height / 2, `Lỗi bản đồ: ${message}`, ERROR_TEXT_STYLE).setOrigin(0.5);
+  }
+
+  private createHero(level: MapLevel): Phaser.Physics.Arcade.Sprite {
+    const spawn = findSpawn(level, this.spawnId);
+    if (!spawn) throw new LdtkFormatError(`Level "${level.identifier}" không có PlayerSpawn`);
+    // Toạ độ hero là điểm chân (giữa đáy ô spawn) để sắp lớp theo y và đặt hitbox đúng chỗ.
+    const feetX = spawn.x + spawn.width / 2;
+    const feetY = spawn.y + spawn.height;
+    const hero = this.physics.add.sprite(feetX, feetY, TEXTURE_KEYS.hero, this.facing);
+    hero.setOrigin(0.5, (HERO_FRAME_SIZE - HERO_FEET_PADDING) / HERO_FRAME_SIZE);
+    const body = hero.body as Phaser.Physics.Arcade.Body;
+    body.setSize(HERO_BODY_WIDTH, HERO_BODY_HEIGHT);
+    body.setOffset((HERO_FRAME_SIZE - HERO_BODY_WIDTH) / 2, HERO_FRAME_SIZE - HERO_FEET_PADDING - HERO_BODY_HEIGHT);
+    body.setCollideWorldBounds(true);
+    return hero;
+  }
+
+  /** NPC và rương chắn đường ở phần chân; sắp lớp theo y để hero đi trước/sau đúng. */
+  private createProps(level: MapLevel): Phaser.Physics.Arcade.StaticGroup {
+    const group = this.physics.add.staticGroup();
+    const propEntities = [...findEntities(level, 'Npc'), ...findEntities(level, 'Chest')];
+    for (const entity of propEntities) {
+      const textureKey = entity.kind === 'Npc' ? TEXTURE_KEYS.npc : TEXTURE_KEYS.chest;
+      const feetY = entity.y + entity.height;
+      const sprite = group.create(entity.x + entity.width / 2, feetY, textureKey) as Phaser.Physics.Arcade.Sprite;
+      sprite.setOrigin(0.5, 1).setDepth(feetY);
+      // Thân chắn theo kích thước entity trong LDtk, canh giữa đáy sprite (sprite có thể rộng/cao hơn ô).
+      const body = sprite.body as Phaser.Physics.Arcade.StaticBody;
+      const bodyWidth = entity.width - PROP_BODY_SIDE_INSET * 2;
+      body.setSize(bodyWidth, PROP_BODY_HEIGHT, false);
+      body.setOffset((sprite.width - bodyWidth) / 2, sprite.height - PROP_BODY_HEIGHT);
+    }
+    return group;
+  }
+
+  /**
+   * Công trình ở thành trì: hình theo giai đoạn hồi sinh (số từ đã học), nền móng chắn đường nằm sẵn trong lưới va chạm.
+   * Trả vùng cửa ở cạnh dưới mỗi công trình.
+   */
+  private createBuildings(level: MapLevel): { rect: Rect; value: BuildingId }[] {
+    const textureKey = BUILDING_TEXTURE_KEYS[this.citadelStage()];
+    return findEntities(level, 'Building').map((building) => {
+      const image = this.add.image(building.x, building.y, textureKey).setOrigin(0, 0).setDisplaySize(building.width, building.height);
+      this.buildingImages.push(image.setDepth(building.y + building.height));
+      return { rect: buildingDoorRect(building), value: building.buildingId };
+    });
+  }
+
+  private moveHero(hero: Phaser.Physics.Arcade.Sprite, nowMs: number): void {
+    const body = hero.body as Phaser.Physics.Arcade.Body;
+    if (this.transitioning) {
+      body.setVelocity(0, 0);
+      return;
+    }
+    if (this.movementSkills?.isDashing(nowMs) === true) {
+      // Lướt vẫn va chạm tường như đi bộ, chỉ nhanh hơn và khoá hướng.
+      body.setVelocity(this.dashVector.x * DASH_SPEED, this.dashVector.y * DASH_SPEED);
+      this.dropDashGhost(hero, nowMs);
+      hero.setDepth(body.bottom);
+      return;
+    }
+    const movement = this.movementInput.readMovement();
+    body.setVelocity(movement.x * HERO_SPEED, movement.y * HERO_SPEED);
+    const facing = facingFromVector(movement, this.facing);
+    if (facing !== this.facing) {
+      this.facing = facing;
+      hero.setFrame(facing);
+    }
+    hero.setDepth(body.bottom);
+  }
+
+  private setUpMovementSkills(ui: UiScene): void {
+    if (this.movementSkills === null) {
+      const me = this.registry.get(REGISTRY_KEYS.me) as MeResponse | undefined;
+      // Dev vào map thử không có tiến độ học: mở hết để thử kỹ năng; bản build luôn theo tiến độ thật.
+      this.movementSkills = new MovementSkillState(unlockedMovementSkills(me?.learning.byPos ?? null, import.meta.env.DEV));
+    }
+    const skills = this.movementSkills;
+    this.skillKeys.clear();
+    for (const [id, code] of Object.entries(SKILL_KEY_CODES) as [MovementSkillId, number][]) {
+      const key = this.input.keyboard?.addKey(code, false);
+      if (key !== undefined && skills.isUnlocked(id)) this.skillKeys.set(id, key);
+    }
+    ui.showSkillButtons(new Set(MOVEMENT_SKILL_IDS.filter((id) => skills.isUnlocked(id))));
+    this.fx = new FxPlayer(this);
+  }
+
+  private requestedSkill(ui: UiScene): MovementSkillId | null {
+    const touched = ui.consumeSkillRequest();
+    if (touched !== null) return touched;
+    for (const [id, key] of this.skillKeys) {
+      if (Phaser.Input.Keyboard.JustDown(key)) return id;
+    }
+    return null;
+  }
+
+  private useMovementSkills(hero: Phaser.Physics.Arcade.Sprite, nowMs: number): void {
+    const skills = this.movementSkills;
+    if (skills === null || this.transitioning) return;
+    const ui = this.scene.get(SCENE_KEYS.ui) as UiScene;
+    for (const id of MOVEMENT_SKILL_IDS) ui.setSkillCoolingDown(id, skills.cooldownRatio(id, nowMs) > 0);
+    const requested = this.requestedSkill(ui);
+    if (requested === 'dash') this.dash(hero, skills, nowMs);
+    else if (requested === 'blink') this.blink(hero, skills, nowMs);
+  }
+
+  /** Lướt theo hướng đang đi (đứng yên thì theo hướng nhìn). */
+  private dash(hero: Phaser.Physics.Arcade.Sprite, skills: MovementSkillState, nowMs: number): void {
+    if (!skills.use('dash', nowMs)) return;
+    const movement = this.movementInput.readMovement();
+    const length = Math.hypot(movement.x, movement.y);
+    this.dashVector = length > 0 ? { x: movement.x / length, y: movement.y / length } : facingVector(this.facing);
+    this.nextGhostAtMs = nowMs;
+    this.fx?.play(SYSTEM_FX.dashDust, hero.x, hero.y, { depth: hero.depth - FX_DEPTH_OFFSET, scale: 0.6 });
+  }
+
+  /** Thuấn bộ theo hướng nhìn tới điểm đáp xa nhất đứng được; không có chỗ đáp thì không tốn hồi chiêu. */
+  private blink(hero: Phaser.Physics.Arcade.Sprite, skills: MovementSkillState, nowMs: number): void {
+    const level = this.level;
+    if (level === null || !skills.canUse('blink', nowMs)) return;
+    const body = hero.body as Phaser.Physics.Arcade.Body;
+    const bodyOffset = { x: body.x - hero.x, y: body.y - hero.y };
+    const isFree = (point: Point): boolean =>
+      isAreaWalkable(
+        { x: point.x + bodyOffset.x, y: point.y + bodyOffset.y, width: body.width, height: body.height },
+        level,
+        level.collision,
+        this.blockers,
+      );
+    const destination = findBlinkDestination({ x: hero.x, y: hero.y }, facingVector(this.facing), isFree);
+    if (destination === null || !skills.use('blink', nowMs)) return;
+    this.fx?.play(SYSTEM_FX.blinkOut, hero.x, hero.y, { depth: hero.depth + FX_DEPTH_OFFSET });
+    body.reset(destination.x, destination.y);
+    hero.setDepth(body.bottom);
+    this.fx?.play(SYSTEM_FX.blinkIn, destination.x, destination.y, { depth: hero.depth + FX_DEPTH_OFFSET });
+  }
+
+  /** Bóng mờ sau lưng khi lướt; 3 ảnh dùng lại để không tạo đối tượng mỗi lần lướt. */
+  private dropDashGhost(hero: Phaser.Physics.Arcade.Sprite, nowMs: number): void {
+    if (nowMs < this.nextGhostAtMs) return;
+    this.nextGhostAtMs = nowMs + DASH_GHOST_INTERVAL_MS;
+    if (this.dashGhosts.length < DASH_GHOST_COUNT) {
+      this.dashGhosts.push(this.add.image(0, 0, TEXTURE_KEYS.hero, this.facing).setOrigin(hero.originX, hero.originY));
+    }
+    const ghost = this.dashGhosts[this.ghostIndex % this.dashGhosts.length];
+    this.ghostIndex += 1;
+    if (ghost === undefined) return;
+    this.tweens.killTweensOf(ghost);
+    ghost.setFrame(this.facing).setPosition(hero.x, hero.y).setDepth(hero.depth - FX_DEPTH_OFFSET).setAlpha(DASH_GHOST_ALPHA).setVisible(true);
+    this.tweens.add({ targets: ghost, alpha: 0, duration: DASH_GHOST_FADE_MS, onComplete: () => ghost.setVisible(false) });
+  }
+
+  private bodyRect(hero: Phaser.Physics.Arcade.Sprite): Rect {
+    const body = hero.body as Phaser.Physics.Arcade.Body;
+    return { x: body.x, y: body.y, width: body.width, height: body.height };
+  }
+
+  /** Bước vào vùng trận: dừng bản đồ, ẩn joystick, mở màn trận; thoát trận thì bản đồ chạy tiếp tại chỗ. */
+  private checkBattleTriggers(hero: Phaser.Physics.Arcade.Sprite): void {
+    if (this.transitioning || this.overlayOpen) return;
+    const encounterId = this.battleTriggers.enter(this.bodyRect(hero));
+    if (encounterId === null) return;
+    const data: BattleSceneData = { encounterId };
+    this.openOverlay(hero, SCENE_KEYS.battle, data);
+  }
+
+  /** Bước tới cửa công trình: mở panel thành trì; đóng panel thì bản đồ chạy tiếp tại chỗ. */
+  private checkBuildingDoors(hero: Phaser.Physics.Arcade.Sprite): void {
+    if (this.transitioning || this.overlayOpen) return;
+    const buildingId = this.buildingDoors.enter(this.bodyRect(hero));
+    if (buildingId === null) return;
+    const data: CitadelSceneData = { buildingId };
+    this.openOverlay(hero, SCENE_KEYS.citadel, data);
+  }
+
+  /** Dừng bản đồ, ẩn joystick rồi mở scene phủ lên trên; scene đó tự resume bản đồ khi đóng. */
+  private openOverlay(hero: Phaser.Physics.Arcade.Sprite, sceneKey: string, data: object): void {
+    (hero.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+    this.overlayOpen = true;
+    this.scene.pause();
+    this.scene.sleep(SCENE_KEYS.ui);
+    this.scene.launch(sceneKey, data);
+  }
+
+  private checkPortals(hero: Phaser.Physics.Arcade.Sprite): void {
+    if (this.transitioning) return;
+    const body = hero.body as Phaser.Physics.Arcade.Body;
+    const portal = this.portals.find((candidate) => bodyOverlapsRect(body, candidate));
+    if (!portal) {
+      this.portalsArmed = true;
+      return;
+    }
+    if (!this.portalsArmed) return;
+    if (!this.map.project.levels.some((level) => level.identifier === portal.targetLevel)) return;
+    this.transitioning = true;
+    this.cameras.main.fadeOut(FADE_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      const next: WorldSceneData = { levelId: portal.targetLevel, spawnId: portal.targetSpawn };
+      this.scene.restart(next);
+    });
+  }
+}

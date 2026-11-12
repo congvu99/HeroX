@@ -1,0 +1,383 @@
+{
+  "pixelfxCommit": "044e12a45dc9cc312cec50ee606dfc98afe5adc2",
+  "effects": {
+    "attack-cast-1": {
+      "source": "melee/sword-slash",
+      "fps": 15,
+      "loop": false,
+      "frames": 12,
+      "frameSize": [
+        136,
+        104
+      ],
+      "pivot": [
+        44,
+        92
+      ],
+      "atlasSize": [
+        544,
+        312
+      ]
+    },
+    "attack-impact-1": {
+      "source": "impacts/hit-spark",
+      "fps": 15,
+      "loop": false,
+      "frames": 9,
+      "frameSize": [
+        136,
+        80
+      ],
+      "pivot": [
+        44,
+        64
+      ],
+      "atlasSize": [
+        408,
+        240
+      ]
+    },
+    "attack-cast-2": {
+      "source": "melee/heavy-cleave",
+      "fps": 15,
+      "loop": false,
+      "frames": 30,
+      "frameSize": [
+        208,
+        116
+      ],
+      "pivot": [
+        68,
+        96
+      ],
+      "atlasSize": [
+        1040,
+        696
+      ]
+    },
+    "attack-impact-2": {
+      "source": "impacts/crit-hit",
+      "fps": 15,
+      "loop": false,
+      "frames": 15,
+      "frameSize": [
+        216,
+        136
+      ],
+      "pivot": [
+        84,
+        106
+      ],
+      "atlasSize": [
+        864,
+        544
+      ]
+    },
+    "guard-cast-1": {
+      "source": "impacts/shield-block",
+      "fps": 15,
+      "loop": false,
+      "frames": 18,
+      "frameSize": [
+        148,
+        104
+      ],
+      "pivot": [
+        40,
+        88
+      ],
+      "atlasSize": [
+        592,
+        520
+      ]
+    },
+    "guard-impact-1": {
+      "source": "impacts/blunt-hit",
+      "fps": 15,
+      "loop": false,
+      "frames": 15,
+      "frameSize": [
+        128,
+        88
+      ],
+      "pivot": [
+        64,
+        72
+      ],
+      "atlasSize": [
+        512,
+        352
+      ]
+    },
+    "guard-cast-2": {
+      "source": "holy/divine-shield",
+      "fps": 15,
+      "loop": true,
+      "frames": 36,
+      "frameSize": [
+        88,
+        84
+      ],
+      "pivot": [
+        44,
+        68
+      ],
+      "atlasSize": [
+        528,
+        504
+      ]
+    },
+    "guard-impact-2": {
+      "source": "impacts/parry",
+      "fps": 15,
+      "loop": false,
+      "frames": 16,
+      "frameSize": [
+        200,
+        112
+      ],
+      "pivot": [
+        100,
+        96
+      ],
+      "atlasSize": [
+        600,
+        672
+      ]
+    },
+    "empower-cast-1": {
+      "source": "arcane/spell-charge",
+      "fps": 15,
+      "loop": true,
+      "frames": 24,
+      "frameSize": [
+        120,
+        86
+      ],
+      "pivot": [
+        44,
+        80
+      ],
+      "atlasSize": [
+        600,
+        430
+      ]
+    },
+    "empower-impact-1": {
+      "source": "shadow/grasping-hands",
+      "fps": 15,
+      "loop": false,
+      "frames": 48,
+      "frameSize": [
+        200,
+        116
+      ],
+      "pivot": [
+        100,
+        100
+      ],
+      "atlasSize": [
+        1200,
+        928
+      ]
+    },
+    "empower-cast-2": {
+      "source": "arcane/mana-burst",
+      "fps": 15,
+      "loop": false,
+      "frames": 28,
+      "frameSize": [
+        208,
+        150
+      ],
+      "pivot": [
+        104,
+        124
+      ],
+      "atlasSize": [
+        1040,
+        900
+      ]
+    },
+    "empower-impact-2": {
+      "source": "shadow/hex-sigil",
+      "fps": 15,
+      "loop": false,
+      "frames": 64,
+      "frameSize": [
+        168,
+        128
+      ],
+      "pivot": [
+        84,
+        112
+      ],
+      "atlasSize": [
+        1176,
+        1280
+      ]
+    },
+    "dash-dust": {
+      "source": "impacts/heavy-landing",
+      "fps": 15,
+      "loop": false,
+      "frames": 25,
+      "frameSize": [
+        176,
+        80
+      ],
+      "pivot": [
+        88,
+        60
+      ],
+      "atlasSize": [
+        704,
+        560
+      ]
+    },
+    "blink-out": {
+      "source": "arcane/blink-out",
+      "fps": 15,
+      "loop": false,
+      "frames": 25,
+      "frameSize": [
+        136,
+        96
+      ],
+      "pivot": [
+        68,
+        80
+      ],
+      "atlasSize": [
+        680,
+        480
+      ]
+    },
+    "blink-in": {
+      "source": "arcane/blink-in",
+      "fps": 15,
+      "loop": false,
+      "frames": 22,
+      "frameSize": [
+        136,
+        96
+      ],
+      "pivot": [
+        68,
+        80
+      ],
+      "atlasSize": [
+        544,
+        576
+      ]
+    },
+    "finisher": {
+      "source": "holy/smite",
+      "fps": 15,
+      "loop": false,
+      "frames": 43,
+      "frameSize": [
+        224,
+        176
+      ],
+      "pivot": [
+        112,
+        148
+      ],
+      "atlasSize": [
+        1344,
+        1408
+      ]
+    },
+    "combo-up": {
+      "source": "holy/blessing",
+      "fps": 15,
+      "loop": true,
+      "frames": 45,
+      "frameSize": [
+        80,
+        128
+      ],
+      "pivot": [
+        40,
+        108
+      ],
+      "atlasSize": [
+        720,
+        640
+      ]
+    },
+    "enemy-strike": {
+      "source": "melee/claw-swipe",
+      "fps": 15,
+      "loop": false,
+      "frames": 15,
+      "frameSize": [
+        128,
+        96
+      ],
+      "pivot": [
+        36,
+        84
+      ],
+      "atlasSize": [
+        512,
+        384
+      ]
+    },
+    "enemy-spawn": {
+      "source": "spawn/spawn-portal",
+      "fps": 15,
+      "loop": false,
+      "frames": 58,
+      "frameSize": [
+        208,
+        150
+      ],
+      "pivot": [
+        104,
+        122
+      ],
+      "atlasSize": [
+        1456,
+        1350
+      ]
+    },
+    "enemy-death": {
+      "source": "spawn/poof",
+      "fps": 15,
+      "loop": false,
+      "frames": 25,
+      "frameSize": [
+        112,
+        92
+      ],
+      "pivot": [
+        56,
+        80
+      ],
+      "atlasSize": [
+        560,
+        460
+      ]
+    },
+    "level-up": {
+      "source": "ui/level-up",
+      "fps": 15,
+      "loop": false,
+      "frames": 49,
+      "frameSize": [
+        176,
+        138
+      ],
+      "pivot": [
+        88,
+        114
+      ],
+      "atlasSize": [
+        1232,
+        966
+      ]
+    }
+  }
+}

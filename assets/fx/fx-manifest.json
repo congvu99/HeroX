@@ -1,0 +1,32 @@
+{
+  "pixelfx": {
+    "repository": "https://github.com/patch-gg/pixelfx",
+    "commit": "044e12a45dc9cc312cec50ee606dfc98afe5adc2",
+    "license": "MIT"
+  },
+  "defaultFps": 15,
+  "maxAtlasSize": 2048,
+  "effects": [
+    { "name": "attack-cast-1", "source": "melee/sword-slash", "purpose": "Chiêu tấn công bậc 1: nhát chém" },
+    { "name": "attack-impact-1", "source": "impacts/hit-spark", "purpose": "Chiêu tấn công bậc 1: trúng quái" },
+    { "name": "attack-cast-2", "source": "melee/heavy-cleave", "purpose": "Chiêu tấn công bậc 2: chém bổ" },
+    { "name": "attack-impact-2", "source": "impacts/crit-hit", "purpose": "Chiêu tấn công bậc 2: trúng quái" },
+    { "name": "guard-cast-1", "source": "impacts/shield-block", "purpose": "Chiêu khiên bậc 1: dựng khiên" },
+    { "name": "guard-impact-1", "source": "impacts/blunt-hit", "purpose": "Chiêu khiên bậc 1: đòn phụ trúng quái" },
+    { "name": "guard-cast-2", "source": "holy/divine-shield", "purpose": "Chiêu khiên bậc 2: vòm thánh quang" },
+    { "name": "guard-impact-2", "source": "impacts/parry", "purpose": "Chiêu khiên bậc 2: đòn phụ trúng quái" },
+    { "name": "empower-cast-1", "source": "arcane/spell-charge", "purpose": "Chiêu làm yếu bậc 1: tụ phép" },
+    { "name": "empower-impact-1", "source": "shadow/grasping-hands", "purpose": "Chiêu làm yếu bậc 1: trói quái" },
+    { "name": "empower-cast-2", "source": "arcane/mana-burst", "purpose": "Chiêu làm yếu bậc 2: bùng phép" },
+    { "name": "empower-impact-2", "source": "shadow/hex-sigil", "purpose": "Chiêu làm yếu bậc 2: ấn nguyền trên quái" },
+    { "name": "dash-dust", "source": "impacts/heavy-landing", "purpose": "Kỹ năng lướt và chiêu né bậc 1: bụi chân" },
+    { "name": "blink-out", "source": "arcane/blink-out", "purpose": "Kỹ năng dịch chuyển và chiêu né bậc 2: biến mất" },
+    { "name": "blink-in", "source": "arcane/blink-in", "purpose": "Kỹ năng dịch chuyển: hiện ra" },
+    { "name": "finisher", "source": "holy/smite", "purpose": "Đòn kết liễu của chuỗi cụm" },
+    { "name": "combo-up", "source": "holy/blessing", "purpose": "Lên combo" },
+    { "name": "enemy-strike", "source": "melee/claw-swipe", "purpose": "Quái đánh trả" },
+    { "name": "enemy-spawn", "source": "spawn/spawn-portal", "purpose": "Quái hiện ra từ khe nứt" },
+    { "name": "enemy-death", "source": "spawn/poof", "purpose": "Quái chết" },
+    { "name": "level-up", "source": "ui/level-up", "purpose": "Lên cấp" }
+  ]
+}

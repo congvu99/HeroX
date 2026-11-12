@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "srsEpoch": 0,
+  "srs": {
+    "w-run": { "ef": 2.1, "ivl": 30, "due": 1797051600000, "state": "review", "reps": 6, "lapses": 2, "last": 1794286800000, "lastMode": "type", "sentences": [], "hist": [ { "t": 1791003600000, "g": 0, "mode": "type" }, { "t": 1794286800000, "g": 2, "mode": "type" } ] },
+    "w-cat": { "ef": 2.5, "ivl": 0, "due": 0, "state": "learning", "reps": 0, "lapses": 0, "last": 1794456000000, "lastMode": "card", "sentences": [], "hist": [ { "t": 1794456000000, "g": 0, "mode": "card" } ] },
+    "w-big": { "ef": 1.7, "ivl": 1, "due": 1794373200000, "state": "relearn", "reps": 4, "lapses": 3, "last": 1794027600000, "lastMode": "card", "sentences": [], "hist": [ { "t": 1794027600000, "g": 3, "mode": "card" } ] },
+    "w-fast": { "ef": 2.5, "ivl": 21, "due": 1794718800000, "state": "review", "reps": 5, "lapses": 1, "last": 1791954000000, "lastMode": "card", "sentences": [], "hist": [ { "t": 1791954000000, "g": 2, "mode": "card" } ] },
+    "w-on": { "ef": 2.5, "ivl": 0, "due": 0, "state": "new", "reps": 0, "lapses": 0, "last": 0, "lastMode": "", "sentences": [], "hist": [] },
+    "w-give-up": { "ef": 2.4, "ivl": 20, "due": 1794718800000, "state": "review", "reps": 4, "lapses": 0, "last": 1794200400000, "lastMode": "card", "sentences": [], "hist": [] }
+  },
+  "cfg": null,
+  "plan": null,
+  "day": { "data": { "date": "2026-11-12", "streak": 4, "done": {}, "history": {}, "caption": {} }, "ts": 1794456000000 },
+  "gameScore": {},
+  "boss": null
+}

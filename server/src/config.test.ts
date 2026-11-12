@@ -8,6 +8,7 @@ describe('loadConfig', () => {
       databaseUrl: undefined,
       trustProxyHops: 0,
       pgSsl: false,
+      pgSslRootCert: undefined,
     });
   });
 
@@ -17,12 +18,14 @@ describe('loadConfig', () => {
       DATABASE_URL: 'postgres://user@db/app',
       TRUST_PROXY_HOPS: '1',
       PGSSL: 'TRUE',
+      PGSSLROOTCERT: '/etc/ssl/postgres-ca.pem',
     });
     expect(config).toEqual({
       port: 4000,
       databaseUrl: 'postgres://user@db/app',
       trustProxyHops: 1,
       pgSsl: true,
+      pgSslRootCert: '/etc/ssl/postgres-ca.pem',
     });
   });
 

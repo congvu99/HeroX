@@ -1,0 +1,9 @@
+[
+  { "id": "w-run", "word": "run", "pos": "verb", "meaning": "chạy", "emoji": "🏃", "ipa": "/rʌn/" },
+  { "id": "w-cat", "word": "cat", "pos": "noun", "meaning": "con mèo", "emoji": "🐈", "ipa": "/kæt/" },
+  { "id": "w-big", "word": "big", "pos": "adjective", "meaning": "to", "emoji": "🐘", "ipa": "/bɪɡ/" },
+  { "id": "w-fast", "word": "fast", "pos": "adverb", "meaning": "nhanh", "emoji": "⚡", "ipa": "/fæst/" },
+  { "id": "w-on", "word": "on", "pos": "preposition", "meaning": "trên", "emoji": "📍", "ipa": "/ɒn/" },
+  { "id": "w-give-up", "word": "give up", "pos": "phrasal verb", "meaning": "từ bỏ", "emoji": "🏳️", "ipa": "" },
+  { "id": "w-hello", "word": "hello", "pos": "exclamation", "meaning": "xin chào", "emoji": "👋", "ipa": "/həˈləʊ/" }
+]

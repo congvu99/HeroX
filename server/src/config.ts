@@ -1,10 +1,12 @@
 /** Cấu hình server đọc từ biến môi trường; bất biến sau khi khởi động. */
 export interface ServerConfig {
   readonly port: number;
-  /** Chưa dùng ở khung dự án; bắt buộc khi server bắt đầu kết nối Postgres. */
+  /** Bắt buộc khi chạy server (kiểm ở `server.ts`); để trống được trong test không cần DB. */
   readonly databaseUrl: string | undefined;
   readonly trustProxyHops: number;
   readonly pgSsl: boolean;
+  /** File CA xác thực chứng chỉ Postgres khi `pgSsl` bật; trống thì dùng CA hệ thống. */
+  readonly pgSslRootCert: string | undefined;
 }
 
 export const DEFAULT_PORT = 3180;
@@ -48,5 +50,6 @@ export function loadConfig(env: Env = process.env): ServerConfig {
     databaseUrl: readOptionalString(env, 'DATABASE_URL'),
     trustProxyHops: readNonNegativeInteger(env, 'TRUST_PROXY_HOPS', 0, Number.MAX_SAFE_INTEGER),
     pgSsl: readBoolean(env, 'PGSSL', false),
+    pgSslRootCert: readOptionalString(env, 'PGSSLROOTCERT'),
   };
 }

@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "srsEpoch": 0,
+  "srs": {
+    "w-removed": { "ef": 2.5, "ivl": 50, "due": 1797051600000, "state": "review", "reps": 9, "lapses": 4, "last": 1794286800000, "lastMode": "card", "sentences": [], "hist": [ { "t": 1794286800000, "g": 0, "mode": "card" } ] },
+    "w-gone": { "ef": 2.5, "ivl": 3, "due": 1794718800000, "state": "learning", "reps": 1, "lapses": 0, "last": 1794286800000, "lastMode": "card", "sentences": [], "hist": [] },
+    "w-hello": { "ef": 2.5, "ivl": 3, "due": 1794718800000, "state": "review", "reps": 1, "lapses": 0, "last": 1794286800000, "lastMode": "card", "sentences": [], "hist": [ { "t": 1794286800000, "g": 2, "mode": "card" } ] }
+  }
+}

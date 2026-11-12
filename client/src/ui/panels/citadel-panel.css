@@ -1,0 +1,274 @@
+/* Bảng màu theo docs/art-direction.md: mực đêm, tro, xương, máu thánh, vàng nến. */
+.citadel-overlay {
+  --ink: #0b0a10;
+  --ash: #1b1720;
+  --bone: #d9d2c0;
+  --bone-dim: #a39c8c;
+  --blood: #7a141c;
+  --ember: #e0602a;
+  --gold: #e8c66a;
+  --border: #4a3236;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+  background: #0b0a10b3;
+  color: var(--bone);
+  font-family: system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.citadel-overlay.is-busy .citadel-dialog {
+  cursor: progress;
+}
+
+.citadel-overlay.is-busy button {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.citadel-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(640px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px;
+  background: var(--ash);
+  border: 1px solid var(--gold);
+  box-shadow: 0 0 0 1px #000, inset 0 0 24px #e8c66a22;
+}
+
+.citadel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.citadel-title,
+.citadel-heading {
+  margin: 0;
+  font-family: Cambria, Georgia, serif;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+}
+
+.citadel-title {
+  font-size: 22px;
+}
+
+.citadel-heading {
+  font-size: 17px;
+  margin-top: 6px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2px;
+}
+
+.citadel-resources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 10px;
+  background: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.citadel-gold {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.citadel-crystal {
+  color: #9ab0ff;
+  font-weight: 700;
+}
+
+.citadel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.citadel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.citadel-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 8px 10px;
+  background: #0b0a1080;
+  border: 1px solid var(--border);
+}
+
+.citadel-summary {
+  border-color: var(--gold);
+}
+
+.citadel-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.citadel-actions,
+.citadel-upgrade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.citadel-upgrade {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.citadel-muted {
+  color: var(--bone-dim);
+  margin: 0;
+}
+
+.citadel-description {
+  color: var(--bone-dim);
+  font-style: italic;
+  font-size: 14px;
+}
+
+.citadel-reason {
+  color: var(--ember);
+  font-size: 14px;
+}
+
+.citadel-ok {
+  color: var(--gold);
+}
+
+.citadel-notice {
+  margin: 0;
+  min-height: 1.4em;
+}
+
+.citadel-notice[data-tone='error'] {
+  color: var(--ember);
+}
+
+.citadel-notice[data-tone='info'] {
+  color: var(--gold);
+}
+
+/* Nút đủ lớn để chạm trên điện thoại (tối thiểu 44 px). */
+.citadel-button {
+  min-height: 44px;
+  padding: 6px 14px;
+  font: inherit;
+  color: var(--bone);
+  background: var(--blood);
+  border: 1px solid var(--gold);
+  cursor: pointer;
+}
+
+.citadel-button:disabled {
+  background: #2a1a1e;
+  border-color: var(--border);
+  color: var(--bone-dim);
+  cursor: not-allowed;
+}
+
+.citadel-button:focus-visible,
+.citadel-chip:focus-visible,
+.citadel-search:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.citadel-close {
+  background: var(--ink);
+}
+
+.citadel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.citadel-chip {
+  min-height: 40px;
+  padding: 4px 10px;
+  font: inherit;
+  color: var(--bone);
+  background: var(--ink);
+  border: 1px solid var(--chip-color, var(--border));
+  cursor: pointer;
+}
+
+.citadel-chip[aria-pressed='true'] {
+  background: var(--chip-color, var(--border));
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* Màu từ loại giống vòng từ trong trận. */
+.pos-verb {
+  --chip-color: #e0602a;
+}
+
+.pos-noun {
+  --chip-color: #6aa8e8;
+}
+
+.pos-adj {
+  --chip-color: #e8c66a;
+}
+
+.pos-adv {
+  --chip-color: #5a2a6a;
+}
+
+/* Nền tím tối: chữ sáng mới đọc được. */
+.pos-adv[aria-pressed='true'] {
+  color: var(--bone);
+}
+
+.pos-prep {
+  --chip-color: #a39c8c;
+}
+
+.pos-other {
+  --chip-color: #6a6470;
+}
+
+/* 16 px trở lên để Safari iOS không tự phóng to trang khi focus ô tìm. */
+.citadel-search {
+  font-size: 16px;
+  min-height: 44px;
+  padding: 6px 10px;
+  color: var(--bone);
+  background: var(--ink);
+  border: 1px solid var(--border);
+}
+
+/* Thuộc tính `hidden` phải thắng `display: flex` của các khối trong panel. */
+.citadel-overlay [hidden] {
+  display: none;
+}
