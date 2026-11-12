@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Image HeroX. Target mặc định `runtime` là image chạy production (chỉ dist + dependency production).
-# Các target `e2e-seed`, `web-e2e` chỉ dùng cho compose.dev.yml (môi trường thử E2E).
+# Target `web` (nginx phục vụ client) chạy cạnh `runtime` ở production. `e2e-seed`, `web-e2e` chỉ dùng cho compose.dev.yml.
 
 ARG NODE_IMAGE=node:22-alpine
 ARG NGINX_IMAGE=nginx:1.29-alpine
@@ -49,6 +49,12 @@ EXPOSE 3180
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 \
   CMD ["node", "-e", "fetch('http://127.0.0.1:'+(process.env.PORT||3180)+'/herox/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
 CMD ["node", "server/dist/server.js"]
+
+# ---- web: nginx phục vụ client bản production ở /herox/ (server HeroX chưa có route file tĩnh) ----
+FROM ${NGINX_IMAGE} AS web
+COPY deploy/nginx-web.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/client/dist /usr/share/nginx/html/herox
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1/herox/"]
 
 # ---- e2e-seed: seed DB thử của compose.dev.yml (cần mã nguồn TS + tsx) ----
 FROM build AS e2e-seed

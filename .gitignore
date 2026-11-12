@@ -11,3 +11,5 @@ playwright-report/
 *.log
 # Kết quả E2E (trace, ảnh, báo cáo HTML): sinh lại mỗi lần chạy, rất nặng
 plans/reports/e2e-playwright/
+# Tag image đang chạy trên VPS (deploy/deploy.sh ghi)
+.deployed-tag

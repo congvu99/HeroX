@@ -1,5 +1,6 @@
-# HeroX chạy cạnh LingoBrain (project compose `lingobrain`), dùng chung Postgres `db` của LingoBrain.
-# Người vận hành chạy theo docs/deployment-guide.md; agent không deploy.
+# HeroX trên VPS, cạnh LingoBrain (project compose `lingobrain`) và Caddy dùng chung (mạng `web`).
+# Người vận hành chạy theo docs/deployment-guide.md (bằng deploy/deploy.sh); agent không deploy.
+#   Caddy: /herox/api/* → herox:3180, phần còn lại của /herox/ → herox-web:80.
 name: herox
 
 services:
@@ -7,23 +8,35 @@ services:
     build:
       context: .
       target: runtime
-    image: herox:latest
+    image: herox:${IMAGE_TAG:-latest}
     restart: unless-stopped
-    # .env: DATABASE_URL (role herox_app, host db), PGSSL..., không commit file này.
+    # .env: DATABASE_URL (role herox_app, host db của LingoBrain), PGSSL. Không commit file này.
     env_file: .env
     environment:
       PORT: "3180"
-      # Một proxy (reverse proxy của LingoBrain) đứng trước HeroX.
+      # Một proxy (Caddy) đứng trước HeroX.
       TRUST_PROXY_HOPS: "1"
-    mem_limit: 256m
     networks:
-      - lingobrain_default
-      - web
+      lingobrain_default:
+      web:
+        aliases: [herox]
+    mem_limit: 256m
+
+  herox-web:
+    build:
+      context: .
+      target: web
+    image: herox-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    networks:
+      web:
+        aliases: [herox-web]
+    mem_limit: 64m
 
 networks:
-  # Mạng mặc định của project LingoBrain: thấy host `db`.
+  # Mạng mặc định của project LingoBrain: thấy host `db` (Postgres của LingoBrain).
   lingobrain_default:
     external: true
-  # Mạng của reverse proxy: proxy gọi tới `herox:3180`.
+  # Mạng của Caddy dùng chung: Caddy gọi tới `herox:3180` và `herox-web:80`.
   web:
     external: true
