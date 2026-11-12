@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import {
   apiPath,
   BASE_SKILL_TIERS,
+  CHAPTER_1_BEATS,
   CITADEL_REJECTION_MESSAGES,
   FIELD_ENCOUNTER_ID,
   FORGE_LEVELS,
@@ -20,6 +21,7 @@ import { loadConfig } from '../config.js';
 import { loadMigrations, runMigrations } from '../db/migrate.js';
 import { PgHeroRepository } from '../hero/hero-repository.js';
 import { PgLearningRepository } from '../learning/learning-repository.js';
+import { PgStoryRepository } from '../story/story-repository.js';
 import type { DeckWord } from '../learning/learning-stats.js';
 import { EmbeddedPostgres } from '../../test/embedded-postgres.js';
 
@@ -74,6 +76,10 @@ describe('citadel routes on embedded Postgres', () => {
     return app.inject({ method: 'POST', url: citadelUrl(route), headers: bearer(token), payload });
   }
 
+  async function rescueSmith(userId: number): Promise<void> {
+    await db.query('INSERT INTO herox.story_progress (user_id, chapter, beat) VALUES ($1, 1, $2)', [userId, CHAPTER_1_BEATS.smithRescued]);
+  }
+
   async function setResources(userId: number, gold: number, crystals: number): Promise<void> {
     await db.query('UPDATE herox.heroes SET gold = $2, crystals = $3, row_version = row_version + 1 WHERE user_id = $1', [userId, gold, crystals]);
   }
@@ -91,6 +97,8 @@ describe('citadel routes on embedded Postgres', () => {
     for (const [userId, name] of [[knightId, 'Knight'], [noviceId, 'Novice']] as const) {
       await db.query("INSERT INTO herox.heroes (user_id, name, gender) VALUES ($1, $2, 'female')", [userId, name]);
     }
+    // Lò rèn khoá theo truyện; knight đã cứu thợ rèn để thử các luật nâng cấp khác.
+    await rescueSmith(knightId);
     app = buildApp(loadConfig({}), {
       logger: false,
       services: {
@@ -99,6 +107,7 @@ describe('citadel routes on embedded Postgres', () => {
         heroes: new PgHeroRepository(db),
         battles: new PgBattleRepository(db),
         citadel: new PgCitadelRepository(db),
+        story: new PgStoryRepository(db),
         isReady: () => true,
         now: () => clock,
       },
@@ -147,8 +156,16 @@ describe('citadel routes on embedded Postgres', () => {
       expect(response.json()).toEqual({ error: CITADEL_REJECTION_MESSAGES['not-enough-gold'] });
     });
 
-    it('refuses without enough learned words even with gold', async () => {
+    it('keeps the forge locked until the smith is rescued in the story', async () => {
       await setResources(noviceId, 10_000, 0);
+      const { state } = await readCitadel(NOVICE_TOKEN);
+      const response = await post(NOVICE_TOKEN, 'upgrade', { rowVersion: state.rowVersion, target: { kind: 'forge' } });
+      expect(response.statusCode).toBe(422);
+      expect(response.json()).toEqual({ error: CITADEL_REJECTION_MESSAGES['building-locked'] });
+    });
+
+    it('refuses without enough learned words even with gold', async () => {
+      await rescueSmith(noviceId);
       const { state } = await readCitadel(NOVICE_TOKEN);
       const response = await post(NOVICE_TOKEN, 'upgrade', { rowVersion: state.rowVersion, target: { kind: 'forge' } });
       expect(response.statusCode).toBe(422);

@@ -2,10 +2,12 @@
 node_modules
 **/node_modules
 **/dist
+**/dist-e2e
 coverage
 test-results
 playwright-report
 plans
+prototypes
 docs
 .env
 .env.*

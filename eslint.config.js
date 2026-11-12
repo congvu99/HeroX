@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/node_modules/**', 'coverage/**', 'test-results/**', 'playwright-report/**', 'plans/**'],
+    ignores: ['**/dist/**', '**/dist-e2e/**', '**/node_modules/**', 'coverage/**', 'test-results/**', 'playwright-report/**', 'plans/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -12,7 +12,7 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['eslint.config.js', 'vitest.config.ts', 'shared/vitest.config.ts', 'server/vitest.config.ts', 'server/scripts/*.mjs', 'client/scripts/*.mjs'],
+          allowDefaultProject: ['eslint.config.js', 'vitest.config.ts', 'playwright.config.ts', 'shared/vitest.config.ts', 'server/vitest.config.ts', 'server/scripts/*.mjs', 'client/scripts/*.mjs'],
         },
         tsconfigRootDir: import.meta.dirname,
       },

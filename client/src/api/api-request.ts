@@ -24,10 +24,10 @@ export async function readErrorMessage(response: Response): Promise<string> {
 }
 
 export interface JsonRequest<T> {
-  readonly method: 'GET' | 'POST';
+  readonly method: 'GET' | 'POST' | 'PUT';
   readonly url: string;
   readonly token: string;
-  /** Chỉ dùng với POST. */
+  /** Chỉ dùng với POST, PUT. */
   readonly body?: unknown;
   readonly isExpected: (value: unknown) => value is T;
 }
@@ -36,7 +36,7 @@ export interface JsonRequest<T> {
 export async function requestJson<T>(request: JsonRequest<T>, fetchImpl: typeof fetch): Promise<ApiResult<T>> {
   const headers: Record<string, string> = { Authorization: `Bearer ${request.token}`, Accept: 'application/json' };
   const init: RequestInit = { method: request.method, headers, cache: 'no-store', signal: AbortSignal.timeout(API_REQUEST_TIMEOUT_MS) };
-  if (request.method === 'POST') {
+  if (request.method !== 'GET') {
     headers['Content-Type'] = 'application/json';
     init.body = JSON.stringify(request.body);
   }

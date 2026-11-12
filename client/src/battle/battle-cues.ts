@@ -23,6 +23,7 @@ export type BattleCue =
   | { readonly type: 'shake'; readonly strong: boolean };
 
 const NORMAL_SCALE = 1;
+const SHIELD_FX_SCALE = 1.6;
 
 /** Né bằng thuấn bộ khi biến thể chiêu dùng hiệu ứng biến mất; còn lại là lướt. */
 function heroMoveFor(variant: SkillVariant): HeroMove {
@@ -67,6 +68,18 @@ export class BattleCueMapper {
         return [
           { type: 'fx', fx: SYSTEM_FX.enemyDeath, target: 'enemy', scale: NORMAL_SCALE },
           { type: 'floatText', target: 'enemy', text: `+${event.rewardGold} vàng`, tone: 'info' },
+        ];
+      case 'enemyShieldUp':
+        // Trùm dựng khiên lửa: đòn lẻ bị chặn, phải nối đủ combo đúng liên tiếp mới xuyên.
+        return [
+          { type: 'fx', fx: SYSTEM_FX.shieldBlock, target: 'enemy', scale: SHIELD_FX_SCALE },
+          { type: 'floatText', target: 'enemy', text: `Khiên lửa! Cần combo ×${event.minCombo}`, tone: 'bad' },
+          { type: 'shake', strong: true },
+        ];
+      case 'shieldBlocked':
+        return [
+          { type: 'fx', fx: SYSTEM_FX.shieldBlock, target: 'enemy', scale: NORMAL_SCALE },
+          { type: 'floatText', target: 'enemy', text: `Khiên chặn · còn ${event.comboNeeded}`, tone: 'info' },
         ];
       case 'victory':
         return [{ type: 'sound', sound: 'victory' }];

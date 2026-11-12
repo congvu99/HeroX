@@ -16,10 +16,12 @@
     "dev": "concurrently --kill-others-on-fail --names server,client \"npm run dev -w @herox/server\" \"npm run dev -w @herox/client\"",
     "build": "npm run build -w @herox/shared && npm run build -w @herox/server && npm run build -w @herox/client",
     "typecheck": "npm run typecheck --workspaces",
+    "typecheck:e2e": "tsc -p e2e/tsconfig.json --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

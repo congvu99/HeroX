@@ -17,6 +17,7 @@ export const API_ERROR_CODES = {
   battleSettled: 'HEROX_BATTLE_SETTLED',
   citadelConflict: 'HEROX_CITADEL_CONFLICT',
   citadelRejected: 'HEROX_CITADEL_REJECTED',
+  storyRejected: 'HEROX_STORY_REJECTED',
   internal: 'HEROX_INTERNAL',
 } as const;
 

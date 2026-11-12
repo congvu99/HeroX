@@ -62,6 +62,7 @@ export type {
   BattleSetup,
   BattleWord,
   EnemySpec,
+  FireShieldSpec,
   HeroCombatStats,
 } from './combat/battle-types.js';
 export {
@@ -90,10 +91,14 @@ export type { CastAccuracy, CastPower } from './combat/damage-formula.js';
 export {
   ENCOUNTERS,
   FIELD_ENCOUNTER_ID,
+  FIELD_ROAM_ENCOUNTER_ID,
   findEncounter,
   scaleEncounterEnemies,
+  SCARECROW_BOSS_ENCOUNTER_ID,
+  SMITHY_ENCOUNTER_ID,
   TUTORIAL_ENCOUNTER_ID,
 } from './combat/encounters.js';
+export { CHAPTER_1_ENEMIES, ENEMY_NAMES } from './data/enemies/chapter-1.js';
 export type { Encounter, EnemyTemplate } from './combat/encounters.js';
 export { buildRingOptions, RING_LOADOUT_SLOTS, RING_SIZE } from './combat/ring-options.js';
 export { SeededRandom } from './combat/seeded-random.js';
@@ -192,3 +197,38 @@ export type {
   UpgradeRequest,
   UpgradeTarget,
 } from './citadel-contract.js';
+export { CHAPTER_1_BEATS, CHAPTER_1_STORY } from './data/story/chapter-1.js';
+export {
+  activeQuests,
+  BEAT_REJECTION_MESSAGES,
+  beatForEncounter,
+  beatForItem,
+  beatKey,
+  checkBeatCompletion,
+  encounterGateState,
+  findBeat,
+  findChapter,
+  isBeatAvailable,
+  isChapterComplete,
+  levelGateState,
+  lockedBuildings,
+  pendingAutoDialog,
+  selectDialog,
+  STORY_CHAPTERS,
+  StoryProgress,
+} from './story/story-rules.js';
+export type { ActiveDialog, BeatCheck, BeatEvidence, BeatRejection, GateState, QuestView } from './story/story-rules.js';
+export type {
+  BeatCompletion,
+  DialogLine,
+  DialogScript,
+  DialogVariant,
+  EncounterGate,
+  LevelGate,
+  SpeakerId,
+  StoryBeat,
+  StoryChapter,
+  StoryQuest,
+  TaughtWord,
+} from './story/story-types.js';
+export type { CompleteBeatRequest, StoryResponse } from './story/story-contract.js';

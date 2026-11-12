@@ -34,3 +34,15 @@ const DOOR_REACH = 16;
 export function buildingDoorRect(building: Rect): Rect {
   return { x: building.x, y: building.y + building.height - DOOR_INSET, width: building.width, height: DOOR_INSET + DOOR_REACH };
 }
+
+/** NPC, rương chắn đường ở chân: vùng nói chuyện/nhặt nới ra quanh entity để hero đứng sát là kích hoạt. */
+const INTERACTION_REACH = 12;
+
+export function interactionRect(entity: Rect): Rect {
+  return {
+    x: entity.x - INTERACTION_REACH,
+    y: entity.y - INTERACTION_REACH,
+    width: entity.width + INTERACTION_REACH * 2,
+    height: entity.height + INTERACTION_REACH * 2,
+  };
+}

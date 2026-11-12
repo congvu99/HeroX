@@ -16,11 +16,17 @@ export const REGISTRY_KEYS = {
   devCitadel: 'dev-citadel',
   /** Giai đoạn thành trì mới nhất từ `/citadel`; mới hơn số liệu `me` lúc boot. */
   citadelStage: 'citadel-stage',
+  /** `StoryJournal`: tiến độ truyện dùng chung giữa bản đồ, trận và thành trì. */
+  story: 'story',
+  /** `QuestTracker`: bảng nhiệm vụ DOM sống suốt phiên. */
+  questTracker: 'quest-tracker',
+  /** `QualityController`: mức hiệu ứng theo fps và `prefers-reduced-motion`, tạo ở `main.ts`. */
+  quality: 'quality',
 } as const;
 
 /** Map khởi đầu và đường dẫn tính từ thư mục `assets/`. */
-export const START_MAP_PATH = 'maps/test-room.ldtk';
-export const START_MAP_CACHE_KEY = 'ldtk-project:test-room';
+export const START_MAP_PATH = 'maps/chapter-1-misty-village.ldtk';
+export const START_MAP_CACHE_KEY = 'ldtk-project:chapter-1-misty-village';
 
 /** Project LDtk đã parse kèm đường dẫn file gốc để giải đường dẫn tương đối và đặt namespace cho cache. */
 export interface LoadedMapProject {

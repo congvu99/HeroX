@@ -60,7 +60,26 @@ Hiệu ứng chiêu render sẵn từ [pixelfx](https://github.com/patch-gg/pixe
 
 Vite dev đang chạy mà vừa sinh lại map có level mới: chạm lại `client/src/maps/map-asset-urls.ts` (hoặc khởi động lại Vite) để bảng asset nhận file `.ldtkl` mới.
 
-Playwright (`@playwright/test`) đã cài, spec E2E viết ở phase 09. Cài trình duyệt khi cần: `npx playwright install chromium`.
+## E2E
+
+Playwright, 2 project: `desktop-chrome` và `iphone-12` (WebKit). Cài trình duyệt lần đầu: `npx playwright install chromium webkit`.
+
+```bash
+npm run test:e2e        # = npx playwright test; tự dựng môi trường riêng rồi tắt khi xong
+npm run typecheck:e2e   # tsc cho e2e/ và playwright.config.ts
+```
+
+Môi trường tự dựng (cổng cố định, cổng bận thì dừng process cũ chứ không đổi cổng; không bao giờ dùng lại server đang chạy):
+
+| Thành phần | Cổng | Ghi chú |
+|---|---|---|
+| Postgres nhúng (PGlite) | 55432 | Seed fixture `e2e/fixtures/e2e-fixture.ts`: 60 từ, mỗi project 5 người dùng riêng (55 từ đã học, 12 thuộc lòng), nhân vật, mốc truyện đủ mở trận `ch1-field` và lò rèn |
+| Server | 3180 | Chạy mã nguồn, không đọc `.env` (tránh trỏ vào DB thật). Trùng cổng dev: tắt `npm run dev` trước khi chạy E2E |
+| Client | 5181 | Build chế độ dev (giữ hook `window.__HEROX_GAME__`) ra `client/dist-e2e`, phục vụ bằng `vite preview` |
+
+Chạy vào stack có sẵn (ví dụ `compose.dev.yml`): `E2E_BASE_URL=http://localhost:8080/herox/ npx playwright test`, xem [`docs/deployment-guide.md`](docs/deployment-guide.md#môi-trường-thử-e2e).
+
+Kết quả (trace, ảnh, báo cáo HTML) ở `plans/reports/e2e-playwright/`; xem trace: `npx playwright show-trace <đường dẫn trace.zip>`. Mọi spec kiểm không có request ghi (POST/PUT/PATCH/DELETE) nào ra ngoài `/herox/api/`.
 
 ## Chạy bản build
 

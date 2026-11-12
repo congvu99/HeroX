@@ -1,0 +1,5 @@
+{
+  "$comment": "Công thức tạo lại asset PixelLab. Mỗi phần tử của assets: id (khoá duy nhất), path (file ảnh tính từ assets/, vd sprites/hero/hero_walk.png), prompt (mô tả gửi PixelLab), seed (số nguyên), size ({ width, height } pixel mỗi khung), directions (số hướng: 4 hoặc 8), animations (mảng tên hoạt ảnh, vd [\"idle\", \"walk\"]), reference (đường dẫn ảnh tham chiếu phong cách trong repo), createdAt (ngày tạo YYYY-MM-DD). Không ghi token hay khoá API vào file này.",
+  "version": 1,
+  "assets": []
+}

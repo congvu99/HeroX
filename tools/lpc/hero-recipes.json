@@ -1,0 +1,239 @@
+{
+  "$comment": "Công thức hero tạm (kiểu Crusader của Sorthen) port từ prototypes/style-preview/tools/build_style_assets.py. layers vẽ theo z tăng dần; sheet là đường dẫn trong spritesheets/ của LPC ({anim} thay bằng tên hoạt ảnh); credits là tên dòng trong CREDITS.csv của LPC cho từng hoạt ảnh layer có mặt. Layer chỉ dùng khi dòng credit có ít nhất một license không phải GPL. Áo choàng nhuộm theo độ sáng sang màu tint. Mỗi ô LPC 64px được đặt giữa ô heroCell vì vệt chém longsword vẽ trong ô 192. extraCredits: asset khác (không phải hero) ghép từ LPC, liệt kê sheet theo thứ tự vẽ; tên sheet trùng tên dòng CREDITS.csv.",
+  "source": {
+    "repo": "https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator",
+    "commit": "04140673ec02906f8233523639733c83690df750"
+  },
+  "style": {
+    "name": "Crusader",
+    "author": "Sorthen",
+    "url": "https://sorthen.itch.io/crusader-sprite"
+  },
+  "lpcCell": 64,
+  "heroCell": 192,
+  "animations": {
+    "walk": {
+      "cols": 9,
+      "rows": 4,
+      "file": "sprites/hero/hero_walk.png"
+    },
+    "slash": {
+      "cols": 6,
+      "rows": 4,
+      "file": "sprites/hero/hero_slash.png"
+    },
+    "spellcast": {
+      "cols": 7,
+      "rows": 4,
+      "file": "sprites/hero/hero_spellcast.png"
+    },
+    "hurt": {
+      "cols": 6,
+      "rows": 1,
+      "file": "sprites/hero/hero_hurt.png"
+    },
+    "idle": {
+      "cols": 2,
+      "rows": 4,
+      "file": "sprites/hero/hero_idle.png"
+    }
+  },
+  "rowDirections": [
+    "up",
+    "left",
+    "down",
+    "right"
+  ],
+  "layers": [
+    {
+      "id": "shield_bg",
+      "z": 2,
+      "sheet": "shield/crusader/bg/{anim}/crusader.png",
+      "credits": {
+        "walk": "shield/crusader/bg/walk.png",
+        "slash": "shield/crusader/bg/slash.png",
+        "spellcast": "shield/crusader/bg/spellcast.png",
+        "hurt": "shield/crusader/bg/hurt.png"
+      }
+    },
+    {
+      "id": "cape_bg",
+      "z": 5,
+      "sheet": "cape/solid/bg/{anim}.png",
+      "tint": "#7a141c",
+      "credits": {
+        "walk": "cape/solid/bg/walk.png",
+        "slash": "cape/solid/bg/slash.png",
+        "spellcast": "cape/solid/bg/spellcast.png",
+        "hurt": "cape/solid/bg/hurt.png",
+        "idle": "cape/solid/bg/idle.png"
+      }
+    },
+    {
+      "id": "sword_behind",
+      "z": 9,
+      "sheet": {
+        "walk": "weapon/sword/longsword/universal_behind/walk/longsword.png",
+        "slash": "weapon/sword/longsword/attack_slash/behind/longsword.png",
+        "hurt": "weapon/sword/longsword/universal_behind/hurt/longsword.png"
+      },
+      "credits": {
+        "walk": "weapon/sword/longsword/universal_behind/walk.png",
+        "slash": "weapon/sword/longsword/attack_slash/behind/slash_oversize.png",
+        "hurt": "weapon/sword/longsword/universal_behind/hurt.png"
+      }
+    },
+    {
+      "id": "body",
+      "z": 10,
+      "sheet": "body/bodies/male/{anim}.png",
+      "credits": {
+        "walk": "body/bodies/male/walk.png",
+        "slash": "body/bodies/male/slash.png",
+        "spellcast": "body/bodies/male/spellcast.png",
+        "hurt": "body/bodies/male/hurt.png",
+        "idle": "body/bodies/male/idle.png"
+      }
+    },
+    {
+      "id": "legs",
+      "z": 20,
+      "sheet": "legs/armour/plate/male/{anim}.png",
+      "credits": {
+        "walk": "legs/armour/plate/male/walk.png",
+        "slash": "legs/armour/plate/male/slash.png",
+        "spellcast": "legs/armour/plate/male/spellcast.png",
+        "hurt": "legs/armour/plate/male/hurt.png",
+        "idle": "legs/armour/plate/male/idle.png"
+      }
+    },
+    {
+      "id": "feet",
+      "z": 25,
+      "sheet": "feet/armour/plate/male/{anim}.png",
+      "credits": {
+        "walk": "feet/armour/plate/male/walk.png",
+        "slash": "feet/armour/plate/male/slash.png",
+        "spellcast": "feet/armour/plate/male/spellcast.png",
+        "hurt": "feet/armour/plate/male/hurt.png",
+        "idle": "feet/armour/plate/male/idle.png"
+      }
+    },
+    {
+      "id": "torso",
+      "z": 60,
+      "sheet": "torso/armour/plate/male/{anim}.png",
+      "credits": {
+        "walk": "torso/armour/plate/male/walk.png",
+        "slash": "torso/armour/plate/male/slash.png",
+        "spellcast": "torso/armour/plate/male/spellcast.png",
+        "hurt": "torso/armour/plate/male/hurt.png",
+        "idle": "torso/armour/plate/male/idle.png"
+      }
+    },
+    {
+      "id": "arms",
+      "z": 65,
+      "sheet": "arms/armour/plate/male/{anim}.png",
+      "credits": {
+        "walk": "arms/armour/plate/male/walk.png",
+        "slash": "arms/armour/plate/male/slash.png",
+        "spellcast": "arms/armour/plate/male/spellcast.png",
+        "hurt": "arms/armour/plate/male/hurt.png",
+        "idle": "arms/armour/plate/male/idle.png"
+      }
+    },
+    {
+      "id": "shoulders",
+      "z": 70,
+      "sheet": "shoulders/pauldrons/male/{anim}.png",
+      "credits": {
+        "walk": "shoulders/pauldrons/male/walk.png",
+        "slash": "shoulders/pauldrons/male/slash.png",
+        "spellcast": "shoulders/pauldrons/male/spellcast.png",
+        "hurt": "shoulders/pauldrons/male/hurt.png",
+        "idle": "shoulders/pauldrons/male/idle.png"
+      }
+    },
+    {
+      "id": "cape_fg",
+      "z": 85,
+      "sheet": "cape/solid/fg/{anim}.png",
+      "tint": "#7a141c",
+      "credits": {
+        "walk": "cape/solid/fg/walk.png",
+        "slash": "cape/solid/fg/slash.png",
+        "spellcast": "cape/solid/fg/spellcast.png",
+        "hurt": "cape/solid/fg/hurt.png",
+        "idle": "cape/solid/fg/idle.png"
+      }
+    },
+    {
+      "id": "head",
+      "z": 100,
+      "sheet": "head/heads/human/male/{anim}.png",
+      "credits": {
+        "walk": "head/heads/human/male/walk.png",
+        "slash": "head/heads/human/male/slash.png",
+        "spellcast": "head/heads/human/male/spellcast.png",
+        "hurt": "head/heads/human/male/hurt.png",
+        "idle": "head/heads/human/male/idle.png"
+      }
+    },
+    {
+      "id": "shield_fg",
+      "z": 110,
+      "sheet": "shield/crusader/fg/male/{anim}/crusader.png",
+      "credits": {
+        "walk": "shield/crusader/fg/male/walk.png",
+        "slash": "shield/crusader/fg/male/slash.png",
+        "spellcast": "shield/crusader/fg/male/spellcast.png",
+        "hurt": "shield/crusader/fg/male/hurt.png"
+      }
+    },
+    {
+      "id": "helmet",
+      "z": 130,
+      "sheet": "hat/helmet/bascinet/adult/{anim}.png",
+      "credits": {
+        "walk": "hat/helmet/bascinet/adult/walk.png",
+        "slash": "hat/helmet/bascinet/adult/slash.png",
+        "spellcast": "hat/helmet/bascinet/adult/spellcast.png",
+        "hurt": "hat/helmet/bascinet/adult/hurt.png",
+        "idle": "hat/helmet/bascinet/adult/idle.png"
+      }
+    },
+    {
+      "id": "visor",
+      "z": 132,
+      "sheet": "hat/visor/pigface/adult/{anim}.png",
+      "credits": {
+        "walk": "hat/visor/pigface/adult/walk.png",
+        "slash": "hat/visor/pigface/adult/slash.png",
+        "spellcast": "hat/visor/pigface/adult/spellcast.png",
+        "hurt": "hat/visor/pigface/adult/hurt.png",
+        "idle": "hat/visor/pigface/adult/idle.png"
+      }
+    },
+    {
+      "id": "sword",
+      "z": 140,
+      "sheet": {
+        "walk": "weapon/sword/longsword/walk/longsword.png",
+        "slash": "weapon/sword/longsword/attack_slash/longsword.png",
+        "hurt": "weapon/sword/longsword/hurt/longsword.png"
+      },
+      "credits": {
+        "walk": "weapon/sword/longsword/walk.png",
+        "slash": "weapon/sword/longsword/attack_slash/slash_oversize.png",
+        "hurt": "weapon/sword/longsword/hurt.png"
+      }
+    }
+  ],
+  "extraCredits": {
+    "sprites/monsters/skeleton.png": [
+      "body/bodies/skeleton/walk.png",
+      "head/heads/skeleton/adult/walk.png"
+    ]
+  }
+}

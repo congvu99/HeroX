@@ -44,10 +44,10 @@ export const DEV_BATTLE_WORDS: readonly BattleWord[] = [
   fixtureWord('slowly', 'adv', 'một cách chậm rãi', '🐢', { mastered: true }),
 ];
 
-/** Setup trận thử theo trận ngoài đồng của chương 1; dùng khi dev chạy không có phiên LingoBrain. */
-export function devBattleSetup(): BattleSetup {
-  const encounter = findEncounter(FIELD_ENCOUNTER_ID);
-  if (encounter === undefined) throw new Error(`Thiếu trận ${FIELD_ENCOUNTER_ID}`);
+/** Setup trận thử theo trận `encounterId` (mặc định trận ngoài đồng chương 1); dùng khi dev chạy không có phiên LingoBrain. */
+export function devBattleSetup(encounterId: string = FIELD_ENCOUNTER_ID): BattleSetup {
+  const encounter = findEncounter(encounterId);
+  if (encounter === undefined) throw new Error(`Thiếu trận ${encounterId}`);
   return {
     seed: DEV_SEED,
     encounterId: encounter.id,

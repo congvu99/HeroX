@@ -14,6 +14,14 @@ export interface BattleWord {
   readonly weak: boolean;
 }
 
+/** Khiên lửa pha 2 của trùm: dựng khi máu xuống tới ngưỡng, chỉ chiêu trong combo đủ dài mới xuyên qua. */
+export interface FireShieldSpec {
+  /** Máu còn ≤ tỉ lệ này của máu tối đa thì dựng khiên. */
+  readonly belowHpRatio: number;
+  /** Số chiêu đúng liên tiếp tối thiểu (tính cả chiêu đang tung) để xuyên khiên. */
+  readonly minCombo: number;
+}
+
 /** Quái trong một trận, chỉ số đã nhân theo cấp anh hùng. */
 export interface EnemySpec {
   readonly kind: string;
@@ -21,6 +29,8 @@ export interface EnemySpec {
   /** Sát thương mỗi đòn đánh trả. */
   readonly attack: number;
   readonly rewardGold: number;
+  /** Chỉ trùm có; setup lưu trước khi có trường này coi như không có khiên. */
+  readonly fireShield?: FireShieldSpec;
 }
 
 export interface HeroCombatStats {

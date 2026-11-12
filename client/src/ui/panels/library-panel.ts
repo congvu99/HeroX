@@ -1,12 +1,18 @@
-import type { CitadelResponse, CitadelWord } from '@herox/shared';
+import { findBeat, type CitadelResponse, type CitadelWord, type StoryBeatRecord } from '@herox/shared';
 import { fetchPronunciation, PronunciationPlayer, TTS_FAILED_MESSAGE } from '../../audio/word-pronunciation';
 import { filterWords } from '../../citadel/citadel-view';
+import { bundledCredits, groupCredits } from '../asset-credits';
 import { createButton, createElement, createSearchInput, type PanelBody, type PanelContext } from './panel-dom';
 
 /** Danh sách dài trên điện thoại vẽ chậm; quá ngưỡng thì nhắc người chơi tìm. */
 const MAX_VISIBLE_WORDS = 200;
 
-/** Thư viện: nhật ký truyện, danh sách từ đã thu (có ô tìm) và nghe phát âm qua LingoBrain. */
+/** Mốc truyện hiện theo mục tiêu đã làm; mốc không còn trong dữ liệu thì hiện id. */
+function beatLabel(record: StoryBeatRecord): string {
+  return `Chương ${record.chapter}: ${findBeat(record.chapter, record.beat)?.objective ?? record.beat}`;
+}
+
+/** Thư viện: nhật ký truyện, danh sách từ đã thu (có ô tìm), nghe phát âm qua LingoBrain và ghi công hình ảnh. */
 export class LibraryPanel implements PanelBody {
   readonly element = createElement('div', { className: 'citadel-body' });
   private readonly search = createSearchInput('Tìm từ hoặc nghĩa', 'Tìm từ đã thu', () => this.drawWords());
@@ -24,7 +30,23 @@ export class LibraryPanel implements PanelBody {
       createElement('h3', { className: 'citadel-heading', text: 'Từ đã thu' }),
       this.search,
       this.wordList,
+      createElement('h3', { className: 'citadel-heading', text: 'Ghi công hình ảnh' }),
+      LibraryPanel.renderCredits(),
     );
+  }
+
+  /** Tác giả và giấy phép của hình trong game (LPC, DCSS, pixelfx…), gộp theo nguồn. */
+  private static renderCredits(): HTMLElement {
+    const groups = groupCredits(bundledCredits());
+    if (groups.length === 0) return createElement('p', { className: 'citadel-muted', text: 'Chưa có dữ liệu ghi công.' });
+    return createElement('ul', { className: 'citadel-list' }, groups.map((group) =>
+      createElement('li', { className: 'citadel-row' }, [
+        createElement('div', { className: 'citadel-info' }, [
+          createElement('strong', { text: `${group.source} · ${group.license}` }),
+          createElement('span', { className: 'citadel-muted', text: group.authors.join(', ') }),
+          group.url === '' ? null : createElement('span', { className: 'citadel-description', text: group.url }),
+        ]),
+      ])));
   }
 
   render(view: CitadelResponse): void {
@@ -33,7 +55,7 @@ export class LibraryPanel implements PanelBody {
       view.story.length === 0
         ? createElement('p', { className: 'citadel-muted', text: 'Trang nhật ký còn trống. Hành trình sẽ được ghi lại khi qua từng chặng truyện.' })
         : createElement('ol', { className: 'citadel-list' }, view.story.map((beat) =>
-          createElement('li', { className: 'citadel-row', text: `Chương ${beat.chapter}: ${beat.beat}` }))),
+          createElement('li', { className: 'citadel-row', text: beatLabel(beat) }))),
     );
     this.drawWords();
   }

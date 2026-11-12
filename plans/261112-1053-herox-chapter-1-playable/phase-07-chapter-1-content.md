@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "Nội dung chương 1: truyện, asset, map, quái, trùm"
-status: pending
+status: in-progress
 priority: P1
 effort: "5d"
 dependencies: [5, 6]
@@ -70,3 +70,65 @@ Thế giới tồn tại nhờ **Thánh Ngôn**: chữ do thiên đàng ban xu�
 - Test: `story-routes` không cho nhảy beat khi chưa xong beat trước.
 - Test credits: mọi file trong `assets/sprites`, `assets/tiles` có dòng credit; không có layer LPC license chỉ GPL; mọi asset PixelLab có recipe trong `art-recipes.json`.
 - So hình với ảnh mẫu: chụp màn làng, nhà nguyện, trận thường, trận trùm, đặt cạnh ảnh mẫu, người dùng duyệt.
+
+## Tiến độ (2026-11-12 17:30, khoảng 80%)
+
+### Đã làm
+- Shared:
+  - Truyện chương 1 (`shared/src/data/story/chapter-1.ts`): 12 mốc, thoại, nhiệm vụ, khoá trận / cổng / công trình.
+  - Luật mốc ở `shared/src/story/`.
+  - 5 loại quỷ và trùm 2 pha có khiên lửa (chỉ combo ×3 xuyên được).
+- Server:
+  - `GET /herox/api/story` và `POST /herox/api/story/beat`, có kiểm thứ tự mốc và bằng chứng thắng trong `encounter_victories` (migration 004).
+  - Khoá lò rèn tới khi có mốc `smith-rescued`.
+- Client:
+  - Tạo nhân vật (tên, giới tính); tải tiến độ truyện lúc vào game.
+  - Hộp thoại DOM có chân dung, bỏ qua được, thử thách gõ hoặc chạm chữ.
+  - Bảng nhiệm vụ.
+  - NPC, rương, trận, cổng theo mốc; hiển thị khiên lửa trong trận.
+  - Hero LPC đi bộ 4 hướng; mục "Ghi công hình ảnh" trong Thư viện.
+- Asset và map:
+  - Map 5 level.
+  - Hình tạm DCSS/LPC đã chỉnh bảng màu.
+  - `tools/palette-harmonize.mjs`, `tools/build-credits.mjs`, `tools/lpc/hero-recipes.json`, `tools/pixellab/art-recipes.json` (rỗng).
+  - `assets/credits.json`, `assets/CREDITS.md` và test credits.
+- Chơi thử tự động (Playwright, chế độ dev, PC): đi hết 12/12 mốc tới kết chương. Sửa 3 lỗi phát hiện khi chơi:
+  - thân chắn NPC/rương lệch 32 px nên không nói chuyện được;
+  - bảng nhiệm vụ đè lên màn trận;
+  - thoại cửa nhà nguyện và thợ rèn mở trước khi đủ mốc (có test bất biến chặn lại).
+- Kiểm tra: typecheck và eslint sạch, 553/553 test, `npm run build` qua.
+
+### Lệch so với plan
+- Lexhold nằm chung `assets/maps/chapter-1-misty-village.ldtk`, không tách `lexhold.ldtk`, vì cổng nối giữa 2 file LDtk chưa được hỗ trợ.
+- Chưa có PixelLab: toàn bộ hình là hình tạm, chưa có `tools/pixellab/import-pixellab.mjs`.
+
+### Việc còn lại
+Lỗi từ code review high: chi tiết ở `plans/reports/code-reviewer-261112-1730-chapter-1-review.md`. Hẹn sửa sau.
+- [ ] Mốc trận bị mất khi gửi kết quả trận lỗi mạng nhưng server đã lưu thắng (`client/src/scenes/battle-scene.ts`).
+- [ ] Màn tạo nhân vật kẹt khi server đã tạo nhưng client hết giờ chờ: lỗi 409 phải tải lại `/me` (`client/src/scenes/boot-scene.ts`).
+- [ ] Người chơi cũ đã nâng lò rèn bị khoá lò rèn: cần chốt có ghi sẵn mốc `smith-rescued` cho họ không.
+- [ ] Server chặn bắt đầu trận truyện khi chưa đủ mốc (`server/src/routes/battle-routes.ts`).
+- [ ] Khoá lò rèn khoá cả thao tác trang bị; mã công trình dùng kiểu `BuildingId` thay vì chuỗi tự do.
+- [ ] `openChest` không hiện lại bảng nhiệm vụ khi hộp thoại đang mở.
+- [ ] Bỏ dữ liệu lặp:
+  - danh sách trùm ở màn trận suy ra từ dữ liệu quái;
+  - hình Quỷ Bù Nhìn đang tải thành 2 texture;
+  - gom cách đổi kết quả ghi mốc ra câu báo lỗi;
+  - gom câu "phiên đăng nhập hết".
+
+Chơi thử và cân bằng (cần người dùng):
+- [ ] Chạy với server thật và đăng nhập LingoBrain. Thoát giữa chương, vào lại đúng mốc.
+- [ ] Chơi trên iPhone, dùng vòng từ.
+- [ ] Cân bằng với 3 hồ sơ 8/50/150 từ, mục tiêu 25–40 phút.
+- [ ] So hình với ảnh mẫu, người dùng duyệt.
+
+Hình bản chính:
+- [ ] Làm hình bằng PixelLab khi đã có MCP.
+
+### Câu hỏi mở phase 07
+1. Người chơi dưới 8 từ đã học bị server ép vào trận hướng dẫn ở mọi trận nên kẹt sau cổng nam. Giữ (bắt học đủ 8 từ) hay sửa?
+2. Đánh xong trùm, hình Quỷ Bù Nhìn vẫn đứng trong hang và che hero. Ẩn đi hay thay bằng đống tro?
+3. Map khá tối, nhất là hang trùm. Tăng sáng không?
+4. Cánh cửa nhà nguyện (NPC) chiếm nửa lối vào nhà nguyện. Dời sang bên cạnh không?
+5. Trùm dùng hình balrug của DCSS. Giữ hay đổi sang fiend?
+6. Cỡ hình: quái 64, tinh anh 96, trùm 128, ô hero LPC 192. Màn trận co quái về 72 px, trùm 120 px. Giữ như vậy?

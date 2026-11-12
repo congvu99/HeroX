@@ -1,0 +1,58 @@
+# Môi trường thử E2E, không cần LingoBrain thật: Postgres tạm (dữ liệu trong RAM) + seed fixture
+# + HeroX (image production) + nginx đóng vai proxy /herox/ và phục vụ client bản dev.
+#   docker compose -f compose.dev.yml up --build -d --wait
+#   E2E_BASE_URL=http://localhost:8080/herox/ npx playwright test
+# Chạy lại seed (sau khi test đã ghi dữ liệu): docker compose -f compose.dev.yml run --rm seed
+name: herox-dev
+
+x-database-url: &database-url
+  # Mật khẩu chỉ dùng cho DB tạm này. Tên DB phải chứa "e2e" (seed từ chối DB khác).
+  DATABASE_URL: postgres://postgres:herox_dev_only@db:5432/lingobrain_e2e
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: herox_dev_only
+      POSTGRES_DB: lingobrain_e2e
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lingobrain_e2e"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  seed:
+    build:
+      context: .
+      target: e2e-seed
+    environment: *database-url
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  herox:
+    build:
+      context: .
+      target: runtime
+    environment:
+      <<: *database-url
+      PORT: "3180"
+      TRUST_PROXY_HOPS: "1"
+      PGSSL: "false"
+    mem_limit: 256m
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      target: web-e2e
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      herox:
+        condition: service_healthy

@@ -15,6 +15,8 @@ export interface BattleSettlement {
   readonly goldEarned: number;
   readonly misses: ReadonlyMap<string, number>;
   readonly settledAtMs: number;
+  /** Trận vừa thắng: ghi vào lịch sử thắng để mở mốc truyện; `null` khi thua hoặc rời trận. */
+  readonly wonEncounterId: string | null;
 }
 
 export interface BattleStore {
@@ -95,6 +97,13 @@ export class PgBattleRepository implements BattleStore {
            ON CONFLICT (user_id, word_id) DO UPDATE
            SET misses = herox.word_misses.misses + EXCLUDED.misses, last_miss_at = EXCLUDED.last_miss_at`,
           [settlement.userId, [...settlement.misses.keys()], [...settlement.misses.values()], new Date(settlement.settledAtMs)],
+        );
+      }
+      if (settlement.wonEncounterId !== null) {
+        await tx.query(
+          `INSERT INTO herox.encounter_victories (user_id, encounter_id, first_won_at) VALUES ($1, $2, $3)
+           ON CONFLICT (user_id, encounter_id) DO NOTHING`,
+          [settlement.userId, settlement.wonEncounterId, new Date(settlement.settledAtMs)],
         );
       }
       if (settlement.goldEarned > 0) {

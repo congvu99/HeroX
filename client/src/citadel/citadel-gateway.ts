@@ -3,11 +3,14 @@ import {
   buildCitadelResponse,
   CITADEL_REJECTION_MESSAGES,
   localDayKey,
+  lockedBuildings,
+  StoryProgress,
   type CitadelAction,
   type CitadelLearningStats,
   type CitadelResponse,
   type CitadelState,
   type CitadelWord,
+  type StoryBeatRecord,
 } from '@herox/shared';
 import type { ApiResult } from '../api/api-request';
 import { fetchCitadel, HTTP_CONFLICT, sendCitadelAction } from '../api/citadel-api';
@@ -77,9 +80,11 @@ export class DevCitadelGateway implements CitadelGateway {
   private state: CitadelState;
   private readonly learnedWordIds: ReadonlySet<string>;
 
+  /** `story`: tiến độ truyện cục bộ để khoá lò rèn như server; thiếu thì không khoá công trình nào. */
   constructor(
     private readonly seed: DevCitadelSeed,
     private readonly now: () => number = Date.now,
+    private readonly story?: () => readonly StoryBeatRecord[],
   ) {
     this.state = seed.state;
     this.learnedWordIds = new Set(seed.words.map((word) => word.id));
@@ -90,7 +95,13 @@ export class DevCitadelGateway implements CitadelGateway {
   }
 
   send(action: CitadelAction): Promise<CitadelGatewayResult> {
-    const result = applyCitadelAction(this.state, { stats: this.seed.stats, today: this.today(), learnedWordIds: this.learnedWordIds }, action);
+    const context = {
+      stats: this.seed.stats,
+      today: this.today(),
+      learnedWordIds: this.learnedWordIds,
+      ...(this.story === undefined ? {} : { lockedBuildings: lockedBuildings(new StoryProgress(this.story())) }),
+    };
+    const result = applyCitadelAction(this.state, context, action);
     if (!result.ok) return Promise.resolve({ kind: 'failed', message: CITADEL_REJECTION_MESSAGES[result.reason] });
     this.state = { ...result.state, rowVersion: result.state.rowVersion + 1 };
     return this.load();
@@ -102,6 +113,6 @@ export class DevCitadelGateway implements CitadelGateway {
   }
 
   private response(): CitadelResponse {
-    return buildCitadelResponse({ state: this.state, stats: this.seed.stats, words: this.seed.words, story: [], today: this.today() });
+    return buildCitadelResponse({ state: this.state, stats: this.seed.stats, words: this.seed.words, story: this.story?.() ?? [], today: this.today() });
   }
 }

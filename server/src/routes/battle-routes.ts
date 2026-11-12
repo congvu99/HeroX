@@ -164,6 +164,7 @@ export function registerBattleRoutes(scope: FastifyInstance, services: BattleRou
         goldEarned,
         misses: state.misses,
         settledAtMs: now(),
+        wonEncounterId: outcome === 'victory' ? battle.setup.encounterId : null,
       });
       if (!settled) throw battleAlreadySettled();
       return { outcome, goldEarned, missedWordIds: [...state.misses.keys()] };

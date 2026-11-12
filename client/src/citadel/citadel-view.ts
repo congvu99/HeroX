@@ -6,12 +6,15 @@ import {
   equipmentBonusAt,
   isMovementSkillUnlocked,
   isOutfitUnlocked,
+  lockedBuildings,
   MOVEMENT_SKILL_IDS,
   MOVEMENT_SKILLS,
   OUTFIT_CATALOG,
   RING_LOADOUT_SLOTS,
   SKILL_KINDS,
   skillVariantFor,
+  StoryProgress,
+  type BuildingId,
   type CitadelResponse,
   type CitadelWord,
   type EquipmentItem,
@@ -68,6 +71,11 @@ function toOption(label: string, check: UpgradeCheck): UpgradeOption | null {
   // Đã tối đa thì không còn nút nâng.
   if (check.reason === 'max-level') return null;
   return { label, cost: '', blockedReason: CITADEL_REJECTION_MESSAGES[check.reason] };
+}
+
+/** Công trình còn khoá theo truyện (vd lò rèn tới khi cứu thợ rèn); server cũng chặn thao tác. */
+export function isBuildingLocked(view: CitadelResponse, building: BuildingId): boolean {
+  return lockedBuildings(new StoryProgress(view.story)).has(building);
 }
 
 export function forgeUpgradeOption(view: CitadelResponse): UpgradeOption | null {

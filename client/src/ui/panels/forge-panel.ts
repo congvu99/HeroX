@@ -1,8 +1,9 @@
 import type { CitadelResponse } from '@herox/shared';
-import { forgeItemRows, forgeUpgradeOption, type ForgeItemRow } from '../../citadel/citadel-view';
+import { forgeItemRows, forgeUpgradeOption, isBuildingLocked, type ForgeItemRow } from '../../citadel/citadel-view';
 import { createButton, createElement, createUpgradeControl, type PanelBody, type PanelContext } from './panel-dom';
 
 const SLOT_BONUS_LABEL = { weapon: 'sức chiêu', armor: 'máu' } as const;
+const FORGE_LOCKED_TEXT = 'Lò rèn nguội lạnh, đe sắt phủ tro. Cứu thợ rèn ở Làng Sương Sớm để nhóm lửa lại.';
 
 /** Lò rèn: nâng cấp lò, rèn, nâng và mặc vũ khí, giáp; hiện chỉ số hiệp sĩ đã cộng trang bị. */
 export class ForgePanel implements PanelBody {
@@ -11,6 +12,10 @@ export class ForgePanel implements PanelBody {
   constructor(private readonly context: PanelContext) {}
 
   render(view: CitadelResponse): void {
+    if (isBuildingLocked(view, 'forge')) {
+      this.element.replaceChildren(createElement('p', { className: 'citadel-muted', text: FORGE_LOCKED_TEXT }));
+      return;
+    }
     const { heroStats, state } = view;
     const summary = createElement('div', { className: 'citadel-row citadel-summary' }, [
       createElement('span', { text: `Lò rèn cấp ${state.forgeLevel}` }),

@@ -5,7 +5,9 @@ import {
   buildCitadelResponse,
   CITADEL_REJECTION_MESSAGES,
   localDayKey,
+  lockedBuildings,
   SKILL_KINDS,
+  StoryProgress,
   type CitadelAction,
   type CitadelLearningStats,
   type CitadelResponse,
@@ -153,7 +155,8 @@ export function registerCitadelRoutes(scope: FastifyInstance, services: CitadelR
     const parsed: ParsedMutation = { rowVersion: readRowVersion(fields), action: parse(fields) };
     const today = localDayKey(now(), utcOffsetMinutes);
     const [learning, story] = await Promise.all([readLearning(user.userId, utcOffsetMinutes), services.citadel.readStory(user.userId)]);
-    const context = { stats: learning.stats, today, learnedWordIds: learning.learnedWordIds };
+    // Lò rèn khoá tới khi cứu thợ rèn trong truyện chương 1.
+    const context = { stats: learning.stats, today, learnedWordIds: learning.learnedWordIds, lockedBuildings: lockedBuildings(new StoryProgress(story)) };
     const update = await services.citadel.updateCitadel(user.userId, parsed.rowVersion, (state) => {
       const result = applyCitadelAction(state, context, parsed.action);
       if (result.ok) return result.state;

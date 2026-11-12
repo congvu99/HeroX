@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
+import type { CreateHeroRequest, MeResponse } from '@herox/shared';
 import { currentUtcOffsetMinutes, fetchMe, readEngSessionToken, type MeResult } from '../api/me-api';
+import { createHero } from '../api/story-api';
 import { LdtkFormatError, parseLdtkProject } from '../maps/ldtk-loader';
 import { mapAssetUrl } from '../maps/map-asset-urls';
 import { createPlaceholderTextures } from '../render/placeholder-textures';
+import { ApiStoryBackend, DevStoryBackend, StoryJournal } from '../story/story-journal';
+import { HeroCreationForm } from '../ui/hero-creation-form';
 import { REGISTRY_KEYS, SCENE_KEYS, START_MAP_CACHE_KEY, START_MAP_PATH, type LoadedMapProject } from './scene-keys';
 
 /** Trang chủ LingoBrain cùng origin, nơi người chơi đăng nhập. */
@@ -57,13 +61,14 @@ export class BootScene extends Phaser.Scene {
 
   private async authenticate(): Promise<void> {
     this.showStatus('Đang vào HeroX…');
+    const token = readEngSessionToken(() => window.localStorage);
+    if (token === null) {
+      this.showLoginRequired();
+      return;
+    }
     let result: MeResult;
     try {
-      result = await fetchMe(
-        readEngSessionToken(() => window.localStorage),
-        window.fetch.bind(window),
-        currentUtcOffsetMinutes(),
-      );
+      result = await fetchMe(token, window.fetch.bind(window), currentUtcOffsetMinutes());
     } catch {
       // Lưới an toàn: mọi lỗi bất ngờ đều có nút Thử lại, không kẹt ở màn chờ.
       result = { kind: 'unavailable', message: 'Không vào được HeroX, thử lại' };
@@ -72,12 +77,55 @@ export class BootScene extends Phaser.Scene {
     if (!this.scene.isActive()) return;
     if (result.kind === 'ok') {
       this.registry.set(REGISTRY_KEYS.me, result.me);
-      this.enterWorld();
+      if (result.me.hero === null) this.showHeroCreation(token, result.me);
+      else void this.loadStory(token);
     } else if (result.kind === 'unauthenticated') {
       this.showLoginRequired();
     } else {
       this.showUnavailable(result.message, () => void this.authenticate());
     }
+  }
+
+  /** Lần đầu vào game: tạo nhân vật rồi mới vào truyện. */
+  private showHeroCreation(token: string, me: MeResponse): void {
+    this.resetScreen();
+    const form = new HeroCreationForm(document.body, async (request: CreateHeroRequest) => {
+      const created = await createHero(token, request, window.fetch.bind(window));
+      if (created.kind === 'unauthenticated') return 'Phiên đăng nhập đã hết, hãy đăng nhập lại LingoBrain';
+      if (created.kind === 'failed') return created.message;
+      form.close();
+      this.registry.set(REGISTRY_KEYS.me, { ...me, hero: created.value });
+      void this.loadStory(token);
+      return null;
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => form.close());
+  }
+
+  /** Tải tiến độ truyện trước khi vào map để cổng, trận, hội thoại mở đúng mốc đang dở. */
+  private async loadStory(token: string): Promise<void> {
+    this.showStatus('Đang mở lại câu chuyện…');
+    const journal = new StoryJournal(new ApiStoryBackend(token, window.fetch.bind(window)));
+    const loaded = await journal.load();
+    if (!this.scene.isActive()) return;
+    if (loaded.kind === 'unauthenticated') {
+      this.showLoginRequired();
+      return;
+    }
+    if (loaded.kind === 'failed') {
+      this.showUnavailable(loaded.message, () => void this.loadStory(token));
+      return;
+    }
+    this.registry.set(REGISTRY_KEYS.story, journal);
+    this.enterWorld();
+  }
+
+  /** Dev vào map không có phiên LingoBrain: truyện chạy cục bộ theo đúng luật server. */
+  private enterDevWorld(): void {
+    const journal = new StoryJournal(new DevStoryBackend());
+    void journal.load().then(() => {
+      this.registry.set(REGISTRY_KEYS.story, journal);
+      this.enterWorld();
+    });
   }
 
   /** UI chạy song song, không restart khi đổi level, nên joystick giữ được ngón tay đang kéo. */
@@ -115,7 +163,7 @@ export class BootScene extends Phaser.Scene {
     this.addButton(centerX, centerY + 35, 'Đăng nhập LingoBrain', () => window.location.assign(ENG_HOME_PATH));
     // Dev chạy Vite riêng cổng nên không có phiên LingoBrain; nút này bị loại khỏi bản build.
     if (import.meta.env.DEV) {
-      this.addButton(centerX, centerY + 85, 'Vào map thử (dev)', () => this.enterWorld());
+      this.addButton(centerX, centerY + 85, 'Vào map thử (dev)', () => this.enterDevWorld());
     }
   }
 

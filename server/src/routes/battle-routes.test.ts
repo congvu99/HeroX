@@ -24,6 +24,7 @@ import { loadConfig } from '../config.js';
 import { loadMigrations, runMigrations } from '../db/migrate.js';
 import { PgHeroRepository } from '../hero/hero-repository.js';
 import { PgLearningRepository } from '../learning/learning-repository.js';
+import { PgStoryRepository } from '../story/story-repository.js';
 import type { DeckWord } from '../learning/learning-stats.js';
 import { EmbeddedPostgres } from '../../test/embedded-postgres.js';
 
@@ -145,6 +146,7 @@ describe('battle routes on embedded Postgres', () => {
         heroes: new PgHeroRepository(db),
         battles: new PgBattleRepository(db),
         citadel: new PgCitadelRepository(db),
+        story: new PgStoryRepository(db),
         isReady: () => true,
         now: () => clock,
         newBattleSeed: () => nextSeed,

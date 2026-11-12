@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { citadelStageFor, MOVEMENT_SKILL_IDS, SYSTEM_FX, type BuildingId, type CitadelStage, type MeResponse, type MovementSkillId } from '@herox/shared';
-import { HERO_FRAME_SIZE } from '../config/display';
 import { FxPlayer, isFxAssetKey, queueFxAssets } from '../fx/fx-player';
 import { InputController } from '../input/input-controller';
 import { facingFromVector, type Facing, type MovementVector } from '../input/movement-vector';
@@ -16,7 +15,10 @@ import {
 } from '../maps/ldtk-loader';
 import { buildLevelTilemap } from '../maps/ldtk-tilemap-builder';
 import { mapAssetUrl } from '../maps/map-asset-urls';
+import type { QualityController } from '../platform/quality-settings';
 import { DarkAtmosphere } from '../render/dark-atmosphere';
+import { prepareHeroLook, queueHeroSheet, walkAnimationKey, type HeroLook } from '../render/hero-sprite';
+import { chestTextureKey, npcTextureKey, queuePropSprites } from '../render/prop-sprites';
 import { BUILDING_TEXTURE_KEYS, TEXTURE_KEYS } from '../render/placeholder-textures';
 import {
   DASH_SPEED,
@@ -28,7 +30,10 @@ import {
   type Point,
   type Rect,
 } from '../world/movement-skills';
-import { buildingDoorRect, TriggerZones } from '../world/trigger-zones';
+import { QuestTracker } from '../story/quest-tracker';
+import { DevStoryBackend, StoryJournal } from '../story/story-journal';
+import { WorldStory, type StoryHost } from '../story/world-story';
+import { buildingDoorRect, interactionRect, TriggerZones } from '../world/trigger-zones';
 import type { BattleSceneData } from './battle-scene';
 import type { CitadelSceneData } from './citadel-scene';
 import { REGISTRY_KEYS, SCENE_KEYS, type LoadedMapProject } from './scene-keys';
@@ -40,6 +45,10 @@ export interface WorldSceneData {
 }
 
 type PortalEntity = Extract<MapEntity, { kind: 'Portal' }>;
+/** Tên hiển thị khi dev vào map thử chưa có nhân vật. */
+const DEV_HERO_NAME = 'Hiệp sĩ';
+/** Rương đã mở tối đi để người chơi biết không cần ghé lại. */
+const OPENED_CHEST_TINT = 0x6a6470;
 
 /** Hiệu ứng bản đồ cần; phần còn lại của bộ hiệu ứng chỉ nạp khi vào trận. */
 const WORLD_FX = [SYSTEM_FX.dashDust, SYSTEM_FX.blinkOut, SYSTEM_FX.blinkIn] as const;
@@ -56,11 +65,9 @@ const SKILL_KEY_CODES: Readonly<Record<MovementSkillId, number>> = {
 
 /** Tốc độ đi bộ, pixel/giây (khoảng 3,4 ô mỗi giây). */
 const HERO_SPEED = 110;
-/** Hitbox ở chân trong khung LPC 64×64: hẹp và thấp để đi sát tường, đi sau cột tự nhiên. */
+/** Hitbox ở chân nhân vật LPC: hẹp và thấp để đi sát tường, đi sau cột tự nhiên. */
 const HERO_BODY_WIDTH = 20;
 const HERO_BODY_HEIGHT = 12;
-/** Khoảng trống dưới chân trong khung LPC. */
-const HERO_FEET_PADDING = 2;
 /** NPC, rương chỉ chắn ở phần chân, hẹp hơn ô một chút mỗi bên để hero lách qua khe một ô. */
 const PROP_BODY_HEIGHT = 12;
 const PROP_BODY_SIDE_INSET = 2;
@@ -106,6 +113,7 @@ export class WorldScene extends Phaser.Scene {
   private level: MapLevel | null = null;
   private loadError: string | null = null;
   private hero: Phaser.Physics.Arcade.Sprite | null = null;
+  private heroLook!: HeroLook;
   private movementInput!: InputController;
   private atmosphere: DarkAtmosphere | null = null;
   private facing: Facing = 'down';
@@ -116,6 +124,10 @@ export class WorldScene extends Phaser.Scene {
   private battleTriggers = new TriggerZones<string>([]);
   private buildingDoors = new TriggerZones<BuildingId>([]);
   private buildingImages: Phaser.GameObjects.Image[] = [];
+  private npcZones = new TriggerZones<string>([]);
+  private chestZones = new TriggerZones<string>([]);
+  private chestSprites = new Map<string, Phaser.GameObjects.Sprite>();
+  private story: WorldStory | null = null;
   /** Đã mở màn trận hoặc panel trong khung này: các vùng khác không mở thêm lớp phủ nữa. */
   private overlayOpen = false;
   /** Giữ qua các lần đổi level để hồi chiêu không reset khi qua cổng. */
@@ -150,6 +162,10 @@ export class WorldScene extends Phaser.Scene {
     this.battleTriggers = new TriggerZones<string>([]);
     this.buildingDoors = new TriggerZones<BuildingId>([]);
     this.buildingImages = [];
+    this.npcZones = new TriggerZones<string>([]);
+    this.chestZones = new TriggerZones<string>([]);
+    this.chestSprites = new Map();
+    this.story = null;
     this.overlayOpen = false;
     this.fx = null;
     this.blockers = [];
@@ -158,6 +174,8 @@ export class WorldScene extends Phaser.Scene {
 
   preload(): void {
     queueFxAssets(this, WORLD_FX);
+    queueHeroSheet(this);
+    queuePropSprites(this);
     // Loader thuộc scene và sống qua các lần restart: gỡ listener cũ trước khi gắn lại.
     this.load.off(Phaser.Loader.Events.FILE_LOAD_ERROR);
     this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
@@ -201,12 +219,20 @@ export class WorldScene extends Phaser.Scene {
     this.portals = findEntities(level, 'Portal');
     this.battleTriggers = new TriggerZones(findEntities(level, 'BattleTrigger').map((trigger) => ({ rect: trigger, value: trigger.encounterId })));
     this.buildingDoors = new TriggerZones(this.createBuildings(level));
+    this.npcZones = new TriggerZones(findEntities(level, 'Npc').map((npc) => ({ rect: interactionRect(npc), value: npc.dialogId })));
+    this.chestZones = new TriggerZones(findEntities(level, 'Chest').map((chest) => ({ rect: interactionRect(chest), value: chest.itemId })));
 
     const camera = this.cameras.main;
     camera.setBounds(...cameraBoundsFor(level, this.scale.gameSize)).startFollow(hero, true);
     camera.fadeIn(FADE_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);
 
-    this.atmosphere = new DarkAtmosphere(this, { enabled: true });
+    const quality = this.registry.get(REGISTRY_KEYS.quality) as QualityController | undefined;
+    const atmosphere = new DarkAtmosphere(this, { enabled: quality?.profile.dynamicLightingEnabled ?? true });
+    this.atmosphere = atmosphere;
+    const unsubscribeQuality = quality?.subscribe((profile) => {
+      if (!profile.dynamicLightingEnabled) atmosphere.disable();
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => unsubscribeQuality?.());
     // Nguồn sáng đọc vị trí hero mỗi frame nên dùng getter thay vì chép toạ độ.
     this.atmosphere.addLight(
       {
@@ -227,7 +253,66 @@ export class WorldScene extends Phaser.Scene {
     this.movementInput = new InputController(this, () => ui.movement);
     this.setUpMovementSkills(ui);
     this.events.on(Phaser.Scenes.Events.RESUME, this.handleResume);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(Phaser.Scenes.Events.RESUME, this.handleResume));
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.events.off(Phaser.Scenes.Events.RESUME, this.handleResume);
+      this.story?.dispose();
+    });
+    this.story = new WorldStory(this.storyJournal(), this.questTracker(), this.storyHost());
+    for (const [itemId, sprite] of this.chestSprites) {
+      if (this.story.isChestOpened(itemId)) this.showChestOpened(sprite);
+    }
+    // Chờ màn mờ dần xong rồi mới mở hội thoại tự động (mở đầu, kết chương).
+    this.time.delayedCall(FADE_MS, () => this.story?.refresh());
+  }
+
+  private storyJournal(): StoryJournal {
+    const existing = this.registry.get(REGISTRY_KEYS.story) as StoryJournal | undefined;
+    if (existing !== undefined) return existing;
+    // Chỉ xảy ra khi dev mở thẳng scene bản đồ: truyện chạy cục bộ.
+    const journal = new StoryJournal(new DevStoryBackend());
+    this.registry.set(REGISTRY_KEYS.story, journal);
+    return journal;
+  }
+
+  private questTracker(): QuestTracker {
+    const existing = this.registry.get(REGISTRY_KEYS.questTracker) as QuestTracker | undefined;
+    if (existing !== undefined) return existing;
+    const tracker = new QuestTracker(document.body);
+    this.registry.set(REGISTRY_KEYS.questTracker, tracker);
+    return tracker;
+  }
+
+  private storyHost(): StoryHost {
+    const me = this.registry.get(REGISTRY_KEYS.me) as MeResponse | undefined;
+    return {
+      heroName: me?.hero?.name ?? DEV_HERO_NAME,
+      wordCounts: () => ({ learned: me?.learning.learned ?? 0, mastered: me?.learning.mastered ?? 0 }),
+      pauseWorld: () => {
+        if (this.hero !== null) (this.hero.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+        this.overlayOpen = true;
+        this.scene.pause();
+        this.scene.sleep(SCENE_KEYS.ui);
+      },
+      resumeWorld: () => {
+        this.scene.resume();
+        this.scene.wake(SCENE_KEYS.ui);
+      },
+      startBattle: (encounterId) => {
+        const data: BattleSceneData = { encounterId };
+        this.scene.launch(SCENE_KEYS.battle, data);
+      },
+      markChestOpened: (itemId) => {
+        const sprite = this.chestSprites.get(itemId);
+        if (sprite !== undefined) this.showChestOpened(sprite);
+      },
+    };
+  }
+
+  /** Rương đã nhặt: hình rương mở, hoặc tối đi khi chưa có hình. */
+  private showChestOpened(sprite: Phaser.GameObjects.Sprite): void {
+    const opened = chestTextureKey(this, true);
+    if (opened === TEXTURE_KEYS.chest) sprite.setTint(OPENED_CHEST_TINT);
+    else sprite.setTexture(opened);
   }
 
   /** Về từ màn trận: phím nhả trong lúc bản đồ dừng không được ghi nhận, phải xoá để hero không tự chạy. */
@@ -237,6 +322,8 @@ export class WorldScene extends Phaser.Scene {
     // Panel thành trì có thể vừa tải số từ đã học mới hơn lúc boot.
     const textureKey = BUILDING_TEXTURE_KEYS[this.citadelStage()];
     for (const image of this.buildingImages) image.setTexture(textureKey);
+    // Về từ trận truyện hay hội thoại: cập nhật nhiệm vụ, có thể mở đoạn kết chương.
+    if (this.story?.isDialogOpen !== true) this.story?.refresh();
   };
 
   private citadelStage(): CitadelStage {
@@ -253,6 +340,8 @@ export class WorldScene extends Phaser.Scene {
     this.checkPortals(this.hero);
     this.checkBattleTriggers(this.hero);
     this.checkBuildingDoors(this.hero);
+    this.checkNpcs(this.hero);
+    this.checkChests(this.hero);
   }
 
   /** Đọc level (đã nạp hoặc nhúng trong project) rồi xếp hàng chỉ những tileset level dùng. */
@@ -296,11 +385,13 @@ export class WorldScene extends Phaser.Scene {
     // Toạ độ hero là điểm chân (giữa đáy ô spawn) để sắp lớp theo y và đặt hitbox đúng chỗ.
     const feetX = spawn.x + spawn.width / 2;
     const feetY = spawn.y + spawn.height;
-    const hero = this.physics.add.sprite(feetX, feetY, TEXTURE_KEYS.hero, this.facing);
-    hero.setOrigin(0.5, (HERO_FRAME_SIZE - HERO_FEET_PADDING) / HERO_FRAME_SIZE);
+    const look = prepareHeroLook(this);
+    this.heroLook = look;
+    const hero = this.physics.add.sprite(feetX, feetY, look.textureKey, this.facing);
+    hero.setOrigin(0.5, look.feetY / look.frameSize);
     const body = hero.body as Phaser.Physics.Arcade.Body;
     body.setSize(HERO_BODY_WIDTH, HERO_BODY_HEIGHT);
-    body.setOffset((HERO_FRAME_SIZE - HERO_BODY_WIDTH) / 2, HERO_FRAME_SIZE - HERO_FEET_PADDING - HERO_BODY_HEIGHT);
+    body.setOffset((look.frameSize - HERO_BODY_WIDTH) / 2, look.feetY - HERO_BODY_HEIGHT);
     body.setCollideWorldBounds(true);
     return hero;
   }
@@ -310,10 +401,12 @@ export class WorldScene extends Phaser.Scene {
     const group = this.physics.add.staticGroup();
     const propEntities = [...findEntities(level, 'Npc'), ...findEntities(level, 'Chest')];
     for (const entity of propEntities) {
-      const textureKey = entity.kind === 'Npc' ? TEXTURE_KEYS.npc : TEXTURE_KEYS.chest;
+      const textureKey = entity.kind === 'Npc' ? npcTextureKey(this, entity.dialogId) : chestTextureKey(this, false);
       const feetY = entity.y + entity.height;
       const sprite = group.create(entity.x + entity.width / 2, feetY, textureKey) as Phaser.Physics.Arcade.Sprite;
-      sprite.setOrigin(0.5, 1).setDepth(feetY);
+      // Thân tĩnh tạo lúc `create` theo origin giữa; đổi origin xong phải tính lại, không thì thân lệch xuống nửa sprite.
+      sprite.setOrigin(0.5, 1).setDepth(feetY).refreshBody();
+      if (entity.kind === 'Chest') this.chestSprites.set(entity.itemId, sprite);
       // Thân chắn theo kích thước entity trong LDtk, canh giữa đáy sprite (sprite có thể rộng/cao hơn ô).
       const body = sprite.body as Phaser.Physics.Arcade.StaticBody;
       const bodyWidth = entity.width - PROP_BODY_SIDE_INSET * 2;
@@ -352,10 +445,14 @@ export class WorldScene extends Phaser.Scene {
     const movement = this.movementInput.readMovement();
     body.setVelocity(movement.x * HERO_SPEED, movement.y * HERO_SPEED);
     const facing = facingFromVector(movement, this.facing);
-    if (facing !== this.facing) {
-      this.facing = facing;
+    const moving = movement.x !== 0 || movement.y !== 0;
+    if (this.heroLook.animated && moving) {
+      hero.anims.play(walkAnimationKey(facing), true);
+    } else if (facing !== this.facing || hero.anims.isPlaying) {
+      hero.anims.stop();
       hero.setFrame(facing);
     }
+    this.facing = facing;
     hero.setDepth(body.bottom);
   }
 
@@ -430,7 +527,7 @@ export class WorldScene extends Phaser.Scene {
     if (nowMs < this.nextGhostAtMs) return;
     this.nextGhostAtMs = nowMs + DASH_GHOST_INTERVAL_MS;
     if (this.dashGhosts.length < DASH_GHOST_COUNT) {
-      this.dashGhosts.push(this.add.image(0, 0, TEXTURE_KEYS.hero, this.facing).setOrigin(hero.originX, hero.originY));
+      this.dashGhosts.push(this.add.image(0, 0, this.heroLook.textureKey, this.facing).setOrigin(hero.originX, hero.originY));
     }
     const ghost = this.dashGhosts[this.ghostIndex % this.dashGhosts.length];
     this.ghostIndex += 1;
@@ -449,7 +546,7 @@ export class WorldScene extends Phaser.Scene {
   private checkBattleTriggers(hero: Phaser.Physics.Arcade.Sprite): void {
     if (this.transitioning || this.overlayOpen) return;
     const encounterId = this.battleTriggers.enter(this.bodyRect(hero));
-    if (encounterId === null) return;
+    if (encounterId === null || this.story?.canStartBattle(encounterId) === false) return;
     const data: BattleSceneData = { encounterId };
     this.openOverlay(hero, SCENE_KEYS.battle, data);
   }
@@ -467,9 +564,24 @@ export class WorldScene extends Phaser.Scene {
   private openOverlay(hero: Phaser.Physics.Arcade.Sprite, sceneKey: string, data: object): void {
     (hero.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
     this.overlayOpen = true;
+    this.questTracker().setVisible(false);
     this.scene.pause();
     this.scene.sleep(SCENE_KEYS.ui);
     this.scene.launch(sceneKey, data);
+  }
+
+  /** Lại gần NPC: mở hội thoại hợp với mốc truyện hiện tại. */
+  private checkNpcs(hero: Phaser.Physics.Arcade.Sprite): void {
+    if (this.transitioning || this.overlayOpen) return;
+    const dialogId = this.npcZones.enter(this.bodyRect(hero));
+    if (dialogId !== null) this.story?.talkTo(dialogId);
+  }
+
+  /** Lại gần rương: nhặt thánh tích (ghi mốc truyện). */
+  private checkChests(hero: Phaser.Physics.Arcade.Sprite): void {
+    if (this.transitioning || this.overlayOpen) return;
+    const itemId = this.chestZones.enter(this.bodyRect(hero));
+    if (itemId !== null) void this.story?.openChest(itemId);
   }
 
   private checkPortals(hero: Phaser.Physics.Arcade.Sprite): void {
@@ -481,6 +593,11 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     if (!this.portalsArmed) return;
+    // Cổng khoá theo truyện: báo một lần, chỉ báo lại sau khi hero bước ra rồi vào lại.
+    if (this.story?.canUsePortal(portal.targetLevel) === false) {
+      this.portalsArmed = false;
+      return;
+    }
     if (!this.map.project.levels.some((level) => level.identifier === portal.targetLevel)) return;
     this.transitioning = true;
     this.cameras.main.fadeOut(FADE_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);

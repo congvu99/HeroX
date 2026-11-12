@@ -17,6 +17,7 @@ import {
   forgeLevelInfo,
   MAX_FORGE_LEVEL,
   SKILL_TIER_UPGRADES,
+  type BuildingId,
 } from '../data/citadel-catalog.js';
 import { equipmentBonusAt, findEquipmentItem, MAX_ITEM_LEVEL, type EquipmentSlot } from '../data/equipment-catalog.js';
 import { findOutfit } from '../data/outfit-catalog.js';
@@ -38,6 +39,7 @@ export const CITADEL_REJECTION_MESSAGES = {
   'invalid-loadout': `Vòng từ chỉ gắn tối đa ${RING_LOADOUT_SLOTS} từ khác nhau, đã học`,
   'already-claimed': 'Hôm nay đã nhận pha lê',
   'nothing-to-claim': 'Học ở LingoBrain để nhận pha lê hôm nay',
+  'building-locked': 'Công trình chưa mở: tiếp tục cốt truyện để mở',
 } as const;
 export type CitadelRejection = keyof typeof CITADEL_REJECTION_MESSAGES;
 
@@ -54,6 +56,15 @@ export interface CitadelActionContext {
   /** Hôm nay theo giờ người chơi, `YYYY-MM-DD` (xem `localDayKey`). */
   readonly today: string;
   readonly learnedWordIds: ReadonlySet<string>;
+  /** Công trình còn khoá theo cốt truyện (vd lò rèn trước khi cứu thợ rèn); thiếu nghĩa là không khoá. */
+  readonly lockedBuildings?: ReadonlySet<string>;
+}
+
+const FORGE_BUILDING_ID: BuildingId = 'forge';
+
+/** Nâng lò rèn và rèn trang bị đều làm ở lò rèn. */
+function isForgeWork(target: UpgradeTarget): boolean {
+  return target.kind === 'forge' || target.kind === 'item';
 }
 
 const MINUTE_MS = 60_000;
@@ -207,6 +218,7 @@ export function applyCitadelAction(
 ): CitadelActionResult {
   switch (action.type) {
     case 'upgrade':
+      if (isForgeWork(action.target) && context.lockedBuildings?.has(FORGE_BUILDING_ID) === true) return reject('building-locked');
       return applyUpgrade(state, context.stats, action.target);
     case 'equip':
       return applyEquip(state, action.itemId);

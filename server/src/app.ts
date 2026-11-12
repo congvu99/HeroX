@@ -8,8 +8,9 @@ import { UnsupportedProgressVersionError } from './learning/learning-stats.js';
 import { registerBattleRoutes, type BattleRouteServices } from './routes/battle-routes.js';
 import { registerCitadelRoutes, type CitadelRouteServices } from './routes/citadel-routes.js';
 import { registerMeRoutes, type MeRouteServices } from './routes/me-routes.js';
+import { registerStoryRoutes, type StoryRouteServices } from './routes/story-routes.js';
 
-export type AppServices = ApiGuardServices & MeRouteServices & BattleRouteServices & CitadelRouteServices;
+export type AppServices = ApiGuardServices & MeRouteServices & BattleRouteServices & CitadelRouteServices & StoryRouteServices;
 
 export interface BuildAppOptions {
   readonly logger?: boolean;
@@ -121,6 +122,7 @@ export function buildApp(config: ServerConfig, options: BuildAppOptions = {}): F
       registerMeRoutes(scope, services, authorize);
       registerBattleRoutes(scope, services, authorize);
       registerCitadelRoutes(scope, services, authorize);
+      registerStoryRoutes(scope, services, authorize);
     });
   }
 

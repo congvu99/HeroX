@@ -3,6 +3,7 @@ import type { BuildingId } from '@herox/shared';
 import { currentUtcOffsetMinutes, readEngSessionToken } from '../api/me-api';
 import { ApiCitadelGateway, DevCitadelGateway, type CitadelGateway } from '../citadel/citadel-gateway';
 import { devCitadelSeed } from '../citadel/dev-citadel-fixture';
+import type { StoryJournal } from '../story/story-journal';
 import { CitadelPanel } from '../ui/panels/citadel-panel';
 import { REGISTRY_KEYS, SCENE_KEYS } from './scene-keys';
 
@@ -41,7 +42,8 @@ export class CitadelScene extends Phaser.Scene {
     if (import.meta.env.DEV && this.registry.get(REGISTRY_KEYS.me) === undefined) {
       const existing = this.registry.get(REGISTRY_KEYS.devCitadel) as DevCitadelGateway | undefined;
       if (existing !== undefined) return existing;
-      const gateway = new DevCitadelGateway(devCitadelSeed());
+      const journal = this.registry.get(REGISTRY_KEYS.story) as StoryJournal | undefined;
+      const gateway = new DevCitadelGateway(devCitadelSeed(), Date.now, journal === undefined ? undefined : () => journal.beats);
       this.registry.set(REGISTRY_KEYS.devCitadel, gateway);
       return gateway;
     }

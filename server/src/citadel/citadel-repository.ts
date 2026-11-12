@@ -11,6 +11,7 @@ import {
   type StoryBeatRecord,
 } from '@herox/shared';
 import type { Database, Queryable } from '../db/pool.js';
+import { readStoryBeats } from '../story/story-repository.js';
 
 export type CitadelUpdate =
   | { readonly kind: 'updated'; readonly state: CitadelState }
@@ -161,12 +162,8 @@ export class PgCitadelRepository implements CitadelStore {
     });
   }
 
-  async readStory(userId: number): Promise<StoryBeatRecord[]> {
-    const result = await this.db.query<{ chapter: number; beat: string; completed_at: Date }>(
-      'SELECT chapter, beat, completed_at FROM herox.story_progress WHERE user_id = $1 ORDER BY completed_at, chapter, beat',
-      [userId],
-    );
-    return result.rows.map((row) => ({ chapter: row.chapter, beat: row.beat, completedAt: new Date(row.completed_at).toISOString() }));
+  readStory(userId: number): Promise<StoryBeatRecord[]> {
+    return readStoryBeats(this.db, userId);
   }
 
   updateCitadel(

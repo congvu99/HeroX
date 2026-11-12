@@ -1,0 +1,29 @@
+# HeroX chạy cạnh LingoBrain (project compose `lingobrain`), dùng chung Postgres `db` của LingoBrain.
+# Người vận hành chạy theo docs/deployment-guide.md; agent không deploy.
+name: herox
+
+services:
+  herox:
+    build:
+      context: .
+      target: runtime
+    image: herox:latest
+    restart: unless-stopped
+    # .env: DATABASE_URL (role herox_app, host db), PGSSL..., không commit file này.
+    env_file: .env
+    environment:
+      PORT: "3180"
+      # Một proxy (reverse proxy của LingoBrain) đứng trước HeroX.
+      TRUST_PROXY_HOPS: "1"
+    mem_limit: 256m
+    networks:
+      - lingobrain_default
+      - web
+
+networks:
+  # Mạng mặc định của project LingoBrain: thấy host `db`.
+  lingobrain_default:
+    external: true
+  # Mạng của reverse proxy: proxy gọi tới `herox:3180`.
+  web:
+    external: true

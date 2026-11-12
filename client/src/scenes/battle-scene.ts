@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import {
   comboExpiresAtMs,
   COMBO_WINDOW_MS,
+  beatForEncounter,
   InvalidBattleSetupError,
   SYSTEM_FX,
   type BattleEvent,
@@ -25,7 +26,11 @@ import {
 } from '../config/game-settings';
 import { FxPlayer, queueFxAssets } from '../fx/fx-player';
 import { isTouchPrimaryDevice } from '../input/input-controller';
+import type { QualityController } from '../platform/quality-settings';
+import { prepareHeroLook, queueHeroSheet } from '../render/hero-sprite';
 import { TEXTURE_KEYS } from '../render/placeholder-textures';
+import { spriteAssetUrl } from '../render/sprite-asset-urls';
+import type { StoryJournal } from '../story/story-journal';
 import { BattleHud } from '../ui/battle-hud';
 import { TypingInput } from '../ui/typing-input';
 import { WordRing } from '../ui/word-ring';
@@ -50,6 +55,24 @@ const SPRITE_DEPTH = 10;
 const FX_DEPTH = 20;
 const HUD_DEPTH = 100;
 const ELITE_TINT = 0xffa060;
+/** Khiên lửa của trùm: quái ánh cam đỏ tới khi bị xuyên. */
+const FIRE_SHIELD_TINT = 0xff5a1f;
+/** Sprite quái DCSS 32 px phóng lên cho cân với hero LPC 64 px; trùm to hơn hẳn. */
+const ENEMY_DISPLAY_HEIGHT = 72;
+const BOSS_DISPLAY_HEIGHT = 120;
+/** Loại quái → file sprite trong `assets/sprites/monsters`; quái trinh sát dùng chung hình tiểu quỷ. */
+const MONSTER_SPRITES: Readonly<Record<string, string>> = {
+  'imp-scout': 'imp',
+  imp: 'imp',
+  skeleton: 'skeleton',
+  ghoul: 'ghoul',
+  'scarecrow-demon': 'scarecrow-demon',
+};
+const BOSS_KINDS: ReadonlySet<string> = new Set(['scarecrow-demon']);
+
+function monsterTextureKey(file: string): string {
+  return `monster:${file}`;
+}
 const DASH_OFFSET_PX = -34;
 const DASH_DURATION_MS = 110;
 const BLINK_HIDDEN_MS = 260;
@@ -108,6 +131,12 @@ export class BattleScene extends Phaser.Scene {
 
   preload(): void {
     queueFxAssets(this);
+    queueHeroSheet(this);
+    // Thiếu sprite quái thì dùng hình tạm vẽ bằng canvas, trận vẫn chơi được.
+    for (const file of new Set(Object.values(MONSTER_SPRITES))) {
+      const url = spriteAssetUrl(`sprites/monsters/${file}.png`);
+      if (url !== undefined && !this.textures.exists(monsterTextureKey(file))) this.load.image(monsterTextureKey(file), url);
+    }
   }
 
   create(): void {
@@ -141,7 +170,8 @@ export class BattleScene extends Phaser.Scene {
   private createArena(): void {
     this.cameras.main.setBackgroundColor(ARENA_COLOR);
     this.add.ellipse(LOGICAL_WIDTH / 2, HERO_POSITION.y, 520, 70, FLOOR_COLOR);
-    this.hero = this.add.sprite(HERO_POSITION.x, HERO_POSITION.y, TEXTURE_KEYS.hero, 'right').setOrigin(0.5, 1).setDepth(SPRITE_DEPTH);
+    const look = prepareHeroLook(this);
+    this.hero = this.add.sprite(HERO_POSITION.x, HERO_POSITION.y, look.textureKey, 'right').setOrigin(0.5, look.feetY / look.frameSize).setDepth(SPRITE_DEPTH);
     this.enemy = this.add.sprite(ENEMY_POSITION.x, ENEMY_POSITION.y, TEXTURE_KEYS.enemy).setOrigin(0.5, 1).setDepth(SPRITE_DEPTH).setAlpha(0);
   }
 
@@ -228,7 +258,7 @@ export class BattleScene extends Phaser.Scene {
     this.hud.showCenter('Đang vào trận…');
     // Dev vào map bằng nút thử (không có phiên LingoBrain): chơi bộ từ thử, không gửi kết quả.
     if (import.meta.env.DEV && this.registry.get(REGISTRY_KEYS.me) === undefined) {
-      this.startSession(devBattleSetup(), null);
+      this.startSession(devBattleSetup(this.encounterId), null);
       return;
     }
     const token = readEngSessionToken(() => window.localStorage);
@@ -273,7 +303,7 @@ export class BattleScene extends Phaser.Scene {
 
   private handleEvent(event: BattleEvent): void {
     if (event.type === 'prompt') this.showPrompt(event.wordId, event.options);
-    else if (event.type === 'enemySpawn') this.showEnemy(event.elite);
+    else if (event.type === 'enemySpawn') this.showEnemy(event.kind, event.elite);
     else if (event.type === 'enemyDefeated') this.tweens.add({ targets: this.enemy, alpha: 0, duration: ENEMY_FADE_MS / 2 });
     for (const cue of this.cueMapper.cuesFor(event)) this.playCue(cue);
   }
@@ -288,8 +318,17 @@ export class BattleScene extends Phaser.Scene {
     this.typing.clear();
   }
 
-  private showEnemy(elite: boolean): void {
+  private showEnemy(kind: string, elite: boolean): void {
     this.tweens.killTweensOf(this.enemy);
+    const file = MONSTER_SPRITES[kind];
+    const textureKey = file === undefined ? undefined : monsterTextureKey(file);
+    if (textureKey !== undefined && this.textures.exists(textureKey)) {
+      this.enemy.setTexture(textureKey);
+      const height = BOSS_KINDS.has(kind) ? BOSS_DISPLAY_HEIGHT : ENEMY_DISPLAY_HEIGHT;
+      this.enemy.setScale(height / this.enemy.height);
+    } else {
+      this.enemy.setTexture(TEXTURE_KEYS.enemy).setScale(1);
+    }
     this.enemy.setAlpha(0).setX(ENEMY_POSITION.x);
     if (elite) this.enemy.setTint(ELITE_TINT);
     else this.enemy.clearTint();
@@ -299,7 +338,12 @@ export class BattleScene extends Phaser.Scene {
   private refreshHud(session: BattleSession): void {
     const { hero, enemy, combo } = session.current;
     this.hud.setHero(hero.hp, hero.maxHp, hero.shield);
-    if (enemy !== null) this.hud.setEnemy(enemy.kind, enemy.hp, enemy.maxHp, enemy.elite);
+    if (enemy !== null) {
+      this.hud.setEnemy(enemy.kind, enemy.hp, enemy.maxHp, enemy.elite);
+      if (enemy.shielded) this.enemy.setTint(FIRE_SHIELD_TINT);
+      else if (enemy.elite) this.enemy.setTint(ELITE_TINT);
+      else this.enemy.clearTint();
+    }
     this.hud.setComboCount(combo.count);
   }
 
@@ -335,6 +379,8 @@ export class BattleScene extends Phaser.Scene {
         this.moveHero(cue.move);
         break;
       case 'shake': {
+        const quality = this.registry.get(REGISTRY_KEYS.quality) as QualityController | undefined;
+        if (quality?.profile.screenShakeEnabled === false) break;
         const shake = cue.strong ? SHAKE.strong : SHAKE.light;
         this.cameras.main.shake(shake.durationMs, shake.intensity);
         break;
@@ -366,7 +412,13 @@ export class BattleScene extends Phaser.Scene {
     const title = victory ? 'Chiến thắng!' : 'Hiệp sĩ gục ngã…';
     const online = this.online;
     if (online === null) {
-      this.showEnd(`${title}\n(Trận thử, không ghi kết quả)`);
+      const lines = [title, '(Trận thử, không ghi kết quả)'];
+      if (victory) {
+        this.storyJournal()?.recordVictory(this.encounterId);
+        const storyLine = await this.completeStoryBattle();
+        if (storyLine !== null) lines.push(storyLine);
+      }
+      this.showEnd(lines.join('\n'));
       return;
     }
     await this.submitResult(session, online, title);
@@ -387,11 +439,33 @@ export class BattleScene extends Phaser.Scene {
       this.showEnd(`${title}\nChưa ghi được kết quả: ${result.message}`, () => void this.submitResult(session, online, title));
       return;
     }
-    const { goldEarned, missedWordIds } = result.value;
+    const { goldEarned, missedWordIds, outcome } = result.value;
     const lines = [title];
+    if (outcome === 'victory') {
+      const storyLine = await this.completeStoryBattle();
+      if (this.isStale(run)) return;
+      if (storyLine !== null) lines.push(storyLine);
+    }
     if (goldEarned > 0) lines.push(`+${goldEarned} vàng`);
     if (missedWordIds.length > 0) lines.push(`${missedWordIds.length} từ cần ôn lại`);
     this.showEnd(lines.join('\n'));
+  }
+
+  private storyJournal(): StoryJournal | undefined {
+    return this.registry.get(REGISTRY_KEYS.story) as StoryJournal | undefined;
+  }
+
+  /**
+   * Trận truyện vừa thắng: báo server ghi mốc (server tự kiểm bằng chứng thắng đã ghi lúc chốt trận).
+   * Trả dòng báo cho màn kết thúc, `null` khi trận không gắn mốc nào.
+   */
+  private async completeStoryBattle(): Promise<string | null> {
+    const journal = this.storyJournal();
+    const found = journal === undefined ? null : beatForEncounter(this.encounterId, journal.progress);
+    if (journal === undefined || found === null) return null;
+    const result = await journal.complete(found.chapter, found.beat.id);
+    if (result.kind === 'ok') return `Xong: ${found.beat.objective}`;
+    return result.kind === 'failed' ? `Chưa ghi được mốc truyện: ${result.message}` : 'Chưa ghi được mốc truyện: phiên đăng nhập đã hết';
   }
 
   private showEnd(message: string, retry?: () => void): void {

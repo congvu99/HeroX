@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MIN_VISIBLE_COMBO } from '@herox/shared';
+import { ENEMY_NAMES, MIN_VISIBLE_COMBO } from '@herox/shared';
 import type { FloatTone } from '../battle/battle-cues';
 import { LOGICAL_WIDTH } from '../config/display';
 
@@ -58,13 +58,6 @@ const CENTER_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   backgroundColor: '#0b0b12dd',
   padding: { x: 18, y: 12 },
   wordWrap: { width: 460 },
-};
-
-/** Tên quái hiển thị; thêm quái mới thì bổ sung tên ở đây. */
-const ENEMY_NAMES: Readonly<Record<string, string>> = {
-  'imp-scout': 'Quỷ con trinh sát',
-  imp: 'Quỷ con',
-  'scarecrow-thrall': 'Bù nhìn bị nhập',
 };
 
 export function enemyDisplayName(kind: string): string {

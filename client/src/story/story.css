@@ -1,0 +1,239 @@
+/* Bảng màu theo docs/art-direction.md: mực đêm, tro, xương, máu thánh, vàng nến. */
+.story-overlay,
+.quest-tracker,
+.hero-creation {
+  --ink: #0b0a10;
+  --ash: #1b1720;
+  --bone: #d9d2c0;
+  --bone-dim: #a39c8c;
+  --blood: #7a141c;
+  --ember: #e0602a;
+  --gold: #e8c66a;
+  --border: #4a3236;
+  color: var(--bone);
+  font-family: system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.story-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+  background: linear-gradient(transparent 40%, #0b0a10cc);
+}
+
+.story-overlay.is-busy button,
+.hero-creation.is-busy button {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.story-box {
+  display: flex;
+  gap: 12px;
+  width: min(720px, 100%);
+  padding: 12px 14px;
+  background: var(--ash);
+  border: 1px solid var(--gold);
+  box-shadow: 0 0 0 1px #000, inset 0 0 24px #e8c66a22;
+}
+
+.story-portrait {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.story-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.story-speaker {
+  font-family: Cambria, Georgia, serif;
+  color: var(--gold);
+}
+
+.story-text {
+  margin: 0;
+}
+
+.story-text.is-narration {
+  font-style: italic;
+  color: var(--bone-dim);
+}
+
+.story-teach {
+  align-self: flex-start;
+  padding: 2px 8px;
+  color: var(--ink);
+  background: var(--gold);
+}
+
+.story-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.story-choices,
+.story-answer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.story-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px;
+  /* 16px để Safari iOS không tự phóng to trang khi focus. */
+  font-size: 16px;
+  color: var(--bone);
+  background: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.story-status {
+  width: 100%;
+  min-height: 1.2em;
+  color: var(--ember);
+}
+
+.story-button {
+  min-height: 40px;
+  padding: 6px 14px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--gold);
+  border: 0;
+  cursor: pointer;
+}
+
+.story-button.is-quiet {
+  color: var(--bone-dim);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.story-button.is-choice {
+  flex: 1;
+  color: var(--bone);
+  background: var(--blood);
+}
+
+/* `display: flex` bên dưới ghi đè thuộc tính `hidden` mặc định của trình duyệt. */
+.quest-tracker[hidden] {
+  display: none;
+}
+
+.quest-tracker {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  left: max(8px, env(safe-area-inset-left));
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: min(280px, 45vw);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.quest-panel {
+  padding: 6px 8px;
+  background: #0b0a10b3;
+  border-left: 2px solid var(--gold);
+}
+
+.quest-title {
+  font-family: Cambria, Georgia, serif;
+  color: var(--gold);
+}
+
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quest-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.quest-objective {
+  color: var(--bone-dim);
+}
+
+.quest-toast {
+  padding: 6px 8px;
+  background: #1b1720e6;
+  border: 1px solid var(--border);
+}
+
+.hero-creation {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: #0b0a10e6;
+}
+
+.hero-creation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(420px, 100%);
+  padding: 16px;
+  background: var(--ash);
+  border: 1px solid var(--gold);
+}
+
+.hero-creation-title {
+  margin: 0;
+  font-family: Cambria, Georgia, serif;
+  color: var(--gold);
+}
+
+.hero-creation-genders {
+  display: flex;
+  gap: 8px;
+}
+
+.hero-creation-genders label {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.hero-creation-note {
+  color: var(--bone-dim);
+  font-size: 13px;
+}

@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0b0b12" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HeroX" />
     <title>HeroX</title>
     <style>
       html,
@@ -18,17 +23,39 @@
         position: fixed;
         top: env(safe-area-inset-top, 0px);
         right: env(safe-area-inset-right, 0px);
-        bottom: env(safe-area-inset-bottom, 0px);
+        /* --keyboard-inset do ios-viewport.ts ghi: khung game co lên trên bàn phím ảo để đề không bị che. */
+        bottom: calc(env(safe-area-inset-bottom, 0px) + var(--keyboard-inset, 0px));
         left: env(safe-area-inset-left, 0px);
         display: flex;
         align-items: center;
         justify-content: center;
         touch-action: none;
       }
+      /* Game thiết kế cho màn ngang; iOS bỏ qua orientation trong manifest nên nhắc bằng chữ, không chặn thao tác. */
+      #rotate-hint {
+        display: none;
+        position: fixed;
+        top: calc(env(safe-area-inset-top, 0px) + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 6px 12px;
+        border-radius: 6px;
+        background: rgb(11 11 18 / 85%);
+        color: #e8d9a8;
+        font: 14px sans-serif;
+        pointer-events: none;
+        z-index: 10;
+      }
+      @media (orientation: portrait) and (pointer: coarse) {
+        #rotate-hint {
+          display: block;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="game-root"></div>
+    <div id="rotate-hint" role="status">Xoay ngang màn hình để chơi rõ hơn</div>
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

@@ -8,6 +8,7 @@ import { startDatabase } from './db/migrate.js';
 import { createPgDatabase, type DatabaseLogger } from './db/pool.js';
 import { PgHeroRepository } from './hero/hero-repository.js';
 import { PgLearningRepository } from './learning/learning-repository.js';
+import { PgStoryRepository } from './story/story-repository.js';
 
 const DELETED_USER_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -39,6 +40,7 @@ const app = buildApp(config, {
     heroes: new PgHeroRepository(database),
     battles: new PgBattleRepository(database),
     citadel: new PgCitadelRepository(database),
+    story: new PgStoryRepository(database),
     isReady: () => databaseReady,
   },
 });

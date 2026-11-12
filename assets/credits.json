@@ -1,0 +1,425 @@
+[
+  {
+    "path": "sprites/hero/hero_hurt.png",
+    "title": "Hero Hiệp sĩ Thánh Ngôn tạm: hurt (6x1 ô 192)",
+    "source": "Universal LPC Spritesheet Character Generator",
+    "url": "https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/tree/04140673ec02906f8233523639733c83690df750",
+    "authors": "bluecarrot16, Sander Frenken (castelonia), Nila122, JaidynReiman, Johannes Sjölund (wulax), Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Stephen Challener (Redshrike), Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Napsio (Vitruvian Studio), ElizaWy",
+    "license": "OGA-BY 3.0 / CC-BY-SA 3.0 / CC-BY-SA 4.0",
+    "modified": "ghép layer theo tools/lpc/hero-recipes.json, nhuộm áo choàng; giữ nguyên sheet ghép từ prototype (ô 192); không chỉnh tông bảng màu vì làm bệt chi tiết giáp bạc và lệch màu áo choàng Máu thánh đã nhuộm sẵn"
+  },
+  {
+    "path": "sprites/hero/hero_idle.png",
+    "title": "Hero Hiệp sĩ Thánh Ngôn tạm: idle (2x4 ô 192)",
+    "source": "Universal LPC Spritesheet Character Generator",
+    "url": "https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/tree/04140673ec02906f8233523639733c83690df750",
+    "authors": "Nila122, JaidynReiman, bluecarrot16, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike), Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Napsio (Vitruvian Studio), ElizaWy, Sander Frenken (castelonia)",
+    "license": "OGA-BY 3.0 / CC-BY-SA 3.0 / CC-BY-SA 4.0",
+    "modified": "ghép layer theo tools/lpc/hero-recipes.json, nhuộm áo choàng; giữ nguyên sheet ghép từ prototype (ô 192); không chỉnh tông bảng màu vì làm bệt chi tiết giáp bạc và lệch màu áo choàng Máu thánh đã nhuộm sẵn"
+  },
+  {
+    "path": "sprites/hero/hero_slash.png",
+    "title": "Hero Hiệp sĩ Thánh Ngôn tạm: slash (6x4 ô 192)",
+    "source": "Universal LPC Spritesheet Character Generator",
+    "url": "https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/tree/04140673ec02906f8233523639733c83690df750",
+    "authors": "bluecarrot16, Sander Frenken (castelonia), Nila122, JaidynReiman, Johannes Sjölund (wulax), Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Stephen Challener (Redshrike), Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Napsio (Vitruvian Studio), ElizaWy",
+    "license": "OGA-BY 3.0 / CC-BY-SA 3.0 / CC-BY-SA 4.0",
+    "modified": "ghép layer theo tools/lpc/hero-recipes.json, nhuộm áo choàng; giữ nguyên sheet ghép từ prototype (ô 192); không chỉnh tông bảng màu vì làm bệt chi tiết giáp bạc và lệch màu áo choàng Máu thánh đã nhuộm sẵn"
+  },
+  {
+    "path": "sprites/hero/hero_spellcast.png",
+    "title": "Hero Hiệp sĩ Thánh Ngôn tạm: spellcast (7x4 ô 192)",
+    "source": "Universal LPC Spritesheet Character Generator",
+    "url": "https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/tree/04140673ec02906f8233523639733c83690df750",
+    "authors": "bluecarrot16, Sander Frenken (castelonia), Nila122, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike), Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Napsio (Vitruvian Studio), ElizaWy",
+    "license": "OGA-BY 3.0 / CC-BY-SA 3.0 / CC-BY-SA 4.0",
+    "modified": "ghép layer theo tools/lpc/hero-recipes.json, nhuộm áo choàng; giữ nguyên sheet ghép từ prototype (ô 192); không chỉnh tông bảng màu vì làm bệt chi tiết giáp bạc và lệch màu áo choàng Máu thánh đã nhuộm sẵn"
+  },
+  {
+    "path": "sprites/hero/hero_walk.png",
+    "title": "Hero Hiệp sĩ Thánh Ngôn tạm: walk (9x4 ô 192)",
+    "source": "Universal LPC Spritesheet Character Generator",
+    "url": "https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/tree/04140673ec02906f8233523639733c83690df750",
+    "authors": "bluecarrot16, Sander Frenken (castelonia), Nila122, JaidynReiman, Johannes Sjölund (wulax), Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Stephen Challener (Redshrike), Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Napsio (Vitruvian Studio), ElizaWy",
+    "license": "OGA-BY 3.0 / CC-BY-SA 3.0 / CC-BY-SA 4.0",
+    "modified": "ghép layer theo tools/lpc/hero-recipes.json, nhuộm áo choàng; giữ nguyên sheet ghép từ prototype (ô 192); không chỉnh tông bảng màu vì làm bệt chi tiết giáp bạc và lệch màu áo choàng Máu thánh đã nhuộm sẵn"
+  },
+  {
+    "path": "sprites/monsters/elite-demon.png",
+    "title": "Quỷ tinh anh (red devil) (dc-mon/demons/red_devil.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "cắt sát, phóng x3, đặt khung 96 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/monsters/ghoul.png",
+    "title": "Ghoul (dc-mon/undead/ghoul.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/monsters/imp.png",
+    "title": "Tiểu quỷ (imp) (dc-mon/demons/imp.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/monsters/scarecrow-demon.png",
+    "title": "Trùm Quỷ Bù Nhìn (balrug) (dc-mon/demons/balrug.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "cắt sát, phóng x4, đặt khung 128 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/monsters/skeleton.png",
+    "title": "Xương khô (thân + đầu, khung đứng hướng phải của walk)",
+    "source": "Universal LPC Spritesheet Character Generator",
+    "url": "https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/tree/04140673ec02906f8233523639733c83690df750",
+    "authors": "bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)",
+    "license": "OGA-BY 3.0 / CC-BY-SA 3.0",
+    "modified": "ghép thân + đầu, cắt sát, khung 64 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/npc/keeper.png",
+    "title": "Tu sĩ Giữ Thư (doll người + áo tu sĩ) (player/base/human_m.png + player/body/monk_black.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "ghép doll; cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/npc/smith.png",
+    "title": "Thợ rèn (doll người + giáp da + búa) (player/base/human_m.png + player/legs/pants_brown.png + player/body/leather_heavy.png + player/hair/brown1.png + player/hand1/hammer.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "ghép doll; cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/npc/villager.png",
+    "title": "Dân làng vỏ rỗng (doll người, nhuộm xám nhạt) (player/base/human_m.png + player/legs/pants_short_gray.png + player/body/shirt_white1.png + player/hair/brown1.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "ghép doll; nhuộm xám; cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/props/altar.png",
+    "title": "Bàn thờ (dc-dngn/altars/dngn_altar.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "sprites/props/chapel-door.png",
+    "title": "Cửa nhà nguyện (dc-dngn/dngn_closed_door.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "sprites/props/chest-closed.png",
+    "title": "Rương đóng",
+    "source": "HeroX, vẽ bằng script",
+    "url": "",
+    "authors": "HeroX",
+    "license": "Thuộc dự án HeroX",
+    "modified": "tools/lib/prop-painters.mjs; palette-harmonize"
+  },
+  {
+    "path": "sprites/props/chest-open.png",
+    "title": "Rương mở",
+    "source": "HeroX, vẽ bằng script",
+    "url": "",
+    "authors": "HeroX",
+    "license": "Thuộc dự án HeroX",
+    "modified": "tools/lib/prop-painters.mjs; palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/brick_brown0.png",
+    "title": "Tile brick_brown0 (dc-dngn/wall/brick_brown0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/brick_dark0.png",
+    "title": "Tile brick_dark0 (dc-dngn/wall/brick_dark0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/brick_dark3.png",
+    "title": "Tile brick_dark3 (dc-dngn/wall/brick_dark3.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/cobble_blood1.png",
+    "title": "Tile cobble_blood1 (dc-dngn/floor/cobble_blood1.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/cobble_blood2.png",
+    "title": "Tile cobble_blood2 (dc-dngn/floor/cobble_blood2.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/crumbled_column.png",
+    "title": "Tile crumbled_column (dc-dngn/crumbled_column.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/dngn_altar.png",
+    "title": "Tile dngn_altar (dc-dngn/altars/dngn_altar.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/dngn_blood_fountain.png",
+    "title": "Tile dngn_blood_fountain (dc-dngn/dngn_blood_fountain.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/dngn_closed_door.png",
+    "title": "Tile dngn_closed_door (dc-dngn/dngn_closed_door.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/dngn_granite_statue.png",
+    "title": "Tile dngn_granite_statue (dc-dngn/dngn_granite_statue.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/gate_closed_middle.png",
+    "title": "Tile gate_closed_middle (dc-dngn/gate_closed_middle.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/grass0.png",
+    "title": "Tile grass0 (dc-dngn/floor/grass/grass0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/grass1.png",
+    "title": "Tile grass1 (dc-dngn/floor/grass/grass1.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/grey_dirt0.png",
+    "title": "Tile grey_dirt0 (dc-dngn/floor/grey_dirt0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/grey_dirt3.png",
+    "title": "Tile grey_dirt3 (dc-dngn/floor/grey_dirt3.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/lava0.png",
+    "title": "Tile lava0 (dc-dngn/floor/lava0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/lava1.png",
+    "title": "Tile lava1 (dc-dngn/floor/lava1.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/marble_floor1.png",
+    "title": "Tile marble_floor1 (dc-dngn/floor/marble_floor1.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/marble_floor2.png",
+    "title": "Tile marble_floor2 (dc-dngn/floor/marble_floor2.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/rect_gray0.png",
+    "title": "Tile rect_gray0 (dc-dngn/floor/rect_gray0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/rect_gray1.png",
+    "title": "Tile rect_gray1 (dc-dngn/floor/rect_gray1.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/stone2_dark0.png",
+    "title": "Tile stone2_dark0 (dc-dngn/wall/stone2_dark0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/tomb0.png",
+    "title": "Tile tomb0 (dc-dngn/floor/tomb0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/tree1_red.png",
+    "title": "Tile tree1_red (dc-dngn/wall/tree1_red.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/tree2_red.png",
+    "title": "Tile tree2_red (dc-dngn/wall/tree2_red.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/volcanic_floor0.png",
+    "title": "Tile volcanic_floor0 (dc-dngn/floor/volcanic_floor0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/volcanic_floor1.png",
+    "title": "Tile volcanic_floor1 (dc-dngn/floor/volcanic_floor1.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tiles/dcss/volcanic_wall0.png",
+    "title": "Tile volcanic_wall0 (dc-dngn/wall/volcanic_wall0.png)",
+    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
+    "license": "CC0 1.0",
+    "modified": "palette-harmonize"
+  },
+  {
+    "path": "tilesets/chapter-1.png",
+    "title": "Atlas tile chương 1 (ghép)",
+    "source": "Ghép: Dungeon Crawl Stone Soup tiles (CC0) + HeroX, vẽ bằng script",
+    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
+    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles; HeroX",
+    "license": "CC0 1.0 (tile DCSS) + thuộc dự án HeroX (tile vẽ bằng script)",
+    "modified": "ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/dcss/* (26 tile, nhuộm sương/mặt tường cho 5 tile) và 11 tile vẽ (mud, ruin_wall, foundation, carpet, grave, lava_crack, forge, candles, rubble, bones, rune_gate); palette-harmonize"
+  },
+  {
+    "path": "tilesets/placeholder-dungeon.png",
+    "title": "Tileset placeholder của map thử test-room",
+    "source": "HeroX, vẽ bằng script",
+    "url": "",
+    "authors": "HeroX",
+    "license": "Thuộc dự án HeroX",
+    "modified": "sinh bằng client/scripts/generate-test-room.mjs; không chỉnh tông (chỉ dùng cho map thử)"
+  }
+]

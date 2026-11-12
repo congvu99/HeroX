@@ -70,9 +70,11 @@ async function refreshAssetCache(html, pageUrl) {
   for (const assetUrl of assetUrls) {
     if (!(await cache.match(assetUrl))) missing.push(assetUrl);
   }
+  // Index không tham chiếu file mới nào → cùng bản deploy, không dọn: map, atlas do JS nạp động
+  // cũng nằm trong assets/ mà không có trong index, dọn mỗi lần mở trang sẽ bắt tải lại chúng.
+  if (missing.length === 0) return;
   await cache.addAll(missing);
-  // Chỉ dọn khi index tham chiếu được asset: tránh xoá sạch cache vì đọc nhầm một trang lỗi.
-  if (assetUrls.length === 0) return;
+  // Bản deploy mới: bỏ file hash của bản cũ, file nạp động của bản mới sẽ được cache dần khi dùng.
   const keep = new Set(assetUrls);
   const cachedRequests = await cache.keys();
   await Promise.all(cachedRequests.filter(request => !keep.has(request.url)).map(request => cache.delete(request)));

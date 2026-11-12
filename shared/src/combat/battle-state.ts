@@ -48,6 +48,8 @@ export interface EnemyBattleState {
   readonly elite: boolean;
   /** Số đòn tới của quái bị giảm sát thương. */
   readonly weakenedHits: number;
+  /** Khiên lửa pha 2 đang dựng (chỉ trùm). */
+  readonly shielded: boolean;
 }
 
 export interface PromptState {
@@ -111,6 +113,10 @@ export type BattleEvent =
       readonly evadeCharges: number;
       readonly enemyWeakenedHits: number;
     }
+  /** Trùm sang pha 2 và dựng khiên lửa. */
+  | { readonly type: 'enemyShieldUp'; readonly enemyIndex: number; readonly minCombo: number }
+  /** Chiêu bị khiên lửa chặn: combo chưa đủ dài; `comboNeeded` là số chiêu đúng nữa cần nối thêm. */
+  | { readonly type: 'shieldBlocked'; readonly comboNeeded: number }
   | { readonly type: 'miss'; readonly wordId: string; readonly reason: MissReason }
   | { readonly type: 'comboBreak'; readonly count: number }
   | {
@@ -244,6 +250,7 @@ class BattleDraft {
       rewardGold: elite ? spec.rewardGold * ELITE_REWARD_MULTIPLIER : spec.rewardGold,
       elite,
       weakenedHits: 0,
+      shielded: false,
     };
     this.events.push({ type: 'enemySpawn', enemyIndex, kind: spec.kind, maxHp, elite });
     this.showPrompt(eliteWord);
@@ -308,6 +315,13 @@ class BattleDraft {
       comboMultiplier: combo.multiplier,
     };
     this.applySkillEffect(skill, computeShieldGain(power));
+    const minCombo = enemy.shielded ? (this.setup.enemies[enemy.index]?.fireShield?.minCombo ?? 0) : 0;
+    if (combo.count < minCombo) {
+      // Khiên lửa chặn sát thương, hiệu ứng chiêu (khiên, né, làm yếu) vẫn có; combo vẫn nối để lần sau xuyên được.
+      this.events.push({ type: 'shieldBlocked', comboNeeded: minCombo - combo.count });
+      this.showPrompt();
+      return;
+    }
     const finisher = combo.chainId !== null;
     let damage = Math.min(enemy.hp, computeCastDamage(power));
     if (finisher && enemy.hp - damage <= enemy.maxHp * FINISHER_EXECUTE_RATIO) damage = enemy.hp;
@@ -322,8 +336,22 @@ class BattleDraft {
       evadeCharges: this.hero.evadeCharges,
       enemyWeakenedHits: this.currentEnemy().weakenedHits,
     });
-    if (hp === 0) this.defeatEnemy();
-    else this.showPrompt();
+    if (hp === 0) {
+      this.defeatEnemy();
+      return;
+    }
+    this.raiseFireShieldIfDue();
+    this.showPrompt();
+  }
+
+  private raiseFireShieldIfDue(): void {
+    const enemy = this.currentEnemy();
+    const fireShield = this.setup.enemies[enemy.index]?.fireShield;
+    if (fireShield === undefined || enemy.shielded || enemy.hp > enemy.maxHp * fireShield.belowHpRatio) return;
+    this.enemy = { ...enemy, shielded: true };
+    this.events.push({ type: 'enemyShieldUp', enemyIndex: enemy.index, minCombo: fireShield.minCombo });
+    // Khiên dựng lên dập tắt combo đang có: người chơi phải nối chuỗi mới để xuyên khiên.
+    this.breakCombo();
   }
 
   private currentEnemy(): EnemyBattleState {

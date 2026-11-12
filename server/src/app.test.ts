@@ -54,6 +54,10 @@ describe('buildApp with services', () => {
       readStory: () => Promise.reject(UNAVAILABLE),
       updateCitadel: () => Promise.reject(UNAVAILABLE),
     },
+    story: {
+      readStory: () => Promise.reject(UNAVAILABLE),
+      completeBeat: () => Promise.reject(UNAVAILABLE),
+    },
     isReady: () => ready,
   };
   let app: FastifyInstance | undefined;

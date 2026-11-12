@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "generate:test-room": "node scripts/generate-test-room.mjs"
+    "generate:test-room": "node scripts/generate-test-room.mjs",
+    "generate:chapter-1": "node scripts/generate-chapter-1.mjs"
   },
   "dependencies": {
     "@herox/shared": "0.1.0",

@@ -58,9 +58,9 @@ Bằng chứng: token lưu ở `eng.auth.v1` (`eng/js/cloud-sync-engine.js:6`), 
 | 04 | [Hệ chiến đấu bằng từ (logic thuần)](phase-04-word-combat-logic.md) | 3d | 02 | completed |
 | 05 | [Chiêu, kỹ năng di chuyển, hiệu ứng pixelfx](phase-05-skills-movement-pixelfx.md) | 3d | 03, 04 | completed |
 | 06 | [Thành trì Lexhold: nâng cấp, trang bị, ngoại trang](phase-06-citadel-lexhold.md) | 3d | 02, 03 | completed |
-| 07 | [Nội dung chương 1: truyện, asset, map, quái, trùm](phase-07-chapter-1-content.md) | 5d | 05, 06 | pending |
-| 08 | [iPhone, PWA, hiệu năng](phase-08-mobile-pwa-performance.md) | 2d | 07 | pending |
-| 09 | [Docker, tích hợp proxy, E2E nghiệm thu](phase-09-docker-deploy-e2e.md) | 2d | 08 | pending |
+| 07 | [Nội dung chương 1: truyện, asset, map, quái, trùm](phase-07-chapter-1-content.md) | 5d | 05, 06 | in-progress (~80%: chơi hết chương ở chế độ dev; còn sửa lỗi review, chơi thử server thật/iPhone, cân bằng, hình PixelLab) |
+| 08 | [iPhone, PWA, hiệu năng](phase-08-mobile-pwa-performance.md) | 2d | 07 | in-progress (đã gắn SW, manifest, iOS viewport, chất lượng tự động vào game; PR eng #1 chờ duyệt; còn icon, đo iPhone/Lighthouse, ngân sách atlas) |
+| 09 | [Docker, tích hợp proxy, E2E nghiệm thu](phase-09-docker-deploy-e2e.md) | 2d | 08 | in-progress |
 | 10 | [Chương 2–5](phase-10-chapters-2-5.md) | 1.5d/chương (6d) | 09 | pending |
 
 Phase 03 làm song song được với 02 (không chung file). Các phase còn lại tuần tự.
@@ -114,8 +114,15 @@ Bản xem: `prototypes/style-preview`, chạy bằng `npx vite prototypes/style-
 - Verified: 8 | Failed: 0 | Unverified: 0 (LDtk hiện hành 1.5.3, kiểm ở phase 03)
 - Tier: Full
 
+### Phiên 2026-11-12 15:55: trước phase 07
+| Câu hỏi | Quyết định |
+|---|---|
+| Kiểu đề trong trận | **Giữ một đề chung giữa màn** như `client/` hiện tại; không làm thẻ riêng từng quái. |
+| PixelLab MCP chưa có | **Làm tiếp bằng hình tạm**; phần tạo hình PixelLab để lại, ghi trong báo cáo phase 07. |
+| `client/src/platform/` chưa commit | Phiên khác đang làm phase 08 song song: phase 07 không sửa, không commit các file đó. |
+
 ## Câu hỏi mở
 
 - Chân dung hội thoại: tạo bằng PixelLab (`create_portrait_character`) ở phase 07. Khung UI tiếp tục dựng bằng DOM/CSS theo bảng màu trong `docs/art-direction.md`.
 - Đang chờ người dùng: (1) đăng ký PixelLab và thêm MCP; (2) hero kiểu Crusader tạm đã đủ "bá khí" chưa; (3) quái tự đánh sau 7–10 giây là nhanh hay chậm.
-- Bản xem có thẻ riêng trên đầu từng quái (gõ từ của quái nào thì đánh quái đó). Trận ở `client/` (phase 05) đang hiện một đề chung giữa màn. Cần người dùng chọn 1 kiểu trước phase 07.
+- Câu hỏi mở của phase 07 (người chơi dưới 8 từ, xác trùm, độ sáng map, cửa nhà nguyện, hình trùm, cỡ hình): xem mục "Câu hỏi mở phase 07" trong [phase-07](phase-07-chapter-1-content.md).
