@@ -1,0 +1,568 @@
+# HeroX Gothic UI Demo Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build one self-contained local HTML demo for the login, outfit, health-bar, and character-information UI in HeroX's approved minimalist Gothic style, with desktop and landscape-mobile previews.
+
+**Architecture:** Keep the demo isolated under `prototypes/gothic-ui-demo/`. The HTML file owns its markup, CSS, sample data, and tiny interaction script so it can be opened directly without a server; a Node built-in test reads the file and verifies the required tabs, viewport modes, offline behavior, and accessible controls.
+
+**Tech Stack:** Semantic HTML5, embedded CSS, vanilla JavaScript, Node.js built-in `node:test` and `node:assert`.
+
+---
+
+## File structure
+
+- Create `prototypes/gothic-ui-demo/index.html`: the complete self-contained visual demo and all local interactions.
+- Create `prototypes/gothic-ui-demo/demo.test.mjs`: a dependency-free contract test for scope, navigation, responsive modes, and offline safety.
+
+No files under `client/`, `server/`, or `shared/` are changed.
+
+### Task 1: Lock the demo contract with a failing test
+
+**Files:**
+- Create: `prototypes/gothic-ui-demo/demo.test.mjs`
+- Test: `prototypes/gothic-ui-demo/demo.test.mjs`
+
+- [ ] **Step 1: Create the dependency-free contract test**
+
+```js
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+
+const demoUrl = new URL('./index.html', import.meta.url);
+
+async function html() {
+  return readFile(demoUrl, 'utf8');
+}
+
+test('contains exactly the four approved UI views', async () => {
+  const source = await html();
+  const viewIds = [...source.matchAll(/<section[^>]+data-view="([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(viewIds, ['login', 'outfit', 'health', 'character']);
+  assert.match(source, />Đăng nhập</);
+  assert.match(source, />Mặc đồ</);
+  assert.match(source, />Thanh máu</);
+  assert.match(source, />Nhân vật</);
+});
+
+test('offers desktop and landscape-mobile preview modes', async () => {
+  const source = await html();
+  assert.match(source, /data-mode="desktop"/);
+  assert.match(source, /data-mode="mobile"/);
+  assert.match(source, /\.preview-shell\[data-device='mobile'\]/);
+  assert.match(source, /aspect-ratio:\s*16\s*\/\s*9/);
+});
+
+test('uses the approved HeroX palette and readable Vietnamese labels', async () => {
+  const source = await html();
+  for (const color of ['#0b0a10', '#1b1720', '#7a141c', '#e8c66a', '#d9d2c0']) {
+    assert.match(source.toLowerCase(), new RegExp(color));
+  }
+  assert.match(source, /Đăng nhập LingoBrain/);
+  assert.match(source, /Đang mặc/);
+  assert.match(source, /Chưa mở/);
+  assert.match(source, /HP/);
+  assert.match(source, /Tiến độ học từ/);
+});
+
+test('is self-contained and does not call a network API', async () => {
+  const source = await html();
+  assert.doesNotMatch(source, /<link[^>]+href=/i);
+  assert.doesNotMatch(source, /<script[^>]+src=/i);
+  assert.doesNotMatch(source, /\bfetch\s*\(/);
+  assert.doesNotMatch(source, /XMLHttpRequest|WebSocket/);
+});
+
+test('uses buttons for every interactive control', async () => {
+  const source = await html();
+  const tabButtons = [...source.matchAll(/<button[^>]+data-tab="([^"]+)"/g)].map((match) => match[1]);
+  const modeButtons = [...source.matchAll(/<button[^>]+data-mode="([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(tabButtons, ['login', 'outfit', 'health', 'character']);
+  assert.deepEqual(modeButtons, ['desktop', 'mobile']);
+  assert.match(source, /aria-selected="true"/);
+  assert.match(source, /aria-pressed="true"/);
+});
+```
+
+- [ ] **Step 2: Run the test and verify it fails because the demo does not exist**
+
+Run:
+
+```powershell
+node --test prototypes/gothic-ui-demo/demo.test.mjs
+```
+
+Expected: FAIL with `ENOENT` for `prototypes/gothic-ui-demo/index.html`.
+
+- [ ] **Step 3: Commit the test contract**
+
+```powershell
+git add -- prototypes/gothic-ui-demo/demo.test.mjs
+git commit -m "test: define gothic UI demo contract"
+```
+
+### Task 2: Build the self-contained Gothic UI demo
+
+**Files:**
+- Create: `prototypes/gothic-ui-demo/index.html`
+- Test: `prototypes/gothic-ui-demo/demo.test.mjs`
+
+- [ ] **Step 1: Create the HTML document and demo controls**
+
+Create `prototypes/gothic-ui-demo/index.html` with this document structure. Keep all CSS in the `<style>` element and all behavior in the final inline `<script>` so opening the file directly works offline.
+
+```html
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HeroX · Demo UI Gothic</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #0b0a10;
+        --ash: #1b1720;
+        --ash-light: #29212d;
+        --blood: #7a141c;
+        --blood-bright: #a62a32;
+        --gold: #e8c66a;
+        --gold-dim: #8f7540;
+        --bone: #d9d2c0;
+        --bone-dim: #a39c8c;
+        --line: #4a3236;
+        --shadow: #000000cc;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        color: var(--bone);
+        background:
+          radial-gradient(circle at 50% 10%, #3b2023 0, transparent 35%),
+          linear-gradient(145deg, #070609, var(--ink) 55%, #120d13);
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+
+      button { font: inherit; }
+
+      .demo-page {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .demo-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .eyebrow {
+        margin: 0 0 4px;
+        color: var(--gold-dim);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+      }
+
+      h1, h2, h3, p { margin-top: 0; }
+
+      h1, h2, h3 {
+        font-family: Cambria, 'Times New Roman', serif;
+      }
+
+      h1 { margin-bottom: 0; color: var(--gold); font-size: clamp(26px, 4vw, 42px); }
+
+      .control-group, .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .control-button, .tab-button, .gothic-button {
+        min-height: 44px;
+        padding: 9px 14px;
+        color: var(--bone);
+        background: #100d13;
+        border: 1px solid var(--line);
+        cursor: pointer;
+      }
+
+      .control-button[aria-pressed='true'], .tab-button[aria-selected='true'] {
+        color: var(--ink);
+        background: var(--gold);
+        border-color: var(--gold);
+      }
+
+      .tabs { margin-bottom: 14px; }
+
+      .preview-shell {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        margin: 0 auto;
+        overflow: hidden;
+        background:
+          linear-gradient(#08070a99, #08070acc),
+          radial-gradient(circle at 68% 36%, #7a141c40, transparent 26%),
+          repeating-linear-gradient(90deg, transparent 0 31px, #ffffff05 32px),
+          #111017;
+        border: 1px solid var(--gold-dim);
+        box-shadow: 0 18px 50px var(--shadow), inset 0 0 80px #000;
+        transition: width .25s ease;
+      }
+
+      .preview-shell[data-device='mobile'] { width: min(900px, 100%); }
+
+      .view {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: clamp(12px, 3vw, 36px);
+      }
+
+      .view[hidden] { display: none; }
+
+      .gothic-frame {
+        position: relative;
+        background: linear-gradient(145deg, #211a24f2, #100d13f2);
+        border: 1px solid var(--gold-dim);
+        box-shadow: 0 0 0 2px #060507, 0 16px 48px #000b, inset 0 0 32px #e8c66a0e;
+      }
+
+      .gothic-frame::before, .gothic-frame::after {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-color: var(--gold);
+      }
+
+      .gothic-frame::before { inset: 5px auto auto 5px; border-top: 2px solid; border-left: 2px solid; }
+      .gothic-frame::after { inset: auto 5px 5px auto; border-right: 2px solid; border-bottom: 2px solid; }
+
+      .login-panel { width: min(480px, 100%); padding: clamp(24px, 5vw, 50px); text-align: center; }
+
+      .crest {
+        display: grid;
+        width: 68px;
+        height: 68px;
+        margin: 0 auto 18px;
+        place-items: center;
+        color: var(--gold);
+        background: var(--blood);
+        border: 2px solid var(--gold);
+        clip-path: polygon(50% 0, 88% 14%, 82% 72%, 50% 100%, 18% 72%, 12% 14%);
+        font: 700 32px/1 Cambria, serif;
+      }
+
+      .login-panel h2 { margin-bottom: 8px; color: var(--gold); font-size: 30px; }
+      .muted { color: var(--bone-dim); }
+
+      .gothic-button {
+        color: var(--bone);
+        background: linear-gradient(#92232b, #661117);
+        border-color: var(--gold-dim);
+        box-shadow: inset 0 1px #d55a6044;
+      }
+
+      .gothic-button:hover, .gothic-button:focus-visible { border-color: var(--gold); filter: brightness(1.12); }
+      .login-panel .gothic-button { width: 100%; margin-top: 14px; }
+
+      .outfit-panel {
+        display: grid;
+        grid-template-columns: minmax(180px, .8fr) minmax(280px, 1.2fr);
+        gap: 18px;
+        width: min(820px, 100%);
+        padding: 20px;
+      }
+
+      .hero-preview {
+        display: grid;
+        min-height: 300px;
+        place-items: center;
+        background: radial-gradient(ellipse at center bottom, #7a141c44, transparent 55%), #08070a;
+        border: 1px solid var(--line);
+      }
+
+      .hero-silhouette {
+        position: relative;
+        width: 90px;
+        height: 190px;
+        background: linear-gradient(90deg, #514953, #bbb1a4 48%, #554d55);
+        clip-path: polygon(35% 0, 65% 0, 75% 17%, 70% 34%, 91% 48%, 72% 59%, 67% 100%, 52% 100%, 50% 65%, 48% 100%, 30% 100%, 24% 58%, 8% 49%, 30% 34%, 25% 17%);
+        filter: drop-shadow(0 12px 8px #000);
+      }
+
+      .hero-silhouette::after {
+        content: '';
+        position: absolute;
+        inset: 30% 16% 24%;
+        background: var(--blood);
+        clip-path: polygon(0 0, 100% 0, 78% 100%, 20% 100%);
+      }
+
+      .panel-title { margin-bottom: 12px; color: var(--gold); }
+      .outfit-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+      .outfit-item {
+        display: grid;
+        grid-template-columns: 46px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: #0b0a10aa;
+        border: 1px solid var(--line);
+      }
+
+      .swatch { width: 42px; height: 42px; background: var(--swatch); border: 1px solid var(--gold-dim); }
+      .outfit-copy strong, .outfit-copy small { display: block; }
+      .outfit-copy small { margin-top: 2px; color: var(--bone-dim); }
+      .status { color: var(--gold); font-weight: 700; }
+      .locked { color: #c77855; }
+
+      .health-stage { place-items: start; }
+
+      .health-hud {
+        display: grid;
+        grid-template-columns: 64px minmax(220px, 330px);
+        gap: 10px;
+        width: min(430px, 100%);
+        padding: 10px;
+      }
+
+      .portrait {
+        display: grid;
+        aspect-ratio: 1;
+        place-items: center;
+        color: var(--gold);
+        background: radial-gradient(circle, #302a34, #0b0a10 70%);
+        border: 1px solid var(--gold-dim);
+        font: 700 26px Cambria, serif;
+      }
+
+      .identity { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+      .identity strong { color: var(--gold); font-family: Cambria, serif; font-size: 18px; }
+      .identity span { color: var(--bone-dim); font-size: 12px; }
+
+      .meter {
+        position: relative;
+        height: 18px;
+        margin-top: 7px;
+        overflow: hidden;
+        background: #050406;
+        border: 1px solid #604044;
+        box-shadow: inset 0 2px 5px #000;
+      }
+
+      .meter-fill { width: 73%; height: 100%; background: linear-gradient(90deg, #5e0c13, var(--blood-bright)); }
+      .meter-label { position: absolute; inset: 0; display: grid; place-items: center; color: #fff5df; font-size: 11px; font-weight: 800; text-shadow: 0 1px 2px #000; }
+      .hud-note { margin: 5px 0 0; color: var(--bone-dim); font-size: 11px; }
+
+      .character-card { width: min(560px, 100%); padding: 22px; }
+      .character-header { display: flex; align-items: center; gap: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+      .character-header .portrait { width: 70px; }
+      .character-header h2 { margin-bottom: 3px; color: var(--gold); }
+      .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; margin: 14px 0; background: var(--line); border: 1px solid var(--line); }
+      .stat { padding: 12px; background: #100d13; }
+      .stat span, .stat strong { display: block; }
+      .stat span { color: var(--bone-dim); font-size: 12px; }
+      .stat strong { margin-top: 3px; color: var(--bone); font-size: 20px; }
+      .progress-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .progress-row .meter { flex: 1; margin: 0; }
+      .progress-row .meter-fill { width: 64%; background: linear-gradient(90deg, #80631b, var(--gold)); }
+
+      .demo-note { margin: 12px 0 0; color: var(--bone-dim); font-size: 12px; text-align: center; }
+
+      @media (max-width: 760px) {
+        .demo-page { padding: 12px; }
+        .preview-shell { min-height: 420px; aspect-ratio: auto; }
+        .view { overflow: auto; }
+        .outfit-panel { grid-template-columns: 1fr; }
+        .hero-preview { min-height: 150px; }
+        .hero-silhouette { transform: scale(.65); }
+      }
+
+      .preview-shell[data-device='mobile'] .view { padding: 12px; }
+      .preview-shell[data-device='mobile'] .outfit-panel { grid-template-columns: 150px 1fr; gap: 10px; padding: 12px; }
+      .preview-shell[data-device='mobile'] .hero-preview { min-height: 220px; }
+      .preview-shell[data-device='mobile'] .outfit-item { padding: 6px; }
+      .preview-shell[data-device='mobile'] .character-card { padding: 14px; }
+    </style>
+  </head>
+  <body>
+    <main class="demo-page">
+      <header class="demo-heading">
+        <div>
+          <p class="eyebrow">Bản duyệt giao diện · dữ liệu mẫu</p>
+          <h1>HeroX · Gothic UI</h1>
+        </div>
+        <div class="control-group" aria-label="Kích thước xem trước">
+          <button class="control-button" type="button" data-mode="desktop" aria-pressed="true">Desktop 16:9</button>
+          <button class="control-button" type="button" data-mode="mobile" aria-pressed="false">Mobile ngang</button>
+        </div>
+      </header>
+
+      <nav class="tabs" role="tablist" aria-label="Thành phần giao diện">
+        <button class="tab-button" type="button" role="tab" data-tab="login" aria-selected="true">Đăng nhập</button>
+        <button class="tab-button" type="button" role="tab" data-tab="outfit" aria-selected="false">Mặc đồ</button>
+        <button class="tab-button" type="button" role="tab" data-tab="health" aria-selected="false">Thanh máu</button>
+        <button class="tab-button" type="button" role="tab" data-tab="character" aria-selected="false">Nhân vật</button>
+      </nav>
+
+      <div class="preview-shell" data-device="desktop">
+        <section class="view" data-view="login">
+          <article class="gothic-frame login-panel">
+            <div class="crest" aria-hidden="true">X</div>
+            <p class="eyebrow">Biên niên sử Thánh Ngôn</p>
+            <h2>HeroX</h2>
+            <p class="muted">Đăng nhập LingoBrain để tiếp tục hành trình. Tiến độ học từ quyết định sức mạnh hiệp sĩ.</p>
+            <button class="gothic-button" type="button" data-demo-action>Đăng nhập LingoBrain</button>
+          </article>
+        </section>
+
+        <section class="view" data-view="outfit" hidden>
+          <article class="gothic-frame outfit-panel">
+            <div class="hero-preview" aria-label="Vùng xem nhân vật minh họa"><div class="hero-silhouette" aria-hidden="true"></div></div>
+            <div>
+              <p class="eyebrow">Xưởng may thành trì</p>
+              <h2 class="panel-title">Mặc đồ</h2>
+              <ul class="outfit-list">
+                <li class="outfit-item"><span class="swatch" style="--swatch:#d9d2c0"></span><span class="outfit-copy"><strong>Thánh kỵ sĩ</strong><small>Áo choàng trắng · thập tự đỏ</small></span><span class="status">Đang mặc</span></li>
+                <li class="outfit-item"><span class="swatch" style="--swatch:#7a141c"></span><span class="outfit-copy"><strong>Huyết vệ</strong><small>Áo choàng đỏ thẫm · giáp đen</small></span><button class="gothic-button" type="button" data-demo-action>Mặc</button></li>
+                <li class="outfit-item"><span class="swatch" style="--swatch:#51495a"></span><span class="outfit-copy"><strong>Kỵ sĩ vực câm</strong><small>Mở khi thuộc 120 từ</small></span><span class="locked">Chưa mở</span></li>
+              </ul>
+            </div>
+          </article>
+        </section>
+
+        <section class="view health-stage" data-view="health" hidden>
+          <article class="gothic-frame health-hud">
+            <div class="portrait" aria-hidden="true">HX</div>
+            <div>
+              <div class="identity"><strong>Aldric</strong><span>Cấp 12</span></div>
+              <div class="meter" aria-label="HP 876 trên 1200"><div class="meter-fill"></div><div class="meter-label">HP 876 / 1200</div></div>
+              <p class="hud-note">Hiệp sĩ Thánh Ngôn · Khiên 140</p>
+            </div>
+          </article>
+        </section>
+
+        <section class="view" data-view="character" hidden>
+          <article class="gothic-frame character-card">
+            <header class="character-header"><div class="portrait" aria-hidden="true">HX</div><div><p class="eyebrow">Hiệp sĩ Thánh Ngôn</p><h2>Aldric</h2><span class="muted">Cấp 12 · Thánh điện Mù Sương</span></div></header>
+            <div class="stat-grid"><div class="stat"><span>Sức mạnh</span><strong>184</strong></div><div class="stat"><span>Phòng thủ</span><strong>126</strong></div><div class="stat"><span>Máu tối đa</span><strong>1.200</strong></div><div class="stat"><span>Từ đã thuộc</span><strong>96</strong></div></div>
+            <div class="progress-row"><span>Tiến độ học từ</span><div class="meter"><div class="meter-fill"></div><div class="meter-label">96 / 150</div></div></div>
+          </article>
+        </section>
+      </div>
+      <p class="demo-note">Demo phong cách · không kết nối API và không thay đổi dữ liệu game.</p>
+    </main>
+
+    <script>
+      const shell = document.querySelector('.preview-shell');
+      const tabs = [...document.querySelectorAll('[data-tab]')];
+      const views = [...document.querySelectorAll('[data-view]')];
+      const modes = [...document.querySelectorAll('[data-mode]')];
+
+      tabs.forEach((button) => {
+        button.addEventListener('click', () => {
+          tabs.forEach((tab) => tab.setAttribute('aria-selected', String(tab === button)));
+          views.forEach((view) => { view.hidden = view.dataset.view !== button.dataset.tab; });
+        });
+      });
+
+      modes.forEach((button) => {
+        button.addEventListener('click', () => {
+          modes.forEach((mode) => mode.setAttribute('aria-pressed', String(mode === button)));
+          shell.dataset.device = button.dataset.mode;
+        });
+      });
+
+      document.querySelectorAll('[data-demo-action]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const original = button.textContent;
+          button.textContent = 'Phản hồi demo ✓';
+          window.setTimeout(() => { button.textContent = original; }, 900);
+        });
+      });
+    </script>
+  </body>
+</html>
+```
+
+- [ ] **Step 2: Run the contract test and verify all requirements pass**
+
+Run:
+
+```powershell
+node --test prototypes/gothic-ui-demo/demo.test.mjs
+```
+
+Expected: 5 tests pass, 0 fail.
+
+- [ ] **Step 3: Open the file directly and inspect both device modes**
+
+Run:
+
+```powershell
+Start-Process (Resolve-Path 'prototypes/gothic-ui-demo/index.html')
+```
+
+Expected: the default browser opens the demo. Every tab switches views; Desktop and Mobile buttons resize the preview; the login and outfit action buttons show temporary feedback; no network or console errors appear.
+
+- [ ] **Step 4: Commit the working demo**
+
+```powershell
+git add -- prototypes/gothic-ui-demo/index.html
+git commit -m "feat: add gothic HeroX UI demo"
+```
+
+### Task 3: Final visual and scope verification
+
+**Files:**
+- Verify: `prototypes/gothic-ui-demo/index.html`
+- Test: `prototypes/gothic-ui-demo/demo.test.mjs`
+
+- [ ] **Step 1: Run the automated contract test from the repository root**
+
+```powershell
+node --test prototypes/gothic-ui-demo/demo.test.mjs
+```
+
+Expected: 5 tests pass, 0 fail.
+
+- [ ] **Step 2: Verify the demo remains isolated from game code**
+
+```powershell
+git diff --name-only HEAD~2..HEAD
+```
+
+Expected output contains only:
+
+```text
+prototypes/gothic-ui-demo/demo.test.mjs
+prototypes/gothic-ui-demo/index.html
+```
+
+- [ ] **Step 3: Check formatting and forbidden placeholders**
+
+```powershell
+git diff --check HEAD~2..HEAD
+rg -n "T[B]D|T[O]DO|F[I]XME|f[e]tch\(|XMLHttpR[e]quest|WebS[o]cket" prototypes/gothic-ui-demo/index.html
+```
+
+Expected: `git diff --check` exits 0; `rg` exits 1 with no matches.
+
+- [ ] **Step 4: Hand the local demo path to the user for visual approval**
+
+Provide the clickable file link to `prototypes/gothic-ui-demo/index.html` and explicitly state that no game code was changed. Do not integrate the design into `client/` until the user approves the demo.
