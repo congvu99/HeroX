@@ -9,3 +9,5 @@ playwright-report/
 .env.*
 !.env.example
 *.log
+# Kết quả E2E (trace, ảnh, báo cáo HTML): sinh lại mỗi lần chạy, rất nặng
+plans/reports/e2e-playwright/
