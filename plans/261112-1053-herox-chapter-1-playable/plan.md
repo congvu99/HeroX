@@ -26,6 +26,7 @@ Người dùng LingoBrain mở `https://<domain eng>/herox/`, vào thẳng game 
 - Không ghi ngược SRS của `eng`. Từ sai lưu ở `herox.word_misses`.
 - Hệ chiêu, công thức, cân bằng tự thiết kế mới (không chép Lexoria).
 - Tài nguyên có license dùng được: pixelfx (MIT), LDtk (MIT), sprite LPC/DCSS/0x72/Angels (CC0, CC-BY, CC-BY-SA), có file credits.
+- Hình ảnh theo `docs/art-direction.md`: nhân vật, quái, trùm, chân dung bản chính vẽ bằng PixelLab theo ảnh mẫu; LPC/DCSS chỉ là hình tạm.
 - Script SQL (role, quyền) chỉ viết ra, người dùng tự chạy, có backup trong `D:\DB-Backup\HeroX\...`.
 
 ## Non-goals
@@ -52,11 +53,11 @@ Bằng chứng: token lưu ở `eng.auth.v1` (`eng/js/cloud-sync-engine.js:6`), 
 | # | Phase | Effort | Phụ thuộc | Trạng thái |
 |---|---|---|---|---|
 | 01 | [Khung dự án, công cụ, CI cục bộ](phase-01-project-scaffold.md) | 1.5d | — | completed |
-| 02 | [Cầu dữ liệu: xác thực, đọc tiến độ, schema herox](phase-02-data-bridge-auth-progress.md) | 3d | 01 | pending |
-| 03 | [Lõi game: scene, input, loader LDtk, di chuyển](phase-03-game-core-ldtk-movement.md) | 3d | 01 | pending |
-| 04 | [Hệ chiến đấu bằng từ (logic thuần)](phase-04-word-combat-logic.md) | 3d | 02 | pending |
-| 05 | [Chiêu, kỹ năng di chuyển, hiệu ứng pixelfx](phase-05-skills-movement-pixelfx.md) | 3d | 03, 04 | pending |
-| 06 | [Thành trì Lexhold: nâng cấp, trang bị, ngoại trang](phase-06-citadel-lexhold.md) | 3d | 02, 03 | pending |
+| 02 | [Cầu dữ liệu: xác thực, đọc tiến độ, schema herox](phase-02-data-bridge-auth-progress.md) | 3d | 01 | completed |
+| 03 | [Lõi game: scene, input, loader LDtk, di chuyển](phase-03-game-core-ldtk-movement.md) | 3d | 01 | completed |
+| 04 | [Hệ chiến đấu bằng từ (logic thuần)](phase-04-word-combat-logic.md) | 3d | 02 | completed |
+| 05 | [Chiêu, kỹ năng di chuyển, hiệu ứng pixelfx](phase-05-skills-movement-pixelfx.md) | 3d | 03, 04 | completed |
+| 06 | [Thành trì Lexhold: nâng cấp, trang bị, ngoại trang](phase-06-citadel-lexhold.md) | 3d | 02, 03 | completed |
 | 07 | [Nội dung chương 1: truyện, asset, map, quái, trùm](phase-07-chapter-1-content.md) | 5d | 05, 06 | pending |
 | 08 | [iPhone, PWA, hiệu năng](phase-08-mobile-pwa-performance.md) | 2d | 07 | pending |
 | 09 | [Docker, tích hợp proxy, E2E nghiệm thu](phase-09-docker-deploy-e2e.md) | 2d | 08 | pending |
@@ -97,11 +98,24 @@ Phase 03 làm song song được với 02 (không chung file). Các phase còn l
 | Repo | **Private** → được dùng thêm gói trả phí hoặc cấm phân phối lại nếu license cho phép dùng trong game web; mỗi gói ghi license vào `CREDITS.md`. |
 | Duyệt thoại chương 1 | Không dừng chờ duyệt; agent viết thoại rồi dựng map luôn, người dùng sửa sau khi chơi thử. |
 
+### Phiên 2026-11-12 chiều: định hình phong cách
+Bản xem: `prototypes/style-preview`, chạy bằng `npx vite prototypes/style-preview --port 5190`. Chuẩn hình ảnh ghi ở `docs/art-direction.md`.
+
+| Câu hỏi | Quyết định |
+|---|---|
+| Hero LPC armet + khiên to | Người dùng chê "trông hài", muốn "bá khí". |
+| Đích hình ảnh | Ảnh mẫu người dùng gửi (`prototypes/style-preview/public/assets/reference/style-target.png`): gothic tối, mưa, nến, vòng huyết, thập tự quân áo trắng khiên đỏ, tỉ lệ người thật. LPC/DCSS không đạt mức này. |
+| Nguồn hình bản chính | **PixelLab**: AI vẽ pixel, có MCP cho Claude Code. Thay LPC/DCSS cho nhân vật, quái, trùm, chân dung; tileset làm thử rồi quyết. Người dùng tự đăng ký và thêm MCP. |
+| Hero tạm (tới khi có PixelLab) | Kiểu "Crusader" của Sorthen ghép từ LPC: mũ bascinet + mặt nạ pigface, giáp tấm, giáp vai, **giữ khiên thập tự lớn**, áo choàng đỏ, kiếm dài. |
+| Thông số | Giữ top-down 3/4, lưới 32px, 640x360. Nhân vật và quái khung 64px, trùm 128px. |
+
 ### Verification Results
 - Claims checked: 8 (token key, hashToken, phiên 180 ngày, payload v1, rule đã học/đã thuộc, srsEpoch, phạm vi SW `eng`, license pixelfx)
-- Verified: 7 | Failed: 0 | Unverified: 1 (phiên bản LDtk hiện hành, kiểm ở phase 03)
+- Verified: 8 | Failed: 0 | Unverified: 0 (LDtk hiện hành 1.5.3, kiểm ở phase 03)
 - Tier: Full
 
 ## Câu hỏi mở
 
-- Chân dung hội thoại và khung UI chưa có nguồn asset; phase 07 tìm tiếp (được phép gói trả phí rẻ, cần người dùng duyệt chi phí).
+- Chân dung hội thoại: tạo bằng PixelLab (`create_portrait_character`) ở phase 07. Khung UI tiếp tục dựng bằng DOM/CSS theo bảng màu trong `docs/art-direction.md`.
+- Đang chờ người dùng: (1) đăng ký PixelLab và thêm MCP; (2) hero kiểu Crusader tạm đã đủ "bá khí" chưa; (3) quái tự đánh sau 7–10 giây là nhanh hay chậm.
+- Bản xem có thẻ riêng trên đầu từng quái (gõ từ của quái nào thì đánh quái đó). Trận ở `client/` (phase 05) đang hiện một đề chung giữa màn. Cần người dùng chọn 1 kiểu trước phase 07.

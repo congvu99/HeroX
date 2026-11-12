@@ -24,8 +24,11 @@ Hành trình: từ làng bị chiếm, xuống dần địa ngục, rồi lên t
 Kết truyện: Thiên Thần Sa Ngã là hiệp sĩ Thánh Ngôn đời trước, bỏ ôn nên quên hết chữ và rơi xuống Vực Câm Lặng.
 
 ## Asset theo chương
-- Chương 3–4: tile ngục, địa ngục từ DCSS (CC0) qua palette chung.
-- Chương 5: thiên thần từ "Angels" (CC-BY, https://opengameart.org/content/angels); tile thiên đàng bằng cách đổi màu tile đá/mây sang trắng-vàng, kèm nền mây CC0 (kiểm license trước khi dùng). Được phép gói trả phí nếu người dùng duyệt chi phí.
+Nguồn chính là PixelLab, cùng quy trình, recipe và bảng màu như phase 07 (`docs/art-direction.md`). DCSS, "Angels" và các gói CC chỉ là hình tạm hoặc phương án dự phòng.
+- Chương 3 Hầm Mộ Thánh: trùm Giám Mục Mất Tên lấy đúng hình giám mục sa ngã cầm lư hương, vòng huyết đỏ trong ảnh mẫu; quái gồm giáo sĩ áo đỏ, xương kỵ sĩ, ghoul.
+- Chương 4 Vực Lửa: tile địa ngục, dung nham; giữ tông đỏ và tím của bảng màu.
+- Chương 5 Thiên Cung Vỡ: thiên thần, tile đá và mây trắng-vàng, tông "Thánh quang" `#fff1c2`.
+- Gói trả phí chỉ dùng khi người dùng duyệt chi phí.
 
 ## Files to Create (mỗi chương)
 - `assets/maps/chapter-N-*.ldtk`, `shared/data/story/chapter-N.ts`, `shared/data/enemies/chapter-N.ts`, fx bổ sung trong `fx-manifest.json`, `word-chains` theo chủ đề.

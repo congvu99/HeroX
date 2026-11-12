@@ -23,17 +23,33 @@ Thế giới tồn tại nhờ **Thánh Ngôn**: chữ do thiên đàng ban xu�
 5. **Trùm Quỷ Bù Nhìn:** 2 pha; pha 2 dựng khiên lửa, chỉ chuỗi combo mới phá được (dạy ghép chuỗi).
 6. **Kết chương:** chuông nhà thờ ngân lại, dân làng có lại tiếng nói, Lexhold lên cấp 1, cổng xuống Rừng Tro mở ở mốc 100 từ đã học.
 
-## Asset (đã chốt hướng)
-- **Hero:** Universal LPC Spritesheet Generator (https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator), khung 64×64, đủ walk / slash / spellcast / hurt / death. Chỉ lấy layer CC0, CC-BY, CC-BY-SA; **loại layer chỉ có GPL**. Xuất sẵn 6–10 bộ giáp hiệp sĩ cho ngoại trang (phase 06), mỗi bộ một sheet.
-- **Quỷ / undead:** LPC (xương, quỷ có cánh nếu có) + Dungeon Crawl Stone Soup 32×32 (CC0) + 0x72 DungeonTileset II (CC0, phóng 2×). Sprite tĩnh hoặc ít khung thì thêm chuyển động bằng code (nhún, lao, chớp trắng, tan biến).
-- **Tile:** LPC terrain (làng, nhà nguyện) + DCSS (ngục, địa ngục). Đồng bộ màu bằng một palette tối chung (script đổi màu trong `tools/`).
-- **Chân dung hội thoại, khung UI:** chưa có nguồn. Tìm gói trả phí rẻ hoặc tự cắt mặt từ sprite LPC phóng to; gói trả phí phải hỏi người dùng duyệt chi phí trước khi mua.
-- Repo private: gói trả phí dùng được nếu license cho phép dùng trong game web (file ảnh phát tới trình duyệt người chơi). Đọc license từng gói, ghi vào `CREDITS.md`.
+## Asset (cập nhật 2026-11-12 chiều, chuẩn ở `docs/art-direction.md`)
+Đích hình ảnh là ảnh mẫu `prototypes/style-preview/public/assets/reference/style-target.png`. Bản chính vẽ bằng **PixelLab**; LPC/DCSS chỉ là hình tạm, chạy được khi chưa có PixelLab.
+
+**Điều kiện bắt đầu phần asset:** người dùng đã đăng ký PixelLab và thêm MCP (`claude mcp add pixellab --transport http https://api.pixellab.ai/mcp --header "Authorization: Bearer <TOKEN>"`). Chưa có thì làm phần thoại, map, logic bằng hình tạm, phần asset để sau.
+
+| Nhóm | Nội dung | Khung | Hoạt ảnh |
+|---|---|---|---|
+| Hero | Hiệp sĩ Thánh Ngôn: giáp tấm bạc, mũ kín có mặt nạ, áo trắng thập tự đỏ, **khiên thập tự lớn**, áo choàng đỏ, kiếm dài | 64 | đứng, đi, chém, niệm phép, trúng đòn, chết; 4 hướng |
+| Quỷ thường | tiểu quỷ (imp), ghoul, xương kỵ sĩ, chó địa ngục | 64 | đi, đánh, trúng đòn, chết |
+| Quỷ tinh anh | quỷ đỏ sinh từ từ yếu của người chơi | 64–96 | như trên |
+| Trùm | Quỷ Bù Nhìn, 2 pha (pha 2 có khiên lửa) | 128 | đứng, đánh, chiêu pha 2, chết |
+| NPC | Tu sĩ Giữ Thư, thợ rèn, dân làng vỏ rỗng | 64 | đứng, đi |
+| Chân dung | hero, Tu sĩ Giữ Thư, thợ rèn, trùm | 64–96 | không |
+| Tile | đường lát đá, đất bùn, tường đổ, nhà nguyện, nghĩa địa, cổng sắt, khe dung nham | 32 | không |
+
+- Mọi lần tạo đều dùng ảnh mẫu làm chuẩn phong cách và khoá bảng màu ở `docs/art-direction.md`. Tạo hero trước, người dùng duyệt hero rồi mới tạo hàng loạt.
+- Ngoại trang (phase 06): làm các biến thể của chính hero (đổi áo choàng, khiên, mũ, màu giáp), giữ nguyên dáng và khung để hoạt ảnh khớp.
+- Chuyển động thêm bằng code cho quái ít khung: nhún, lao, chớp trắng, tan biến.
+- Hình tạm: hero lấy công thức LPC trong `prototypes/style-preview/tools/build_style_assets.py`, chỉ dùng layer LPC có license không phải GPL; quái và tile lấy từ DCSS (CC0).
+- Repo private: gói trả phí và asset PixelLab dùng được nếu điều khoản cho phép dùng trong game web. Ghi từng nguồn vào `CREDITS.md`.
 
 ## Files to Create
-- `tools/lpc/hero-recipes.json` — danh sách layer cho từng bộ giáp (để dựng lại sheet khi cần).
-- `tools/build-credits.mjs` — gộp `CREDITS.csv` của LPC + credit các gói khác thành `assets/CREDITS.md` và màn "Credits" trong game; test fail nếu file ảnh nào không có dòng credit.
-- `tools/palette-harmonize.mjs` — đưa sprite/tile các gói về palette chung.
+- `tools/pixellab/art-recipes.json` — mỗi asset ghi prompt, seed, kích thước, số hướng, hoạt ảnh, ảnh tham chiếu, ngày tạo, để tạo lại được. Không ghi token.
+- `tools/pixellab/import-pixellab.mjs` — đưa kết quả PixelLab về atlas ≤ 2048 trong `assets/sprites/**`, sinh JSON khung cho Phaser.
+- `tools/lpc/hero-recipes.json` — công thức hero tạm (port từ `prototypes/style-preview/tools/build_style_assets.py`), dùng khi chưa có hình PixelLab.
+- `tools/build-credits.mjs` — gộp credit từ LPC `CREDITS.csv`, DCSS, pixelfx, PixelLab (từ `art-recipes.json`) và các gói khác thành `assets/CREDITS.md` và màn "Credits" trong game. Test fail nếu có file ảnh không có dòng credit.
+- `tools/palette-harmonize.mjs` — đưa sprite và tile về bảng màu chung (bắt buộc với hình tạm, kiểm thêm với hình PixelLab).
 - `assets/sprites/**`, `assets/tiles/**`, `assets/CREDITS.md`.
 - `assets/maps/lexhold.ldtk`, `assets/maps/chapter-1-misty-village.ldtk` (cánh đồng, làng, nhà nguyện, hang trùm).
 - `shared/data/story/chapter-1.ts` — beat, hội thoại (tiếng Việt, kèm từ tiếng Anh được dạy), điều kiện, phần thưởng.
@@ -44,7 +60,7 @@ Thế giới tồn tại nhờ **Thánh Ngôn**: chữ do thiên đàng ban xu�
 
 ## Tasks
 1. Viết toàn bộ thoại chương 1 rồi dựng map luôn (người dùng không duyệt trước, sửa sau khi chơi thử). Thoại để trong file dữ liệu để sửa không cần đụng code.
-2. Dựng sheet hero + quỷ, chạy palette, sinh credits.
+2. Tạo hero bằng PixelLab, chờ người dùng duyệt, rồi tạo quỷ, trùm, NPC, chân dung, tile. Chạy palette, sinh credits. Chưa có PixelLab thì dùng hình tạm và ghi rõ trong báo cáo phase.
 3. Dựng map LDtk theo kịch bản; entity trỏ đúng `dialogId`, `encounterId`.
 4. Cân bằng: chơi thử với 3 hồ sơ (8 từ, 50 từ, 150 từ đã học), chương 1 mất 25–40 phút.
 5. Lưu giữa chừng: thoát giữa chương, vào lại đúng beat.
@@ -52,4 +68,5 @@ Thế giới tồn tại nhờ **Thánh Ngôn**: chữ do thiên đàng ban xu�
 ## Verification
 - Playthrough đầy đủ trên PC và iPhone giả lập không kẹt (checklist từng beat).
 - Test: `story-routes` không cho nhảy beat khi chưa xong beat trước.
-- Test credits: mọi file trong `assets/sprites`, `assets/tiles` có dòng credit; không có layer LPC license chỉ GPL.
+- Test credits: mọi file trong `assets/sprites`, `assets/tiles` có dòng credit; không có layer LPC license chỉ GPL; mọi asset PixelLab có recipe trong `art-recipes.json`.
+- So hình với ảnh mẫu: chụp màn làng, nhà nguyện, trận thường, trận trùm, đặt cạnh ảnh mẫu, người dùng duyệt.

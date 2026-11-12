@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Cầu dữ liệu: xác thực, đọc tiến độ, schema herox"
-status: pending
+status: completed
 priority: P1
 effort: "3d"
 dependencies: [1]
@@ -52,3 +52,15 @@ Server HeroX xác thực bằng phiên `eng`, tính chỉ số học từ `progr
 
 ## Risks
 - `eng` đổi payload hoặc cách băm → test hợp đồng báo; HeroX trả 503 có thông báo thân thiện thay vì số sai.
+
+## Kết quả thực hiện (2026-11-12)
+
+Đã làm đủ danh sách file và task. Điểm khác so với mô tả ban đầu, có lý do:
+- Test đặt cạnh mã nguồn (`server/src/**/*.test.ts`, theo quy ước repo); fixture và helper ở `server/test/`.
+- Không có Docker trên máy dev: test SQL chạy trên Postgres nhúng PGlite (`server/test/embedded-postgres.ts`), test driver `pg` qua `@electric-sql/pglite-socket`. Kiểm tra `curl` đầu-cuối chạy bản build với PGlite phục vụ qua TCP.
+- `CREATE SCHEMA herox` nằm trong `migrate.ts` (chỉ chạy khi schema chưa có), không nằm trong `001-herox-schema.sql`, vì Postgres kiểm quyền CREATE trên database trước cả `IF NOT EXISTS`.
+- Script role cấp SELECT **theo cột** (không lộ `users.pass_hash`); schema `herox` tạo bằng `AUTHORIZATION herox_app` nên không cần `GRANT CREATE ON DATABASE`: `D:/DB-Backup/HeroX/2026/20261112/herox.role_herox_app_113800_{before,after}.sql`. Chưa chạy lên DB thật.
+- Phân bố `pos` đo từ `eng/words.json` (bộ seed của bảng `words`, 5033 từ); vẫn nên đối chiếu bằng `SELECT pos, count(*) FROM public.words GROUP BY pos` trên DB thật.
+- Thêm theo review: `GET /herox/api/ready`, `utcOffset` bắt buộc ở `/me`, timeout/keepalive cho pool, rate limit IPv6 theo /64, dọn nhân vật của tài khoản đã xoá ngay khi DB sẵn sàng.
+
+Giới hạn đã biết: `retention30` có thể lệch nhẹ so với máy người dùng vì server LingoBrain chỉ lưu 20 lượt chấm/từ; streak chưa có test hợp đồng chạy thẳng code trình duyệt của `eng` (đã đối chiếu tay với `rollDay`/`streakNow`).

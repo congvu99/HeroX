@@ -23,7 +23,7 @@ Chơi mượt trên iPhone 12+ (Safari và PWA), cài được lên màn hình c
 
 ## Tasks
 1. Theo Q1 đã duyệt: ở repo `D:\project\eng`, tạo nhánh riêng, thêm vào `sw.js` (ngay sau kiểm `url.origin`) `if (url.pathname.startsWith('/herox/')) return;` kèm comment lý do; tăng `CACHE` trong `sw.js` và `APP_VERSION` trong `js/app-storage.js` cho khớp (test `pwa-assets` của `eng` bắt buộc); chạy `node tests/run-tests.js`; mở PR, không tự merge. HeroX vẫn có SW riêng scope `/herox/` cho offline/precache.
-2. Ngân sách: tải lần đầu ≤ 5 MB (gzip), JS ≤ 1.5 MB; atlas nạp theo map.
+2. Ngân sách: tải lần đầu ≤ 5 MB (gzip), JS ≤ 1.5 MB; atlas nạp theo map. Sprite PixelLab (khung 64, 4 hướng, trùm 128) đóng atlas ≤ 2048; đo tổng bộ nhớ GPU khi có đủ asset chương 1. Lớp bóng tối và mưa (`docs/art-direction.md`) nằm trong mức giảm chất lượng tự động khi fps < 30.
 3. Đo trên iPhone thật (người dùng cung cấp): fps, bộ nhớ, thời gian tải; ghi số liệu vào báo cáo phase.
 
 ## Verification

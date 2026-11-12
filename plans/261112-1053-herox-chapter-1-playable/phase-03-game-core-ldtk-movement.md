@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Lõi game: scene, input, loader LDtk, di chuyển"
-status: pending
+status: completed
 priority: P1
 effort: "3d"
 dependencies: [1]
@@ -35,3 +35,12 @@ Nhân vật đi lại trên map LDtk có va chạm, chuyển map qua cổng, đi
 - `npm test -w client` pass.
 - Dev: đi hết map thử, không xuyên tường, qua cổng sang level 2 và quay lại đúng spawn.
 - Chrome DevTools giả lập iPhone 12: joystick hoạt động, hình không nhoè.
+
+## Kết quả (2026-11-12)
+
+- LDtk hiện hành 1.5.3; loader kiểm major `jsonVersion`. Máy dev không có LDtk editor nên map thử sinh bằng `client/scripts/generate-test-room.mjs` theo định dạng 1.5.3 (chưa mở thử bằng editor).
+- Thêm ngoài danh sách file: `maps/ldtk-tilemap-builder.ts` (tách phần Phaser khỏi loader để test được trong Node), `maps/map-asset-urls.ts`, `input/movement-vector.ts`, `render/placeholder-textures.ts`, `api/me-api.ts`, `scenes/scene-keys.ts`, `scenes/ui-scene.ts` (joystick không bị restart khi qua cổng); entity `Torch` cho vùng sáng đuốc.
+- Sau review: timeout và bắt lỗi cho `/me`, màn lỗi khi map hỏng, tách tile chồng thành lớp con, zoom theo DPR, chỉ nạp tileset level dùng.
+- Kiểm chứng: `npm test -w @herox/client` 40 test pass; Chrome thật (Playwright): chặn tường, đi chéo 110 px/s, cổng A→B→A đúng spawn, không bật lại cổng; giả lập iPhone 12 ngang: joystick đi được, nhả tay dừng, giữ joystick qua cổng vẫn đi tiếp, pixel sắc.
+- Đã biết: vùng sáng dùng vị trí camera của frame trước (lệch vài pixel khi cuộn) vì Phaser 4 không hiện lệnh vẽ RenderTexture trong lúc camera render.
+- Chưa có: tạo nhân vật khi `hero = null` (world vẫn mở); hoạt ảnh đi bộ (sprite thật ở phase 07); tắt lớp tối theo máy yếu (phase 08).
