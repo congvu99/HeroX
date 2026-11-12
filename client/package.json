@@ -1,0 +1,20 @@
+{
+  "name": "@herox/client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Client game HeroX (Phaser + Vite)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@herox/shared": "0.1.0",
+    "phaser": "4.2.1"
+  },
+  "devDependencies": {
+    "vite": "8.3.8"
+  }
+}
