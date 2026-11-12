@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0b0a10" />
+  <title>HeroX — Bản định hình phong cách</title>
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">✠</span> HeroX <small>bản định hình phong cách · v0.1</small></div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="design" aria-selected="true">Thiết kế</button>
+      <button role="tab" data-tab="explore">Màn 1 · Khám phá</button>
+      <button role="tab" data-tab="battle">Màn 2 · Trận chiến</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-design" class="design" aria-label="Bảng thiết kế"></section>
+
+    <section id="tab-play" class="play" hidden>
+      <div id="stage">
+        <div id="viewport">
+          <div id="game-root"></div>
+          <div id="overlay"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

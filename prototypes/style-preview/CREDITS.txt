@@ -1,0 +1,18 @@
+HeroX - ban dinh hinh phong cach: nguon hinh va giay phep
+
+Hinh trong ban nay la BAN TAM, se thay bang hinh ve rieng (PixelLab).
+
+1. Liberated Pixel Cup (LPC) - Universal LPC Spritesheet Character Generator
+   https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator
+   Dung: hero (than, giap tam, mu bascinet + mat na pigface, giap vai, ao choang, khien crusader, kiem dai), bo xuong.
+   Giay phep: OGA-BY 3.0 / CC-BY-SA 3.0-4.0 (chi chon layer co it nhat mot giay phep khong phai GPL).
+   Tac gia tung file: public/assets/lpc-credits.csv (ban sao CREDITS.csv cua LPC).
+   Kieu nhan vat tham khao: "Crusader Sprite" cua Sorthen (https://sorthen.itch.io/crusader-sprite), cung ghep tu LPC.
+
+2. Dungeon Crawl Stone Soup tiles ("crawl-tiles Oct-5-2010") - CC0
+   Dung: quy, thien than, tu si, tile nen, tuong, tuong da, ban tho.
+
+3. pixelfx (patch-gg/pixelfx, commit 044e12a) - MIT
+   Dung: hieu ung chem, khien thanh, ban phuoc, luot, thanh phat, lua duoc, nguyen rua, tan bien.
+
+4. public/assets/reference/style-target.png - anh mau phong cach do chu du an cung cap, chi dung tham khao noi bo.

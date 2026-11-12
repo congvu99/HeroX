@@ -1,0 +1,163 @@
+:root {
+  --ink: #0b0a10;
+  --ash: #1b1720;
+  --ash-2: #2a2430;
+  --stone: #4a4250;
+  --bone: #d9d2c0;
+  --bone-dim: #a39b8a;
+  --blood: #7a141c;
+  --ember: #e0602a;
+  --gold: #e8c66a;
+  --holy: #fff1c2;
+  --rift: #5a2a6a;
+  --verb: #e0602a;
+  --noun: #6aa8e8;
+  --adj: #e8c66a;
+  --adv: #b48cf0;
+  --title: Cambria, 'Times New Roman', serif; /* Georgia thiếu glyph ố, ề, ầ nên vỡ dấu tiếng Việt */
+  --body: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--ink); color: var(--bone); font-family: var(--body); }
+body { display: flex; flex-direction: column; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+main { flex: 1; min-height: 0; position: relative; }
+[hidden] { display: none !important; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 8px calc(14px + var(--safe-r)) 8px calc(14px + var(--safe-l));
+  background: linear-gradient(#17131c, #0e0c12); border-bottom: 1px solid #3a2a2e;
+}
+.brand { font-family: var(--title); font-size: 20px; letter-spacing: 2px; color: var(--gold); }
+.brand small { font-family: var(--body); font-size: 11px; letter-spacing: 0; color: var(--bone-dim); margin-left: 6px; }
+.brand-mark { color: var(--blood); text-shadow: 0 0 8px #e0602a88; }
+.tabs { display: flex; gap: 4px; }
+.tabs button {
+  font: 600 13px var(--body); color: var(--bone-dim); background: transparent; border: 1px solid #3a2a2e;
+  padding: 7px 12px; border-radius: 3px; cursor: pointer;
+}
+.tabs button[aria-selected='true'] { color: var(--ink); background: var(--gold); border-color: var(--gold); }
+
+/* ---------- Bảng thiết kế ---------- */
+.design { height: 100%; overflow-y: auto; padding: 18px calc(18px + var(--safe-r)) 40px calc(18px + var(--safe-l)); }
+.design-inner { max-width: 1100px; margin: 0 auto; }
+.design h1 { font-family: var(--title); color: var(--gold); font-size: 30px; margin: 4px 0 2px; letter-spacing: 2px; }
+.design h2 { font-family: var(--title); color: var(--gold); font-size: 20px; margin: 30px 0 10px; letter-spacing: 1px; border-bottom: 1px solid #3a2a2e; padding-bottom: 6px; }
+.design p, .design li { line-height: 1.6; color: var(--bone); }
+.design .lede { color: var(--bone-dim); max-width: 760px; }
+.tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 2px; margin-right: 4px; background: var(--ash-2); color: var(--bone-dim); }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.card { background: var(--ash); border: 1px solid #2f2630; padding: 10px; border-radius: 3px; }
+.card h3 { margin: 6px 0 2px; font-size: 14px; color: var(--bone); }
+.card p { margin: 0; font-size: 12px; color: var(--bone-dim); line-height: 1.45; }
+.card canvas { display: block; margin: 0 auto; image-rendering: pixelated; background: radial-gradient(circle at 50% 70%, #3a2a2e 0%, #15121a 70%); width: 100%; height: auto; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatch { width: 120px; font-size: 11px; color: var(--bone-dim); }
+.swatch i { display: block; height: 42px; border: 1px solid #00000060; margin-bottom: 4px; }
+table.rules { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.rules th, table.rules td { border-bottom: 1px solid #2f2630; padding: 8px 6px; text-align: left; vertical-align: middle; }
+table.rules th { color: var(--gold); font-weight: 600; }
+table.rules canvas { width: 72px; image-rendering: pixelated; background: #15121a; }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.flow .step { flex: 1 1 160px; background: var(--ash); border-left: 3px solid var(--blood); padding: 8px 10px; font-size: 13px; }
+.flow .step b { color: var(--gold); display: block; margin-bottom: 2px; }
+.feedback { margin-top: 24px; background: #1c1418; border: 1px dashed var(--blood); padding: 10px 16px; }
+.cta-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.btn {
+  font: 700 14px var(--body); color: var(--ink); background: var(--gold); border: none; padding: 10px 16px;
+  border-radius: 3px; cursor: pointer; box-shadow: 0 2px 0 #8a6a20;
+}
+.btn.ghost { background: transparent; color: var(--gold); border: 1px solid var(--gold); box-shadow: none; }
+
+/* ---------- Khung chơi ---------- */
+.play { position: absolute; inset: 0; }
+#stage { position: absolute; inset: 0; overflow: hidden; background: #050407; }
+#viewport { position: absolute; left: 0; top: 0; width: 640px; height: 360px; transform-origin: 0 0; }
+#game-root, #game-root canvas { position: absolute; inset: 0; width: 640px !important; height: 360px !important; image-rendering: pixelated; }
+#overlay { position: absolute; inset: 0; pointer-events: none; font-family: var(--body); }
+#overlay .hit { pointer-events: auto; }
+
+/* HUD chung (toạ độ logic 640x360, được phóng cùng canvas nên chữ vẫn nét) */
+.hud-card {
+  position: absolute; background: #0b0a10d9; border: 1px solid #4a3236; border-radius: 3px; padding: 5px 8px;
+  font-size: 9px; color: var(--bone); line-height: 1.35;
+}
+.hud-card .name { font-family: var(--title); color: var(--gold); font-size: 10px; letter-spacing: .5px; }
+.bar { height: 4px; background: #2a1a1e; margin-top: 3px; border-radius: 1px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: linear-gradient(90deg, #a01c26, #e0602a); transition: width .25s; }
+.bar.mana > i { background: linear-gradient(90deg, #4a5ab8, #9ab0ff); }
+.sample { color: var(--bone-dim); font-size: 7px; font-style: italic; }
+.hint { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); font-size: 8px; color: var(--bone-dim); background: #0b0a10a0; padding: 2px 8px; border-radius: 2px; white-space: nowrap; }
+.dialog {
+  position: absolute; left: 90px; right: 90px; bottom: 26px; background: #0e0b12ee; border: 1px solid var(--gold);
+  box-shadow: 0 0 0 1px #000, inset 0 0 18px #e8c66a22; padding: 8px 10px 8px 60px; font-size: 10px; line-height: 1.45; min-height: 58px;
+}
+.dialog img { position: absolute; left: 8px; top: 8px; width: 44px; height: 44px; image-rendering: pixelated; background: #1b1720; border: 1px solid #4a3236; }
+.dialog .speaker { font-family: var(--title); color: var(--gold); font-size: 10px; margin-bottom: 2px; }
+.dialog em { color: var(--gold); font-style: normal; font-weight: 700; }
+.dialog .more { position: absolute; right: 8px; bottom: 4px; font-size: 8px; color: var(--bone-dim); }
+.banner {
+  position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-family: var(--title); font-size: 26px;
+  color: var(--gold); text-shadow: 0 0 10px #e0602a, 0 2px 0 #000; letter-spacing: 3px; animation: banner 1.2s ease-out forwards;
+}
+.banner small { display: block; font-family: var(--body); font-size: 10px; letter-spacing: 1px; color: var(--bone); }
+@keyframes banner { 0% { opacity: 0; transform: scale(1.4); } 20% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Joystick + nút cảm ứng (màn khám phá) */
+.joystick { position: absolute; left: 18px; bottom: 18px; width: 70px; height: 70px; border-radius: 50%; border: 1px solid #ffffff30; background: #ffffff0c; touch-action: none; }
+.joystick i { position: absolute; left: 22px; top: 22px; width: 26px; height: 26px; border-radius: 50%; background: #e8c66a66; border: 1px solid var(--gold); }
+.touch-btn { position: absolute; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--gold); background: #0b0a10b0; color: var(--gold); font: 700 9px var(--body); touch-action: none; }
+
+/* Trận chiến */
+.enemy-tag { position: absolute; transform: translate(-50%, -100%); text-align: center; width: 104px; cursor: pointer; }
+.enemy-tag .prompt { background: #0b0a10e6; border: 1px solid #4a3236; padding: 3px 5px; border-radius: 2px; font-size: 10px; line-height: 1.25; }
+.enemy-tag .prompt .emoji { font-size: 12px; }
+.enemy-tag .pos { display: inline-block; font-size: 7px; padding: 0 3px; border-radius: 1px; color: #000; margin-left: 2px; vertical-align: 1px; }
+.enemy-tag.target .prompt { border-color: var(--gold); box-shadow: 0 0 6px #e8c66a88; }
+.enemy-tag.elite .prompt { border-color: #b84aff; }
+.enemy-tag .elite-label { font-size: 7px; color: #d9a8ff; letter-spacing: .5px; }
+.enemy-tag .bar { margin: 2px 8px 0; }
+.enemy-tag .threat { height: 2px; margin: 1px 8px 0; background: #2a1a1e; }
+.enemy-tag .threat i { display: block; height: 100%; background: #b84aff; }
+.pos-verb { background: var(--verb); } .pos-noun { background: var(--noun); } .pos-adj { background: var(--adj); } .pos-adv { background: var(--adv); }
+.float { position: absolute; transform: translate(-50%, 0); font: 800 12px var(--body); color: #fff; text-shadow: 0 1px 0 #000, 0 0 4px #000; animation: floatup .9s ease-out forwards; white-space: nowrap; }
+.float.crit { color: var(--gold); font-size: 15px; }
+.float.miss { color: #ff7a7a; font-size: 10px; }
+.float.skill { font-family: var(--title); color: var(--holy); font-size: 11px; letter-spacing: 1px; }
+@keyframes floatup { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -26px; } }
+
+.battle-panel { position: absolute; left: 0; right: 0; bottom: 0; height: 92px; background: linear-gradient(#0b0a1000, #0b0a10f0 30%); }
+.combo { position: absolute; left: 10px; bottom: 10px; width: 120px; font-size: 8px; color: var(--bone-dim); }
+.combo .count { font-family: var(--title); font-size: 18px; color: var(--gold); }
+.combo .pips { display: flex; gap: 3px; margin-top: 2px; }
+.combo .pips i { flex: 1; height: 4px; background: #2a1a1e; }
+.combo .pips i.on { background: var(--gold); box-shadow: 0 0 4px var(--gold); }
+.type-box { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: 220px; text-align: center; }
+.type-box input {
+  width: 100%; font: 700 14px var(--body); text-align: center; letter-spacing: 1px; color: var(--holy); background: #0b0a10;
+  border: 1px solid var(--gold); border-radius: 2px; padding: 5px; outline: none;
+}
+.type-box input.shake { animation: shake .3s; border-color: #ff5a5a; }
+.type-box .help { font-size: 8px; color: var(--bone-dim); margin-top: 3px; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.ring { position: absolute; right: 16px; bottom: 8px; width: 150px; height: 150px; }
+.ring button {
+  position: absolute; width: 56px; height: 24px; margin: -12px 0 0 -28px; font: 700 9px var(--body); color: var(--bone);
+  background: #1b1720f0; border: 1px solid #6a5a50; border-radius: 12px; cursor: pointer; touch-action: manipulation;
+}
+.ring button:active { background: var(--gold); color: var(--ink); }
+.ring .core { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 7px; color: var(--bone-dim); text-align: center; width: 50px; }
+.mode-switch { position: absolute; right: 8px; top: 6px; font-size: 8px; }
+.mode-switch button { font: 600 8px var(--body); background: #0b0a10c0; color: var(--bone-dim); border: 1px solid #4a3236; padding: 2px 6px; cursor: pointer; }
+.mode-switch button.on { color: var(--ink); background: var(--gold); }
+.result {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 280px; text-align: center;
+  background: #0e0b12f2; border: 1px solid var(--gold); padding: 14px; font-size: 10px;
+}
+.result h3 { font-family: var(--title); color: var(--gold); margin: 0 0 6px; font-size: 18px; letter-spacing: 2px; }
+.result .missed { color: #ffb0b0; margin-top: 6px; }
+.result .btn { font-size: 10px; padding: 6px 10px; margin: 8px 4px 0; }

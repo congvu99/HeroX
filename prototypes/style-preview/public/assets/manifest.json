@@ -1,0 +1,206 @@
+{
+  "heroCell": 192,
+  "hero": {
+    "walk": {
+      "cols": 9,
+      "rows": 4
+    },
+    "slash": {
+      "cols": 6,
+      "rows": 4
+    },
+    "spellcast": {
+      "cols": 7,
+      "rows": 4
+    },
+    "hurt": {
+      "cols": 6,
+      "rows": 1
+    },
+    "idle": {
+      "cols": 2,
+      "rows": 4
+    }
+  },
+  "skeleton": {
+    "walk": {
+      "cols": 9,
+      "rows": 4
+    },
+    "slash": {
+      "cols": 6,
+      "rows": 4
+    },
+    "hurt": {
+      "cols": 6,
+      "rows": 1
+    }
+  },
+  "fx": {
+    "slash": {
+      "frameWidth": 136,
+      "frameHeight": 104,
+      "frames": 24,
+      "fps": 30,
+      "loop": false,
+      "pivot": [
+        44,
+        92
+      ]
+    },
+    "crit": {
+      "frameWidth": 216,
+      "frameHeight": 136,
+      "frames": 28,
+      "fps": 30,
+      "loop": false,
+      "pivot": [
+        84,
+        106
+      ]
+    },
+    "spark": {
+      "frameWidth": 136,
+      "frameHeight": 80,
+      "frames": 16,
+      "fps": 30,
+      "loop": false,
+      "pivot": [
+        44,
+        64
+      ]
+    },
+    "smite": {
+      "frameWidth": 224,
+      "frameHeight": 176,
+      "frames": 43,
+      "fps": 15,
+      "loop": false,
+      "pivot": [
+        112,
+        148
+      ]
+    },
+    "pillar": {
+      "frameWidth": 192,
+      "frameHeight": 232,
+      "frames": 53,
+      "fps": 15,
+      "loop": false,
+      "pivot": [
+        96,
+        204
+      ]
+    },
+    "shield": {
+      "frameWidth": 88,
+      "frameHeight": 84,
+      "frames": 36,
+      "fps": 15,
+      "loop": true,
+      "pivot": [
+        44,
+        68
+      ]
+    },
+    "blessing": {
+      "frameWidth": 80,
+      "frameHeight": 128,
+      "frames": 45,
+      "fps": 15,
+      "loop": true,
+      "pivot": [
+        40,
+        108
+      ]
+    },
+    "blink_out": {
+      "frameWidth": 136,
+      "frameHeight": 96,
+      "frames": 49,
+      "fps": 30,
+      "loop": false,
+      "pivot": [
+        68,
+        80
+      ]
+    },
+    "blink_in": {
+      "frameWidth": 136,
+      "frameHeight": 96,
+      "frames": 43,
+      "fps": 30,
+      "loop": false,
+      "pivot": [
+        68,
+        80
+      ]
+    },
+    "torch": {
+      "frameWidth": 72,
+      "frameHeight": 120,
+      "frames": 30,
+      "fps": 15,
+      "loop": true,
+      "pivot": [
+        36,
+        94
+      ]
+    },
+    "brazier": {
+      "frameWidth": 112,
+      "frameHeight": 148,
+      "frames": 45,
+      "fps": 15,
+      "loop": true,
+      "pivot": [
+        56,
+        136
+      ]
+    },
+    "curse": {
+      "frameWidth": 112,
+      "frameHeight": 124,
+      "frames": 52,
+      "fps": 15,
+      "loop": false,
+      "pivot": [
+        56,
+        108
+      ]
+    },
+    "dark_explosion": {
+      "frameWidth": 280,
+      "frameHeight": 248,
+      "frames": 39,
+      "fps": 10,
+      "loop": false,
+      "pivot": [
+        140,
+        206
+      ]
+    },
+    "dissolve": {
+      "frameWidth": 96,
+      "frameHeight": 112,
+      "frames": 55,
+      "fps": 15,
+      "loop": false,
+      "pivot": [
+        48,
+        100
+      ]
+    },
+    "fireball": {
+      "frameWidth": 136,
+      "frameHeight": 56,
+      "frames": 36,
+      "fps": 30,
+      "loop": true,
+      "pivot": [
+        112,
+        28
+      ]
+    }
+  }
+}
