@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { CreateHeroRequest, MeResponse } from '@herox/shared';
-import { currentUtcOffsetMinutes, fetchMe, readEngSessionToken, type MeResult } from '../api/me-api';
+import { currentUtcOffsetMinutes, fetchMe, readEngSessionToken, waitForEngSession, type MeResult } from '../api/me-api';
 import { createHero } from '../api/story-api';
 import { LdtkFormatError, parseLdtkProject } from '../maps/ldtk-loader';
 import { mapAssetUrl } from '../maps/map-asset-urls';
@@ -29,6 +29,9 @@ const BUTTON_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
 
 /** Nạp asset tối thiểu, xác thực bằng phiên LingoBrain rồi vào world; chưa đăng nhập thì mời về LingoBrain. */
 export class BootScene extends Phaser.Scene {
+  /** Dọn watcher phiên LingoBrain khi rời màn mời đăng nhập hoặc tắt scene. */
+  private stopSessionWatch: (() => void) | null = null;
+
   constructor() {
     super(SCENE_KEYS.boot);
   }
@@ -39,8 +42,14 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     createPlaceholderTextures(this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.clearSessionWatch());
     if (!this.loadMapProject()) return;
     void this.authenticate();
+  }
+
+  private clearSessionWatch(): void {
+    this.stopSessionWatch?.();
+    this.stopSessionWatch = null;
   }
 
   /** Map hỏng hoặc không tải được thì dừng ở màn lỗi thay vì màn đen. */
@@ -135,6 +144,8 @@ export class BootScene extends Phaser.Scene {
   }
 
   private resetScreen(): { centerX: number; centerY: number } {
+    // Đổi màn thì ngừng dò phiên của màn trước, tránh watcher chồng nhau.
+    this.clearSessionWatch();
     this.children.removeAll(true);
     const { width, height } = this.scale.gameSize;
     return { centerX: width / 2, centerY: height / 2 };
@@ -160,11 +171,42 @@ export class BootScene extends Phaser.Scene {
     this.add
       .text(centerX, centerY - 20, 'Đăng nhập LingoBrain để vào game. Tiến độ học từ của bạn quyết định sức mạnh hiệp sĩ.', BODY_STYLE)
       .setOrigin(0.5);
-    this.addButton(centerX, centerY + 35, 'Đăng nhập LingoBrain', () => window.location.assign(ENG_HOME_PATH));
+    this.addButton(centerX, centerY + 35, 'Đăng nhập LingoBrain', () => this.openLoginAndWait());
     // Dev chạy Vite riêng cổng nên không có phiên LingoBrain; nút này bị loại khỏi bản build.
     if (import.meta.env.DEV) {
       this.addButton(centerX, centerY + 85, 'Vào map thử (dev)', () => this.enterDevWorld());
     }
+  }
+
+  /**
+   * LingoBrain đăng nhập trong trang của nó, không có đường tự quay lại. Mở ở tab mới để giữ tab game,
+   * rồi dò phiên ở localStorage cùng origin; có token thì vào game ngay, không cần người chơi tự quay về.
+   */
+  private openLoginAndWait(): void {
+    window.open(ENG_HOME_PATH, '_blank', 'noopener');
+    this.showWaitingForLogin();
+  }
+
+  private showWaitingForLogin(): void {
+    const { centerX, centerY } = this.resetScreen();
+    this.add.text(centerX, centerY - 70, 'HeroX', TITLE_STYLE).setOrigin(0.5);
+    this.add
+      .text(centerX, centerY - 20, 'Đã mở LingoBrain ở tab mới. Đăng nhập xong, game sẽ tự vào. Giữ tab này mở.', BODY_STYLE)
+      .setOrigin(0.5);
+    // Trình duyệt chặn cửa sổ mới, hoặc người chơi tự đăng nhập ở tab khác: cho bấm kiểm tra lại ngay.
+    this.addButton(centerX, centerY + 35, 'Tôi đã đăng nhập', () => void this.authenticate());
+    this.stopSessionWatch = waitForEngSession(this.sessionWatchEnv(), () => void this.authenticate());
+  }
+
+  /** Nối watcher phiên với DOM thật; `authenticate` tự đọc lại token mới từ localStorage. */
+  private sessionWatchEnv() {
+    return {
+      getStorage: () => window.localStorage,
+      addStorageListener: (handler: () => void) => window.addEventListener('storage', handler),
+      removeStorageListener: (handler: () => void) => window.removeEventListener('storage', handler),
+      setPoll: (handler: () => void, ms: number) => window.setInterval(handler, ms),
+      clearPoll: (id: number) => window.clearInterval(id),
+    };
   }
 
   private showUnavailable(message: string, retry: () => void): void {

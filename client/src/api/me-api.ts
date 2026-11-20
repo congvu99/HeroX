@@ -37,6 +37,43 @@ export function currentUtcOffsetMinutes(date: Date = new Date()): number {
   return -date.getTimezoneOffset();
 }
 
+/** Nhịp dò token dự phòng khi tab không nhận `storage` event (ví dụ đăng nhập trong cùng tab bằng back/forward). */
+export const ENG_SESSION_POLL_MS = 1_000;
+
+/** Phần phụ thuộc trình duyệt tiêm vào để `waitForEngSession` test được mà không cần DOM thật. */
+export interface EngSessionWatchEnv {
+  readonly getStorage: () => StorageReader;
+  readonly addStorageListener: (handler: () => void) => void;
+  readonly removeStorageListener: (handler: () => void) => void;
+  readonly setPoll: (handler: () => void, ms: number) => number;
+  readonly clearPoll: (id: number) => void;
+}
+
+/**
+ * Chờ phiên LingoBrain xuất hiện ở localStorage rồi gọi `onToken` một lần với token.
+ * Đăng nhập mở ở tab khác (cùng origin) nên tab game nhận `storage` event; kèm nhịp dò dự phòng
+ * cho trình duyệt không bắn event. Trả về hàm hủy để dọn listener và nhịp dò khi rời màn hình.
+ */
+export function waitForEngSession(env: EngSessionWatchEnv, onToken: (token: string) => void): () => void {
+  let done = false;
+  const stop = (): void => {
+    if (done) return;
+    done = true;
+    env.removeStorageListener(check);
+    env.clearPoll(pollId);
+  };
+  function check(): void {
+    if (done) return;
+    const token = readEngSessionToken(env.getStorage);
+    if (token === null) return;
+    stop();
+    onToken(token);
+  }
+  env.addStorageListener(check);
+  const pollId = env.setPoll(check, ENG_SESSION_POLL_MS);
+  return stop;
+}
+
 function isMeResponse(value: unknown): value is MeResponse {
   if (typeof value !== 'object' || value === null) return false;
   const { user, learning } = value as Partial<Record<keyof MeResponse, unknown>>;

@@ -2,8 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   currentUtcOffsetMinutes,
   ENG_AUTH_STORAGE_KEY,
+  ENG_SESSION_POLL_MS,
   fetchMe,
   readEngSessionToken,
+  waitForEngSession,
+  type EngSessionWatchEnv,
 } from '../src/api/me-api';
 
 function storageWith(value: string | null) {
@@ -76,6 +79,86 @@ describe('fetchMe', () => {
   it('lỗi mạng không ném ra ngoài', async () => {
     const result = await fetchMe('tok', vi.fn<typeof fetch>().mockRejectedValue(new TypeError('offline')), 0);
     expect(result.kind).toBe('unavailable');
+  });
+});
+
+describe('waitForEngSession', () => {
+  function fakeEnv(authValue: { value: string | null }) {
+    let storageHandler: (() => void) | null = null;
+    let pollHandler: (() => void) | null = null;
+    const env: EngSessionWatchEnv = {
+      getStorage: () => ({ getItem: (key) => (key === ENG_AUTH_STORAGE_KEY ? authValue.value : null) }),
+      addStorageListener: (handler) => {
+        storageHandler = handler;
+      },
+      removeStorageListener: vi.fn(),
+      setPoll: (handler) => {
+        pollHandler = handler;
+        return 7;
+      },
+      clearPoll: vi.fn(),
+    };
+    return {
+      env,
+      fireStorage: () => storageHandler?.(),
+      firePoll: () => pollHandler?.(),
+    };
+  }
+
+  it('dùng nhịp dò 1 giây và gọi onToken khi storage event mang token mới', () => {
+    const auth = { value: null as string | null };
+    const onToken = vi.fn();
+    const { env, fireStorage } = fakeEnv(auth);
+    const setPoll = vi.spyOn(env, 'setPoll');
+
+    waitForEngSession(env, onToken);
+    expect(setPoll.mock.calls[0]?.[1]).toBe(ENG_SESSION_POLL_MS);
+
+    fireStorage();
+    expect(onToken).not.toHaveBeenCalled(); // chưa có token
+
+    auth.value = '{"token":"abc","username":"u"}';
+    fireStorage();
+    expect(onToken).toHaveBeenCalledExactlyOnceWith('abc');
+  });
+
+  it('nhịp dò dự phòng cũng phát hiện token khi không có storage event', () => {
+    const auth = { value: null as string | null };
+    const onToken = vi.fn();
+    const { env, firePoll } = fakeEnv(auth);
+
+    waitForEngSession(env, onToken);
+    auth.value = '{"token":"xyz","username":"u"}';
+    firePoll();
+    expect(onToken).toHaveBeenCalledExactlyOnceWith('xyz');
+  });
+
+  it('gọi onToken đúng một lần rồi gỡ listener và nhịp dò', () => {
+    const auth = { value: '{"token":"t","username":"u"}' };
+    const onToken = vi.fn();
+    const { env, fireStorage, firePoll } = fakeEnv(auth);
+
+    waitForEngSession(env, onToken);
+    fireStorage();
+    firePoll();
+    expect(onToken).toHaveBeenCalledTimes(1);
+    expect(env.removeStorageListener).toHaveBeenCalledOnce();
+    expect(env.clearPoll).toHaveBeenCalledWith(7);
+  });
+
+  it('hàm hủy gỡ listener và nhịp dò, sau đó không gọi onToken nữa', () => {
+    const auth = { value: null as string | null };
+    const onToken = vi.fn();
+    const { env, fireStorage } = fakeEnv(auth);
+
+    const stop = waitForEngSession(env, onToken);
+    stop();
+    expect(env.removeStorageListener).toHaveBeenCalledOnce();
+    expect(env.clearPoll).toHaveBeenCalledWith(7);
+
+    auth.value = '{"token":"t"}';
+    fireStorage();
+    expect(onToken).not.toHaveBeenCalled();
   });
 });
 
