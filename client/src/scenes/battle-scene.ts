@@ -371,7 +371,10 @@ export class BattleScene extends Phaser.Scene {
       const lines = [title, '(Trận thử, không ghi kết quả)'];
       if (victory) {
         this.storyJournal()?.recordVictory(this.encounterId);
+        const run = this.battleRun;
         const storyLine = await this.completeStoryBattle();
+        // Người chơi có thể đã rời trận (hoặc sang trận khác) trong lúc chờ ghi mốc truyện.
+        if (this.isStale(run)) return;
         if (storyLine !== null) lines.push(storyLine);
       }
       this.showEnd(lines.join('\n'));

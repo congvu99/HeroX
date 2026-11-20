@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { ARENA_TILE_SCALE, type ArenaLayout } from '../battle/battle-arena-layout';
+import { ARENA_CELL_PX, ARENA_ORIGIN, ARENA_TILE_SCALE, arenaCellCenter, type ArenaLayout } from '../battle/battle-arena-layout';
 import { TILE_SIZE } from '../config/display';
 import { mapAssetUrl } from '../maps/map-asset-urls';
 import { DarkAtmosphere, type LightSource } from './dark-atmosphere';
@@ -22,9 +22,6 @@ const tileIndexFiles = import.meta.glob<Record<string, number>>('../../../assets
   import: 'default',
 });
 const TILE_INDEX: Readonly<Record<string, number>> = Object.values(tileIndexFiles)[0] ?? {};
-
-/** Cạnh một ô sân sau khi phóng. */
-export const ARENA_CELL_PX = TILE_SIZE * ARENA_TILE_SCALE;
 
 /** Xếp atlas tile chương 1 vào hàng đợi tải (gọi ở `preload`). */
 export function queueArenaTiles(scene: Phaser.Scene): void {
@@ -49,7 +46,7 @@ export class BattleArena {
     if (scene.textures.exists(ATLAS_TEXTURE_KEY)) this.paintTiles(scene, layout);
     this.atmosphere = new DarkAtmosphere(scene, { enabled: options.lightingEnabled });
     for (const light of layout.lights) {
-      this.atmosphere.addLight(cellCenter(light.column, light.row), light.radius, light.flicker);
+      this.atmosphere.addLight(arenaCellCenter(light.column, light.row), light.radius, light.flicker);
     }
     for (const light of options.actorLights) this.atmosphere.addLight(light.source, light.radius);
     if (layout.embers && options.lightingEnabled) this.addEmbers(scene, layout);
@@ -58,7 +55,7 @@ export class BattleArena {
   private paintTiles(scene: Phaser.Scene, layout: ArenaLayout): void {
     layout.cells.forEach((row, rowIndex) => {
       row.forEach((cell, column) => {
-        const at = cellCenter(column, rowIndex);
+        const at = arenaCellCenter(column, rowIndex);
         this.addTile(scene, cell.ground, at, GROUND_DEPTH);
         if (cell.decor !== null) this.addTile(scene, cell.decor, at, DECOR_DEPTH);
       });
@@ -81,7 +78,7 @@ export class BattleArena {
     // Tàn lửa bốc lên từ hàng dung nham dưới cùng.
     const lastRow = layout.cells.length - 1;
     const width = (layout.cells[0]?.length ?? 0) * ARENA_CELL_PX;
-    const zone = new Phaser.Geom.Rectangle(0, lastRow * ARENA_CELL_PX - ARENA_CELL_PX / 2, width, ARENA_CELL_PX);
+    const zone = new Phaser.Geom.Rectangle(ARENA_ORIGIN.x, arenaCellCenter(0, lastRow).y - ARENA_CELL_PX / 2, width, ARENA_CELL_PX);
     scene.add
       .particles(0, 0, EMBER_TEXTURE_KEY, {
         emitZone: { type: 'random', source: zone, quantity: 1 },
@@ -96,6 +93,3 @@ export class BattleArena {
   }
 }
 
-function cellCenter(column: number, row: number): LightSource {
-  return { x: column * ARENA_CELL_PX + ARENA_CELL_PX / 2, y: row * ARENA_CELL_PX + ARENA_CELL_PX / 2 };
-}

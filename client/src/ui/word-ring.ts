@@ -7,7 +7,7 @@ export interface RingOption {
 }
 
 /**
- * Vòng từ cho cảm ứng: 6 nút DOM xếp 3×2, chạm một nút là chọn từ đó. Nút dựng một lần, mỗi đề chỉ đổi chữ.
+ * Vòng từ cho cảm ứng: 6 nút DOM xếp 2 cột × 3 hàng (khung dọc), chạm một nút là chọn từ đó. Nút dựng một lần, mỗi đề chỉ đổi chữ.
  * Nút cao ≥ 44 px (khuyến nghị của Apple cho ngón tay) do CSS `battle-ring` đặt.
  */
 export class WordRing {
@@ -50,9 +50,17 @@ export class WordRing {
     // `pointerdown` thay vì `click`: chạm là tung chiêu ngay, không chờ nhấc ngón như click trên iOS.
     button.addEventListener('pointerdown', (event) => {
       event.preventDefault();
-      const wordId = button.dataset['wordId'];
-      if (this.enabled && wordId !== undefined) this.onPick(wordId);
+      this.pick(button);
+    });
+    // Enter/Space trên nút đang focus, VoiceOver, Switch Control chỉ phát `click` (detail = 0); chạm/chuột đã xử lý ở trên.
+    button.addEventListener('click', (event) => {
+      if (event.detail === 0) this.pick(button);
     });
     return button;
+  }
+
+  private pick(button: HTMLButtonElement): void {
+    const wordId = button.dataset['wordId'];
+    if (this.enabled && wordId !== undefined) this.onPick(wordId);
   }
 }

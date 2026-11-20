@@ -1,3 +1,4 @@
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH, TILE_SIZE } from '../config/display';
 import { FIELD_ENCOUNTER_ID, FIELD_ROAM_ENCOUNTER_ID, SCARECROW_BOSS_ENCOUNTER_ID, SMITHY_ENCOUNTER_ID, TUTORIAL_ENCOUNTER_ID } from '@herox/shared';
 
 /**
@@ -8,6 +9,26 @@ import { FIELD_ENCOUNTER_ID, FIELD_ROAM_ENCOUNTER_ID, SCARECROW_BOSS_ENCOUNTER_I
 export const ARENA_TILE_SCALE = 2;
 export const ARENA_COLUMNS = 6;
 export const ARENA_ROWS = 11;
+
+/** Cạnh một ô sân sau khi phóng (pixel logic). */
+export const ARENA_CELL_PX = TILE_SIZE * ARENA_TILE_SCALE;
+
+/**
+ * Góc trên trái của lưới sân để sân nằm giữa khung: phần thừa chia đều hai mép (cột mép cắt mỗi bên một ít),
+ * phần thiếu chiều dọc chia đều trên dưới. Nhân vật, hiệu ứng, HUD đều căn theo tâm khung nên sân phải cùng tâm.
+ */
+export const ARENA_ORIGIN = {
+  x: (LOGICAL_WIDTH - ARENA_COLUMNS * ARENA_CELL_PX) / 2,
+  y: (LOGICAL_HEIGHT - ARENA_ROWS * ARENA_CELL_PX) / 2,
+} as const;
+
+/** Tâm ô (cột, hàng) trên khung, đã cộng góc lưới. */
+export function arenaCellCenter(column: number, row: number): { readonly x: number; readonly y: number } {
+  return {
+    x: ARENA_ORIGIN.x + column * ARENA_CELL_PX + ARENA_CELL_PX / 2,
+    y: ARENA_ORIGIN.y + row * ARENA_CELL_PX + ARENA_CELL_PX / 2,
+  };
+}
 
 export type ArenaThemeId = 'fields' | 'village' | 'lair';
 

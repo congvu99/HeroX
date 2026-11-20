@@ -1,4 +1,4 @@
-/* HUD màn trận. Bảng màu theo docs/art-direction.md; `--u` = 1 pixel logic (640×360) theo px CSS, do battle-hud.ts ghi. */
+/* HUD màn trận. Bảng màu theo docs/art-direction.md; `--u` = 1 pixel logic (khung dọc 360×780) theo px CSS, do battle-hud.ts ghi. */
 .battle-hud {
   --ink: #0b0a10;
   --ash: #1b1720;
@@ -45,9 +45,25 @@
   left: calc(var(--u) * 8);
   right: calc(var(--u) * 8);
   display: grid;
-  grid-template-columns: 1fr minmax(0, 1.25fr) 1fr;
+  /* Khung dọc hẹp: hai thẻ chung một hàng, đề chung nằm hàng riêng chiếm hết chiều ngang. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'hero enemy'
+    'prompt prompt';
   align-items: start;
-  gap: calc(var(--u) * 8);
+  gap: calc(var(--u) * 6);
+}
+
+.battle-top > .battle-card:first-child {
+  grid-area: hero;
+}
+
+.battle-top > .battle-card.is-enemy {
+  grid-area: enemy;
+}
+
+.battle-top-center {
+  grid-area: prompt;
 }
 
 .battle-card {
@@ -260,23 +276,30 @@
   right: calc(var(--u) * 8);
   bottom: calc(var(--u) * 8);
   display: grid;
-  grid-template-columns: 1fr minmax(0, 2.6fr) 1fr;
+  /* Khung dọc: hàng nút phụ ở trên, ô gõ / vòng từ chiếm trọn chiều ngang để không cắt chữ đáp án. */
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'start end'
+    'center center';
   align-items: end;
-  gap: calc(var(--u) * 8);
+  gap: calc(var(--u) * 6);
 }
 
 .battle-dock-side {
+  grid-area: start;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
   gap: calc(var(--u) * 4);
 }
 
 .battle-dock-side.is-end {
-  align-items: flex-end;
+  grid-area: end;
+  justify-content: flex-end;
 }
 
 .battle-dock-center {
+  grid-area: center;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -318,18 +341,19 @@
 
 .battle-ring {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* 2 cột × 3 hàng: nút đủ rộng cho từ dài trên màn 360 px. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: calc(var(--u) * 5);
 }
 
 .battle-ring-option {
   min-height: 44px;
   padding: 0.3em 0.4em;
-  overflow: hidden;
   font-size: max(15px, calc(var(--u) * 15));
+  line-height: 1.15;
   color: var(--bone);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Từ quá dài thì xuống dòng chứ không cắt: người chơi phải đọc được trọn đáp án. */
+  overflow-wrap: anywhere;
   background: linear-gradient(180deg, #2a2030f0, #140f18f0);
   border: 1px solid var(--border);
   outline: 1px solid #000;
@@ -337,7 +361,8 @@
   touch-action: manipulation;
 }
 
-.battle-ring-option:hover:not(:disabled) {
+.battle-ring-option:hover:not(:disabled),
+.battle-ring-option:focus-visible {
   border-color: var(--gold);
 }
 

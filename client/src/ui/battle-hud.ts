@@ -41,7 +41,7 @@ class Meter {
 
 /**
  * HUD màn trận dựng bằng DOM (chữ tiếng Việt sắc nét ở mọi mức zoom), phủ đúng khung canvas.
- * Toạ độ chữ nổi tính theo pixel logic 640×360 rồi đổi sang phần trăm khung.
+ * Toạ độ chữ nổi tính theo pixel logic của khung dọc 360×780 rồi đổi sang phần trăm khung.
  * Màn dọc trên điện thoại: thẻ trên và dải nhập dính mép màn, nằm ở phần đen ngoài canvas.
  */
 export class BattleHud {
