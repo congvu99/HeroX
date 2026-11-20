@@ -7,7 +7,7 @@
   "start_url": "/herox/",
   "scope": "/herox/",
   "display": "fullscreen",
-  "orientation": "landscape",
+  "orientation": "portrait",
   "background_color": "#0b0b12",
   "theme_color": "#0b0b12",
   "icons": [

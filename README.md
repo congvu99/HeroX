@@ -62,7 +62,7 @@ Vite dev đang chạy mà vừa sinh lại map có level mới: chạm lại `cl
 
 ## E2E
 
-Playwright, 2 project: `desktop-chrome` và `iphone-12` (WebKit). Cài trình duyệt lần đầu: `npx playwright install chromium webkit`.
+Playwright, 2 project khung dọc: `pixel-5` (Chromium) và `iphone-12` (WebKit). Cài trình duyệt lần đầu: `npx playwright install chromium webkit`.
 
 ```bash
 npm run test:e2e        # = npx playwright test; tự dựng môi trường riêng rồi tắt khi xong

@@ -1,193 +1,240 @@
-import Phaser from 'phaser';
 import { ENEMY_NAMES, MIN_VISIBLE_COMBO } from '@herox/shared';
 import type { FloatTone } from '../battle/battle-cues';
-import { LOGICAL_WIDTH } from '../config/display';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
+import { createButton, createElement } from './panels/panel-dom';
+import './battle-hud.css';
 
-const BAR_WIDTH = 200;
-const BAR_HEIGHT = 10;
-const BAR_MARGIN = 14;
-const HERO_BAR_COLOR = 0x5fb35a;
-const SHIELD_BAR_COLOR = 0xe8d9a8;
-const ENEMY_BAR_COLOR = 0xc0392b;
-const ELITE_BAR_COLOR = 0xd35400;
-const TIMER_BAR_COLOR = 0x8e7cc3;
-const COMBO_BAR_COLOR = 0xf1c40f;
-const BAR_BACK_COLOR = 0x000000;
-const PROMPT_Y = 62;
-const COMBO_Y = 112;
-const TYPED_Y = 268;
-const FLOAT_RISE_PX = 28;
-const FLOAT_DURATION_MS = 800;
-const FLOAT_POOL_SIZE = 8;
-
-const FLOAT_COLORS: Readonly<Record<FloatTone, string>> = {
-  damage: '#ffe08a',
-  info: '#bfe3ff',
-  bad: '#ff8a80',
-};
-
-const LABEL_STYLE: Phaser.Types.GameObjects.Text.TextStyle = { fontFamily: 'sans-serif', fontSize: '12px', color: '#e8d9a8' };
-const PROMPT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'sans-serif',
-  fontSize: '20px',
-  color: '#ffffff',
-  align: 'center',
-  backgroundColor: '#1c1a2bcc',
-  padding: { x: 12, y: 6 },
-  wordWrap: { width: 420 },
-};
-const TYPED_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'monospace',
-  fontSize: '22px',
-  color: '#f3ead0',
-  backgroundColor: '#1c1a2bcc',
-  padding: { x: 14, y: 6 },
-};
-const FLOAT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'sans-serif',
-  fontSize: '16px',
-  color: '#ffffff',
-  stroke: '#000000',
-  strokeThickness: 3,
-};
-const CENTER_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'serif',
-  fontSize: '22px',
-  color: '#e8d9a8',
-  align: 'center',
-  backgroundColor: '#0b0b12dd',
-  padding: { x: 18, y: 12 },
-  wordWrap: { width: 460 },
-};
+/** Giữ tối đa chừng này chữ nổi cùng lúc; chữ cũ nhất bị gỡ khi có chữ mới. */
+const MAX_FLOATS = 8;
+/** Còn dưới tỉ lệ này thời gian của đề thì thanh đồng hồ chuyển đỏ, nhấp nháy. */
+const URGENT_RATIO = 0.3;
 
 export function enemyDisplayName(kind: string): string {
   return ENEMY_NAMES[kind] ?? kind;
 }
 
-const TYPING_PLACEHOLDER = 'Gõ từ tiếng Anh rồi Enter';
+export interface BattleHudButton {
+  readonly label: string;
+  readonly onClick: () => void;
+}
 
-class MeterBar {
-  private readonly fill: Phaser.GameObjects.Rectangle;
+/** Thanh đo (máu, khiên, đồng hồ đề, cửa sổ combo); chỉ đổi `transform` nên đổi mỗi khung cũng rẻ. */
+class Meter {
+  readonly element: HTMLElement;
+  private readonly fill: HTMLElement;
+  private lastRatio = -1;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, width: number, color: number, depth: number) {
-    scene.add.rectangle(x, y, width, BAR_HEIGHT, BAR_BACK_COLOR, 0.6).setOrigin(0, 0).setDepth(depth);
-    this.fill = scene.add.rectangle(x, y, width, BAR_HEIGHT, color).setOrigin(0, 0).setDepth(depth + 1);
+  constructor(className: string) {
+    this.fill = createElement('i');
+    this.element = createElement('div', { className: `battle-meter ${className}` }, [this.fill]);
   }
 
-  get bar(): Phaser.GameObjects.Rectangle {
-    return this.fill;
-  }
-
-  /** `ratio` 0..1; dùng `scaleX` thay vì đổi kích thước để không dựng lại hình mỗi khung. */
   set(ratio: number): void {
-    this.fill.setScale(Phaser.Math.Clamp(ratio, 0, 1), 1);
+    const clamped = Math.min(1, Math.max(0, Number.isFinite(ratio) ? ratio : 0));
+    // Làm tròn để không ghi style mỗi khung khi tỉ lệ chỉ đổi rất nhỏ.
+    const rounded = Math.round(clamped * 500) / 500;
+    if (rounded === this.lastRatio) return;
+    this.lastRatio = rounded;
+    this.fill.style.transform = `scaleX(${rounded})`;
   }
 }
 
-/** HUD màn trận: máu, khiên, đề, đồng hồ đề, combo, chữ đang gõ, chữ nổi. Đối tượng dựng một lần, chỉ cập nhật. */
+/**
+ * HUD màn trận dựng bằng DOM (chữ tiếng Việt sắc nét ở mọi mức zoom), phủ đúng khung canvas.
+ * Toạ độ chữ nổi tính theo pixel logic 640×360 rồi đổi sang phần trăm khung.
+ * Màn dọc trên điện thoại: thẻ trên và dải nhập dính mép màn, nằm ở phần đen ngoài canvas.
+ */
 export class BattleHud {
-  private readonly heroHp: MeterBar;
-  private readonly heroShield: MeterBar;
-  private readonly heroLabel: Phaser.GameObjects.Text;
-  private readonly enemyHp: MeterBar;
-  private readonly enemyLabel: Phaser.GameObjects.Text;
-  private readonly promptText: Phaser.GameObjects.Text;
-  private readonly promptTimer: MeterBar;
-  private readonly comboText: Phaser.GameObjects.Text;
-  private readonly comboTimer: MeterBar;
-  private readonly typedText: Phaser.GameObjects.Text;
-  private readonly centerText: Phaser.GameObjects.Text;
-  private readonly floats: Phaser.GameObjects.Text[] = [];
-  private nextFloat = 0;
+  readonly root: HTMLElement;
+  /** Dải dưới: chứa ô gõ hoặc vòng từ và các nút phụ. */
+  readonly dockCenter: HTMLElement;
+  private readonly stage: HTMLElement;
+  private readonly heroStats: HTMLElement;
+  private readonly heroHp = new Meter('is-hp');
+  private readonly heroShield = new Meter('is-shield');
+  private readonly enemyCard: HTMLElement;
+  private readonly enemyName: HTMLElement;
+  private readonly enemyStats: HTMLElement;
+  private readonly enemyHp = new Meter('is-enemy-hp');
+  private readonly promptCard: HTMLElement;
+  private readonly promptEmoji: HTMLElement;
+  private readonly promptMeaning: HTMLElement;
+  private readonly promptTimer = new Meter('is-timer');
+  private readonly combo: HTMLElement;
+  private readonly comboCount: HTMLElement;
+  private readonly comboTimer = new Meter('is-combo');
+  private readonly floats: HTMLElement;
+  private readonly center: HTMLElement;
+  private readonly centerText: HTMLElement;
+  private readonly centerButtons: HTMLElement;
+  private readonly dockStart: HTMLElement;
+  private readonly dockEnd: HTMLElement;
+  private readonly stopTracking: () => void;
 
-  constructor(
-    private readonly scene: Phaser.Scene,
-    depth: number,
-  ) {
-    const right = LOGICAL_WIDTH - BAR_MARGIN - BAR_WIDTH;
-    this.heroHp = new MeterBar(scene, BAR_MARGIN, BAR_MARGIN, BAR_WIDTH, HERO_BAR_COLOR, depth);
-    this.heroShield = new MeterBar(scene, BAR_MARGIN, BAR_MARGIN + BAR_HEIGHT + 2, BAR_WIDTH, SHIELD_BAR_COLOR, depth);
-    this.heroLabel = scene.add.text(BAR_MARGIN, BAR_MARGIN + BAR_HEIGHT * 2 + 4, '', LABEL_STYLE).setDepth(depth);
-    this.enemyHp = new MeterBar(scene, right, BAR_MARGIN, BAR_WIDTH, ENEMY_BAR_COLOR, depth);
-    this.enemyLabel = scene.add.text(right + BAR_WIDTH, BAR_MARGIN + BAR_HEIGHT + 4, '', LABEL_STYLE).setOrigin(1, 0).setDepth(depth);
-    this.promptText = scene.add.text(LOGICAL_WIDTH / 2, PROMPT_Y, '', PROMPT_STYLE).setOrigin(0.5).setDepth(depth);
-    this.promptTimer = new MeterBar(scene, LOGICAL_WIDTH / 2 - BAR_WIDTH / 2, PROMPT_Y + 26, BAR_WIDTH, TIMER_BAR_COLOR, depth);
-    this.comboText = scene.add.text(LOGICAL_WIDTH / 2, COMBO_Y, '', LABEL_STYLE).setOrigin(0.5).setDepth(depth);
-    this.comboTimer = new MeterBar(scene, LOGICAL_WIDTH / 2 - BAR_WIDTH / 4, COMBO_Y + 10, BAR_WIDTH / 2, COMBO_BAR_COLOR, depth);
-    this.typedText = scene.add.text(LOGICAL_WIDTH / 2, TYPED_Y, TYPING_PLACEHOLDER, TYPED_STYLE).setOrigin(0.5).setDepth(depth);
-    this.centerText = scene.add.text(LOGICAL_WIDTH / 2, 180, '', CENTER_STYLE).setOrigin(0.5).setDepth(depth + 2).setVisible(false);
-    for (let index = 0; index < FLOAT_POOL_SIZE; index += 1) {
-      this.floats.push(scene.add.text(0, 0, '', FLOAT_STYLE).setOrigin(0.5).setDepth(depth + 1).setVisible(false));
-    }
-    this.setComboCount(0);
+  constructor(parent: HTMLElement, canvas: HTMLCanvasElement, heroName: string) {
+    const heroLabel = createElement('span', { className: 'battle-card-name', text: heroName });
+    this.heroStats = createElement('span', { className: 'battle-card-stats' });
+    const heroCard = createElement('div', { className: 'battle-card is-hero' }, [
+      createElement('div', { className: 'battle-card-head' }, [heroLabel, this.heroStats]),
+      this.heroHp.element,
+      this.heroShield.element,
+    ]);
+
+    this.enemyName = createElement('span', { className: 'battle-card-name' });
+    this.enemyStats = createElement('span', { className: 'battle-card-stats' });
+    this.enemyCard = createElement('div', { className: 'battle-card is-enemy' }, [
+      createElement('div', { className: 'battle-card-head' }, [this.enemyName, this.enemyStats]),
+      this.enemyHp.element,
+    ]);
+    this.enemyCard.hidden = true;
+
+    this.promptEmoji = createElement('span', { className: 'battle-prompt-emoji' });
+    this.promptMeaning = createElement('span', { className: 'battle-prompt-meaning' });
+    this.promptCard = createElement('div', { className: 'battle-prompt' }, [
+      createElement('div', { className: 'battle-prompt-text' }, [this.promptEmoji, this.promptMeaning]),
+      this.promptTimer.element,
+    ]);
+    this.promptCard.setAttribute('aria-live', 'polite');
+    this.promptCard.hidden = true;
+
+    this.comboCount = createElement('span', { className: 'battle-combo-count' });
+    this.combo = createElement('div', { className: 'battle-combo' }, [this.comboCount, this.comboTimer.element]);
+    this.combo.hidden = true;
+
+    const top = createElement('div', { className: 'battle-top' }, [
+      heroCard,
+      createElement('div', { className: 'battle-top-center' }, [this.promptCard, this.combo]),
+      this.enemyCard,
+    ]);
+
+    this.floats = createElement('div', { className: 'battle-floats' });
+    this.floats.setAttribute('aria-hidden', 'true');
+
+    this.centerText = createElement('p', { className: 'battle-center-text' });
+    this.centerButtons = createElement('div', { className: 'battle-center-buttons' });
+    this.center = createElement('div', { className: 'battle-center' }, [
+      createElement('div', { className: 'battle-center-box' }, [this.centerText, this.centerButtons]),
+    ]);
+    this.center.setAttribute('role', 'status');
+    this.center.hidden = true;
+
+    this.dockStart = createElement('div', { className: 'battle-dock-side' });
+    this.dockCenter = createElement('div', { className: 'battle-dock-center' });
+    this.dockEnd = createElement('div', { className: 'battle-dock-side is-end' });
+    const dock = createElement('div', { className: 'battle-dock' }, [this.dockStart, this.dockCenter, this.dockEnd]);
+
+    this.stage = createElement('div', { className: 'battle-stage' }, [this.floats, top, dock, this.center]);
+    this.root = createElement('div', { className: 'battle-hud' }, [this.stage]);
+    parent.appendChild(this.root);
+    this.stopTracking = trackCanvasFrame(canvas, parent, this.stage);
+  }
+
+  /** Nút phụ ở hai đầu dải dưới (đổi kiểu nhập, âm thanh, rời trận); trả nút để đổi nhãn sau. */
+  addDockButton(side: 'start' | 'end', button: BattleHudButton): HTMLButtonElement {
+    const element = createButton(button.label, button.onClick, 'battle-button is-small');
+    (side === 'start' ? this.dockStart : this.dockEnd).appendChild(element);
+    return element;
   }
 
   setHero(hp: number, maxHp: number, shield: number): void {
     this.heroHp.set(hp / maxHp);
     this.heroShield.set(shield / maxHp);
-    this.heroLabel.setText(`Hiệp sĩ ${hp}/${maxHp}${shield > 0 ? `  🛡 ${shield}` : ''}`);
+    this.heroStats.textContent = shield > 0 ? `${hp}/${maxHp} · khiên ${shield}` : `${hp}/${maxHp}`;
   }
 
-  setEnemy(kind: string, hp: number, maxHp: number, elite: boolean): void {
+  setEnemy(kind: string, hp: number, maxHp: number, elite: boolean, shielded: boolean): void {
+    this.enemyCard.hidden = false;
+    this.enemyCard.classList.toggle('is-elite', elite);
+    this.enemyCard.classList.toggle('is-shielded', shielded);
+    this.enemyName.textContent = `${elite ? 'Tinh anh · ' : ''}${enemyDisplayName(kind)}`;
+    this.enemyStats.textContent = `${hp}/${maxHp}`;
     this.enemyHp.set(hp / maxHp);
-    this.enemyHp.bar.setFillStyle(elite ? ELITE_BAR_COLOR : ENEMY_BAR_COLOR);
-    this.enemyLabel.setText(`${elite ? '★ Tinh anh · ' : ''}${enemyDisplayName(kind)} ${hp}/${maxHp}`);
   }
 
   setPrompt(emoji: string, meaning: string): void {
-    this.promptText.setText(`${emoji}  ${meaning}`).setVisible(true);
+    this.promptEmoji.textContent = emoji;
+    this.promptMeaning.textContent = meaning;
+    this.promptCard.hidden = false;
+    // Chạy lại hiệu ứng hiện đề cho mỗi đề mới.
+    this.promptCard.classList.remove('is-new');
+    void this.promptCard.offsetWidth;
+    this.promptCard.classList.add('is-new');
   }
 
   clearPrompt(): void {
-    this.promptText.setVisible(false);
+    this.promptCard.hidden = true;
     this.promptTimer.set(0);
   }
 
   setPromptTimer(ratio: number): void {
     this.promptTimer.set(ratio);
+    this.promptCard.classList.toggle('is-urgent', ratio > 0 && ratio < URGENT_RATIO);
   }
 
-  /** Gọi khi combo đổi (không gọi mỗi khung); dưới `MIN_VISIBLE_COMBO` thì ẩn thanh combo. */
+  /** Gọi khi combo đổi (không gọi mỗi khung); dưới `MIN_VISIBLE_COMBO` thì ẩn. */
   setComboCount(count: number): void {
     const visible = count >= MIN_VISIBLE_COMBO;
-    this.comboText.setText(visible ? `Combo ×${count}` : '').setVisible(visible);
-    this.comboTimer.bar.setVisible(visible);
+    this.combo.hidden = !visible;
+    if (visible) this.comboCount.textContent = `Combo ×${count}`;
   }
 
   setComboTimer(remainingRatio: number): void {
     this.comboTimer.set(remainingRatio);
   }
 
-  setTypingVisible(visible: boolean): void {
-    this.typedText.setVisible(visible);
-  }
-
-  setTyped(text: string): void {
-    this.typedText.setText(text === '' ? TYPING_PLACEHOLDER : text).setAlpha(text === '' ? 0.6 : 1);
-  }
-
-  showCenter(message: string): void {
-    this.centerText.setText(message).setVisible(true);
+  /** Bảng giữa màn (đang vào trận, kết quả); `buttons` rỗng thì chỉ hiện chữ. */
+  showCenter(message: string, buttons: readonly BattleHudButton[] = []): void {
+    this.centerText.textContent = message;
+    this.centerButtons.replaceChildren(...buttons.map((button) => createButton(button.label, button.onClick, 'battle-button')));
+    this.center.hidden = false;
+    const first = this.centerButtons.querySelector('button');
+    first?.focus({ preventScroll: true });
   }
 
   hideCenter(): void {
-    this.centerText.setVisible(false);
+    this.center.hidden = true;
+    this.centerButtons.replaceChildren();
   }
 
-  /** Chữ nổi lên rồi mờ dần; dùng vòng pool cố định, chữ cũ nhất bị tái dùng khi hết chỗ. */
+  /** Chữ nổi tại (x, y) pixel logic, bay lên rồi mờ; tự gỡ khi xong. */
   floatText(x: number, y: number, text: string, tone: FloatTone): void {
-    const label = this.floats[this.nextFloat % FLOAT_POOL_SIZE];
-    this.nextFloat += 1;
-    if (label === undefined) return;
-    this.scene.tweens.killTweensOf(label);
-    label.setText(text).setColor(FLOAT_COLORS[tone]).setPosition(x, y).setAlpha(1).setVisible(true);
-    this.scene.tweens.add({
-      targets: label,
-      y: y - FLOAT_RISE_PX,
-      alpha: 0,
-      duration: FLOAT_DURATION_MS,
-      ease: 'Cubic.easeOut',
-      onComplete: () => label.setVisible(false),
-    });
+    const label = createElement('span', { className: `battle-float is-${tone}`, text });
+    label.style.left = `${(x / LOGICAL_WIDTH) * 100}%`;
+    label.style.top = `${(y / LOGICAL_HEIGHT) * 100}%`;
+    label.addEventListener('animationend', () => label.remove(), { once: true });
+    this.floats.appendChild(label);
+    while (this.floats.childElementCount > MAX_FLOATS) this.floats.firstElementChild?.remove();
   }
+
+  destroy(): void {
+    this.stopTracking();
+    this.root.remove();
+  }
+}
+
+/**
+ * Giữ `frame` trùng khung canvas (canvas căn giữa, đổi cỡ khi zoom); ghi `--u` = 1 pixel logic tính theo px CSS
+ * để cỡ chữ, khoảng cách của HUD co giãn cùng canvas. Trả hàm huỷ theo dõi.
+ */
+function trackCanvasFrame(canvas: HTMLCanvasElement, container: HTMLElement, frame: HTMLElement): () => void {
+  const sync = (): void => {
+    const canvasBox = canvas.getBoundingClientRect();
+    const containerBox = container.getBoundingClientRect();
+    frame.style.left = `${canvasBox.left - containerBox.left}px`;
+    frame.style.top = `${canvasBox.top - containerBox.top}px`;
+    frame.style.width = `${canvasBox.width}px`;
+    frame.style.height = `${canvasBox.height}px`;
+    frame.style.setProperty('--u', `${canvasBox.width / LOGICAL_WIDTH}px`);
+  };
+  sync();
+  const observer = new ResizeObserver(sync);
+  observer.observe(canvas);
+  observer.observe(container);
+  window.addEventListener('resize', sync);
+  window.visualViewport?.addEventListener('resize', sync);
+  return () => {
+    observer.disconnect();
+    window.removeEventListener('resize', sync);
+    window.visualViewport?.removeEventListener('resize', sync);
+  };
 }

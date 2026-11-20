@@ -1,25 +1,25 @@
 import { MAX_TYPED_ANSWER_LENGTH } from '@herox/shared';
 
 export interface TypingInputHandlers {
-  /** Chữ đang gõ thay đổi; màn trận vẽ lại trên canvas. */
-  onChange(text: string): void;
   /** Người chơi bấm Enter (hoặc Go/Done trên bàn phím ảo). */
   onSubmit(text: string): void;
 }
 
+const PLACEHOLDER = 'Gõ từ tiếng Anh rồi Enter';
+const SHAKE_CLASS = 'is-wrong';
+
 /**
- * Ô nhập DOM ẩn nằm dưới canvas: nhận bàn phím thật và bàn phím ảo iPhone (canvas không mở được bàn phím ảo),
- * tắt tự viết hoa, tự sửa, kiểm chính tả để không đổi chữ người chơi gõ. Chữ hiển thị do canvas vẽ.
+ * Ô nhập DOM của màn trận: nhận bàn phím thật và bàn phím ảo iPhone, tắt tự viết hoa, tự sửa, kiểm chính tả để không
+ * đổi chữ người chơi gõ. Cỡ chữ ≥ 16px (CSS `battle-typing`) để Safari iOS không tự phóng to trang khi focus.
  */
 export class TypingInput {
-  private readonly element: HTMLInputElement;
+  readonly element: HTMLInputElement;
 
-  constructor(
-    parent: HTMLElement,
-    private readonly handlers: TypingInputHandlers,
-  ) {
+  constructor(private readonly handlers: TypingInputHandlers) {
     const element = document.createElement('input');
     element.type = 'text';
+    element.className = 'battle-typing';
+    element.placeholder = PLACEHOLDER;
     element.maxLength = MAX_TYPED_ANSWER_LENGTH;
     element.autocomplete = 'off';
     element.spellcheck = false;
@@ -27,26 +27,17 @@ export class TypingInput {
     element.setAttribute('autocapitalize', 'off');
     element.setAttribute('autocorrect', 'off');
     element.setAttribute('aria-label', 'Gõ từ tiếng Anh');
-    // Trong suốt nhưng vẫn focus được; cỡ chữ 16px để Safari iOS không tự phóng to trang khi focus.
-    Object.assign(element.style, {
-      position: 'absolute',
-      left: '0',
-      bottom: '0',
-      width: '1px',
-      height: '1px',
-      opacity: '0',
-      fontSize: '16px',
-      border: '0',
-      padding: '0',
-    });
-    element.addEventListener('input', this.handleInput);
     element.addEventListener('keydown', this.handleKeyDown);
-    parent.appendChild(element);
+    element.addEventListener('animationend', this.handleAnimationEnd);
     this.element = element;
   }
 
   get text(): string {
     return this.element.value;
+  }
+
+  setVisible(visible: boolean): void {
+    this.element.hidden = !visible;
   }
 
   focus(): void {
@@ -59,17 +50,23 @@ export class TypingInput {
 
   clear(): void {
     this.element.value = '';
-    this.handlers.onChange('');
+  }
+
+  /** Rung ô nhập khi gõ sai. */
+  shake(): void {
+    this.element.classList.remove(SHAKE_CLASS);
+    void this.element.offsetWidth;
+    this.element.classList.add(SHAKE_CLASS);
   }
 
   destroy(): void {
-    this.element.removeEventListener('input', this.handleInput);
     this.element.removeEventListener('keydown', this.handleKeyDown);
+    this.element.removeEventListener('animationend', this.handleAnimationEnd);
     this.element.remove();
   }
 
-  private readonly handleInput = (): void => {
-    this.handlers.onChange(this.element.value);
+  private readonly handleAnimationEnd = (): void => {
+    this.element.classList.remove(SHAKE_CLASS);
   };
 
   private readonly handleKeyDown = (event: KeyboardEvent): void => {

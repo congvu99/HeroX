@@ -2,7 +2,7 @@ import { CHAPTER_1_BEATS, CHAPTER_1_STORY } from '../../shared/src/data/story/ch
 import { FIELD_ENCOUNTER_ID, TUTORIAL_ENCOUNTER_ID } from '../../shared/src/combat/encounters.js';
 import type { StoryResponse } from '../../shared/src/story/story-contract.js';
 import { isChapterComplete, StoryProgress } from '../../shared/src/story/story-rules.js';
-import { START_LEVEL_ID, winBattleAndReturn, type BattlePlayer } from '../support/battle-flow.js';
+import { START_LEVEL_ID, winBattleAndExit, winBattleAndReturn, type BattlePlayer } from '../support/battle-flow.js';
 import { waitForSceneActive, waitForWorldLevel } from '../support/game-driver.js';
 import { attachScreenshot, expect, signInAs, test, useBattleInputMode } from '../support/herox-test.js';
 import {
@@ -109,7 +109,7 @@ test.describe('Chương 1', () => {
       await talkTo(page, LAIR, 'scarecrow', 'down');
       await skipDialog(page);
       await waitForSceneActive(page, SCENE_KEYS.battle);
-      await winBattleAndReturn(player);
+      await winBattleAndExit(player);
       expect((await defeated).status()).toBe(200);
 
       // Thắng trùm xong, thoại kết chương tự mở khi bản đồ chạy lại.

@@ -66,9 +66,13 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
 - **Chữ HUD và hội thoại:** chữ tiếng Việt cần sắc nét.
   - Tiêu đề dùng `Cambria, 'Times New Roman', serif`. Georgia thiếu glyph ố, ề, ầ nên vỡ dấu.
   - Thân chữ dùng font sans của hệ thống.
-- **Trận:** sân nhìn ngang, camera zoom 2.
-  - Hero đứng trái, quái đứng phải.
-  - Trên quái hiện emoji, nghĩa tiếng Việt, nhãn từ loại, thanh máu, thanh đe doạ.
+- **Trận:** sân nhìn dọc (6×11 ô) dựng từ tile atlas chương 1, phóng ×2, theo chủ đề trận (`battle-arena-layout.ts`).
+  - Cánh đồng cho trận dã ngoại, làng cho lò rèn, hang có tàn lửa cho trùm; có lớp tối và quầng sáng theo nhân vật.
+  - Hero đứng dưới nhìn lên (sheet LPC hàng hướng lên: đứng, chém, niệm, gục), quái đứng trên (sprite 64 px ×2, trùm 128 px ×1.5).
+  - Đòn trúng có lao tới, giật lùi, loé trắng; đòn kết khựng hình 80 ms. Hiệu ứng chiêu xoay theo trục dọc (lên/xuống).
+  - HUD là DOM/CSS phủ trên canvas (`battle-hud.ts`, `battle-hud.css`): thẻ máu hai bên, một thẻ đề chung giữa màn
+    (emoji, nghĩa tiếng Việt), thanh thời gian, combo, ô gõ hoặc vòng từ ở dock dưới.
+  - Khung dọc (portrait-only): dock dưới né bàn phím ảo iOS qua `--keyboard-inset`.
 
 ## Bản xem tham chiếu
 

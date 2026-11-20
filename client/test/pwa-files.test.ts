@@ -96,9 +96,9 @@ describe('manifest.webmanifest', () => {
     expect(manifest.id).toBe(APP_BASE_PATH);
   });
 
-  it('toàn màn hình, xoay ngang, có icon 192 và 512 cho điều kiện cài đặt', () => {
+  it('toàn màn hình, khung dọc, có icon 192 và 512 cho điều kiện cài đặt', () => {
     expect(manifest.display).toBe('fullscreen');
-    expect(manifest.orientation).toBe('landscape');
+    expect(manifest.orientation).toBe('portrait');
     const anySizes = manifest.icons.filter(icon => icon.purpose === 'any').map(icon => icon.sizes);
     expect(anySizes).toEqual(expect.arrayContaining(['192x192', '512x512']));
   });

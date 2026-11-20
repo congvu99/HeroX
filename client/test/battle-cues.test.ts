@@ -60,6 +60,27 @@ describe('BattleCueMapper', () => {
     expect(hit.find((cue) => cue.type === 'fx')).toMatchObject({ fx: 'enemy-strike', mirrored: true });
   });
 
+  it('động tác: chém khi tấn công, niệm khi đỡ/cường hoá, quái giật khi trúng, hiệp sĩ chỉ giật khi mất máu', () => {
+    const mapper = new BattleCueMapper();
+    const actionsOf = (cues: readonly BattleCue[]): string[] => cues.flatMap((cue) => (cue.type === 'actor' ? [`${cue.target}:${cue.action}`] : []));
+    expect(actionsOf(mapper.cuesFor({ type: 'cast', wordId: 'w', skill: 'attack', accuracy: 'exact', mastered: false }))).toEqual(['hero:strike']);
+    expect(actionsOf(mapper.cuesFor({ type: 'cast', wordId: 'w', skill: 'guard', accuracy: 'exact', mastered: false }))).toEqual(['hero:cast']);
+    expect(actionsOf(mapper.cuesFor({ type: 'cast', wordId: 'w', skill: 'empower', accuracy: 'exact', mastered: false }))).toEqual(['hero:cast']);
+    expect(actionsOf(mapper.cuesFor({ type: 'cast', wordId: 'w', skill: 'evade', accuracy: 'exact', mastered: false }))).toEqual([]);
+    expect(actionsOf(mapper.cuesFor(HIT))).toEqual(['enemy:hurt']);
+    expect(actionsOf(mapper.cuesFor({ type: 'enemyAttack', damage: 10, absorbed: 10, evaded: false, heroHp: 100, shield: 0 }))).toEqual(['enemy:lunge']);
+    expect(actionsOf(mapper.cuesFor({ type: 'enemyAttack', damage: 10, absorbed: 0, evaded: false, heroHp: 90, shield: 0 }))).toEqual([
+      'enemy:lunge',
+      'hero:hurt',
+    ]);
+  });
+
+  it('chỉ đòn kết liễu mới khựng hình', () => {
+    const mapper = new BattleCueMapper();
+    expect(mapper.cuesFor(HIT).some((cue) => cue.type === 'hitstop')).toBe(false);
+    expect(mapper.cuesFor({ ...HIT, finisher: true })).toContainEqual({ type: 'hitstop', durationMs: 80 });
+  });
+
   it('combo, chuỗi cụm, đứt chuỗi, sai, hết giờ có chữ báo', () => {
     const mapper = new BattleCueMapper();
     expect(textsOf(mapper.cuesFor({ type: 'comboUp', count: 3, bonus: 'same-pos', multiplier: 1.3, chainId: null }))).toEqual(['Combo ×3']);

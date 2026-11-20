@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { SCENE_KEYS, START_MAP_PATH } from '../../client/src/scenes/scene-keys.js';
+import { findEntities, parseLdtkLevel, type MapEntityKind } from '../../client/src/maps/ldtk-loader.js';
 import { buildingDoorRect, interactionRect } from '../../client/src/world/trigger-zones.js';
 
 /**
@@ -50,11 +51,6 @@ interface BattleSessionHandle {
 
 interface BattleSceneHandle {
   readonly session: BattleSessionHandle | null;
-  readonly ring: {
-    readonly slots: readonly { readonly wordId: string | null; readonly container: { readonly x: number; readonly y: number } }[];
-  };
-  /** Nút hiện khi trận kết thúc (`Về bản đồ`, có thể kèm `Thử lại`); nút về bản đồ thêm vào đầu tiên. */
-  readonly endButtons: readonly { readonly x: number; readonly y: number }[];
 }
 
 export type HeroxWindow = Window & { __HEROX_GAME__?: GameHandle };
@@ -69,24 +65,15 @@ export interface ReadyPrompt {
 // Level tách file nằm trong thư mục cùng tên file project LDtk của map khởi đầu.
 const MAP_DIRECTORY = new URL(`../../assets/${START_MAP_PATH.replace(/\.ldtk$/, '')}/`, import.meta.url);
 
-interface LdtkEntity {
-  readonly __identifier: string;
-  readonly px: readonly [number, number];
-  readonly width: number;
-  readonly height: number;
-  readonly fieldInstances: readonly { readonly __identifier: string; readonly __value: unknown }[];
-}
-
-/** Đọc vị trí entity trong file level LDtk (tách file) theo loại và giá trị một trường, ví dụ BattleTrigger có encounterId. */
-export function findMapEntity(levelId: string, identifier: string, field: string, value: string): Rect {
-  const level = JSON.parse(readFileSync(new URL(`${levelId}.ldtkl`, MAP_DIRECTORY), 'utf8')) as {
-    readonly layerInstances: readonly { readonly entityInstances?: readonly LdtkEntity[] }[];
-  };
-  const entity = level.layerInstances
-    .flatMap((layer) => layer.entityInstances ?? [])
-    .find((candidate) => candidate.__identifier === identifier && candidate.fieldInstances.some((f) => f.__identifier === field && f.__value === value));
-  if (entity === undefined) throw new Error(`Không thấy ${identifier} ${field}=${value} trong level ${levelId}`);
-  return { x: entity.px[0], y: entity.px[1], width: entity.width, height: entity.height };
+/**
+ * Đọc khung entity trong file level LDtk (tách file) theo loại và giá trị một trường, ví dụ BattleTrigger có encounterId.
+ * Dùng chính parser của client để toạ độ khớp game (pivot, độ lệch layer); tự đọc `px` thô sẽ lệch với entity pivot giữa-đáy.
+ */
+export function findMapEntity(levelId: string, kind: MapEntityKind, field: string, value: string): Rect {
+  const level = parseLdtkLevel(JSON.parse(readFileSync(new URL(`${levelId}.ldtkl`, MAP_DIRECTORY), 'utf8')));
+  const entity = findEntities(level, kind).find((candidate) => (candidate as unknown as Record<string, unknown>)[field] === value);
+  if (entity === undefined) throw new Error(`Không thấy ${kind} ${field}=${value} trong level ${levelId}`);
+  return { x: entity.x, y: entity.y, width: entity.width, height: entity.height };
 }
 
 /** Vùng nói chuyện với NPC `dialogId` (đúng hàm tính vùng của client). */
@@ -133,6 +120,10 @@ export async function waitForWorldLevel(page: Page, levelId: string): Promise<vo
     };
     requestAnimationFrame(step);
   }));
+}
+
+export async function waitForSceneInactive(page: Page, sceneKey: string): Promise<void> {
+  await page.waitForFunction((key) => (window as HeroxWindow).__HEROX_GAME__?.scene.isActive(key) === false, sceneKey);
 }
 
 /** Chờ màn trận đóng và bản đồ chạy tiếp (scene Phaser đang dừng thì `isActive` trả false). */
@@ -241,37 +232,5 @@ export async function waitForCombo(page: Page, count: number): Promise<void> {
       return (session?.current.combo.count ?? 0) >= expected;
     },
     { key: SCENE_KEYS.battle, expected: count },
-  );
-}
-
-/** Toạ độ trên trang của nút `Về bản đồ` ở màn kết thúc trận; chờ tới khi nút hiện. */
-export async function battleExitPosition(page: Page): Promise<{ x: number; y: number }> {
-  const handle = await page.waitForFunction((key) => {
-    const game = (window as HeroxWindow).__HEROX_GAME__;
-    const battle = game?.scene.getScene(key) as BattleSceneHandle | undefined;
-    const button = battle?.endButtons[0];
-    if (!game || button === undefined) return false;
-    const bounds = game.canvas.getBoundingClientRect();
-    const ratio = bounds.width / game.scale.width;
-    return { x: bounds.left + button.x * ratio, y: bounds.top + button.y * ratio };
-  }, SCENE_KEYS.battle);
-  const position = await handle.jsonValue();
-  if (position === false) throw new Error('Không thấy nút về bản đồ');
-  return position;
-}
-
-/** Toạ độ trên trang của ô vòng từ đang chứa `wordId` (đổi từ toạ độ logic của game qua kích thước canvas). */
-export async function ringOptionPosition(page: Page, wordId: string): Promise<{ x: number; y: number }> {
-  return page.evaluate(
-    ({ key, target }) => {
-      const game = (window as HeroxWindow).__HEROX_GAME__;
-      const battle = game?.scene.getScene(key) as BattleSceneHandle | undefined;
-      const slot = battle?.ring.slots.find((candidate) => candidate.wordId === target);
-      if (!game || !slot) throw new Error(`Vòng từ không có ô ${target}`);
-      const bounds = game.canvas.getBoundingClientRect();
-      const ratio = bounds.width / game.scale.width;
-      return { x: bounds.left + slot.container.x * ratio, y: bounds.top + slot.container.y * ratio };
-    },
-    { key: SCENE_KEYS.battle, target: wordId },
   );
 }

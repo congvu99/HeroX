@@ -1,6 +1,6 @@
 /**
  * Xử lý riêng cho Safari iOS / PWA: bàn phím ảo che màn, chạm đúp và chụm ngón phóng to trang.
- * Zoom canvas theo kích thước đã có ở `config/display.ts`; nhắc xoay ngang làm bằng CSS trong `index.html`;
+ * Zoom canvas theo kích thước đã có ở `config/display.ts`; game chạy khung dọc nên không có nhắc xoay màn;
  * mở khoá âm thanh do màn trận tự làm ở lần chạm/phím đầu.
  */
 

@@ -8,14 +8,16 @@ import {
   type BattleEvent,
   type BattleInput,
   type BattleSetup,
+  type MeResponse,
 } from '@herox/shared';
 import { submitBattleResult, startBattle } from '../api/battle-api';
 import { readEngSessionToken } from '../api/me-api';
 import { BattleSounds } from '../audio/battle-sounds';
-import { BattleCueMapper, type BattleCue, type CueTarget, type HeroMove } from '../battle/battle-cues';
+import { arenaThemeFor, buildArenaLayout } from '../battle/battle-arena-layout';
+import { BattleCueMapper, type BattleCue, type CueTarget } from '../battle/battle-cues';
 import { BattleSession } from '../battle/battle-session';
 import { devBattleSetup } from '../battle/dev-battle-fixture';
-import { LOGICAL_WIDTH } from '../config/display';
+import { BACKGROUND_COLOR, LOGICAL_WIDTH } from '../config/display';
 import {
   loadSettings,
   otherInputMode,
@@ -27,11 +29,13 @@ import {
 import { FxPlayer, queueFxAssets } from '../fx/fx-player';
 import { isTouchPrimaryDevice } from '../input/input-controller';
 import type { QualityController } from '../platform/quality-settings';
-import { prepareHeroLook, queueHeroSheet } from '../render/hero-sprite';
-import { TEXTURE_KEYS } from '../render/placeholder-textures';
-import { spriteAssetUrl } from '../render/sprite-asset-urls';
+import { BattleActors, ENEMY_FEET, HERO_FEET, queueMonsterSprites, type ActorPoint } from '../render/battle-actors';
+import { BattleArena, queueArenaTiles } from '../render/battle-arena';
+import { queueHeroBattleSheets } from '../render/hero-battle-animations';
+import { queueHeroSheet } from '../render/hero-sprite';
+import type { QuestTracker } from '../story/quest-tracker';
 import type { StoryJournal } from '../story/story-journal';
-import { BattleHud } from '../ui/battle-hud';
+import { BattleHud, type BattleHudButton } from '../ui/battle-hud';
 import { TypingInput } from '../ui/typing-input';
 import { WordRing } from '../ui/word-ring';
 import { REGISTRY_KEYS, SCENE_KEYS } from './scene-keys';
@@ -46,54 +50,29 @@ interface OnlineBattle {
   readonly battleId: string;
 }
 
-const HERO_POSITION = { x: 180, y: 176 } as const;
-const ENEMY_POSITION = { x: 460, y: 176 } as const;
-const FLOAT_OFFSET_Y = -70;
-const ARENA_COLOR = '#140d18';
-const FLOOR_COLOR = 0x241a2c;
-const SPRITE_DEPTH = 10;
+/** Hiệu ứng chiêu đặt ngang thân nhân vật (chân ở `HERO_FEET`/`ENEMY_FEET`, thân cao khoảng 90 px sau khi phóng). */
+const FX_BODY_OFFSET_Y = -44;
+/**
+ * Khung dọc: hiệu ứng pixelfx vẽ hướng phải. Đòn thường đi từ hiệp sĩ (dưới) lên quái (trên) → xoay -90°;
+ * đòn quái dội về hiệp sĩ (`mirrored`) đi xuống → xoay +90°.
+ */
+const FX_ANGLE_UP = -90;
+const FX_ANGLE_DOWN = 90;
+/** Chữ nổi hiện trên đầu nhân vật. */
+const FLOAT_OFFSET_Y = -110;
 const FX_DEPTH = 20;
-const HUD_DEPTH = 100;
-const ELITE_TINT = 0xffa060;
-/** Khiên lửa của trùm: quái ánh cam đỏ tới khi bị xuyên. */
-const FIRE_SHIELD_TINT = 0xff5a1f;
-/** Sprite quái DCSS 32 px phóng lên cho cân với hero LPC 64 px; trùm to hơn hẳn. */
-const ENEMY_DISPLAY_HEIGHT = 72;
-const BOSS_DISPLAY_HEIGHT = 120;
-/** Loại quái → file sprite trong `assets/sprites/monsters`; quái trinh sát dùng chung hình tiểu quỷ. */
-const MONSTER_SPRITES: Readonly<Record<string, string>> = {
-  'imp-scout': 'imp',
-  imp: 'imp',
-  skeleton: 'skeleton',
-  ghoul: 'ghoul',
-  'scarecrow-demon': 'scarecrow-demon',
-};
-const BOSS_KINDS: ReadonlySet<string> = new Set(['scarecrow-demon']);
-
-function monsterTextureKey(file: string): string {
-  return `monster:${file}`;
-}
-const DASH_OFFSET_PX = -34;
-const DASH_DURATION_MS = 110;
-const BLINK_HIDDEN_MS = 260;
-const ENEMY_FADE_MS = 400;
+const ACTOR_LIGHT_RADIUS = 110;
 const SHAKE = { light: { durationMs: 120, intensity: 0.004 }, strong: { durationMs: 260, intensity: 0.012 } } as const;
-const BUTTON_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'sans-serif',
-  fontSize: '13px',
-  color: '#0b0b12',
-  backgroundColor: '#e8d9a8',
-  padding: { x: 10, y: 6 },
-};
+const DEV_HERO_NAME = 'Hiệp sĩ';
 const SESSION_EXPIRED_MESSAGE = 'Phiên đăng nhập LingoBrain đã hết. Đăng nhập lại để vào trận.';
 const INVALID_SETUP_MESSAGE = 'Dữ liệu trận không hợp lệ. Thử lại sau.';
-const END_BUTTON_OFFSET_Y = 70;
-const END_BUTTON_GAP_X = 70;
+const EXIT_LABEL = 'Về bản đồ';
 const INPUT_MODE_LABELS: Readonly<Record<BattleInputMode, string>> = { typing: 'Kiểu nhập: Gõ', ring: 'Kiểu nhập: Vòng từ' };
 
 /**
  * Màn trận: lấy setup từ server (hoặc bộ từ thử ở dev), chạy `battle-state` qua `BattleSession`,
- * đổi sự kiện thành hiệu ứng pixelfx, chữ nổi, âm thanh; cuối trận gửi log để server chạy lại và phát thưởng.
+ * đổi sự kiện thành động tác, hiệu ứng pixelfx, chữ nổi, âm thanh; cuối trận gửi log để server chạy lại và phát thưởng.
+ * Sân và nhân vật vẽ bằng Phaser; HUD, ô gõ, vòng từ là DOM phủ lên canvas.
  */
 export class BattleScene extends Phaser.Scene {
   private encounterId = '';
@@ -108,11 +87,9 @@ export class BattleScene extends Phaser.Scene {
   private ring!: WordRing;
   private typing!: TypingInput;
   private cueMapper!: BattleCueMapper;
-  private hero!: Phaser.GameObjects.Sprite;
-  private enemy!: Phaser.GameObjects.Sprite;
-  private modeButton!: Phaser.GameObjects.Text;
-  private soundButton!: Phaser.GameObjects.Text;
-  private endButtons: Phaser.GameObjects.Text[] = [];
+  private actors!: BattleActors;
+  private modeButton!: HTMLButtonElement;
+  private soundButton!: HTMLButtonElement;
   /** Tăng mỗi lần mở trận; scene được dùng lại nên lời gọi mạng của trận cũ phải so số này trước khi ghi đè trạng thái. */
   private battleRun = 0;
 
@@ -125,31 +102,28 @@ export class BattleScene extends Phaser.Scene {
     this.session = null;
     this.online = null;
     this.ended = false;
-    this.endButtons = [];
     this.battleRun += 1;
   }
 
   preload(): void {
     queueFxAssets(this);
     queueHeroSheet(this);
-    // Thiếu sprite quái thì dùng hình tạm vẽ bằng canvas, trận vẫn chơi được.
-    for (const file of new Set(Object.values(MONSTER_SPRITES))) {
-      const url = spriteAssetUrl(`sprites/monsters/${file}.png`);
-      if (url !== undefined && !this.textures.exists(monsterTextureKey(file))) this.load.image(monsterTextureKey(file), url);
-    }
+    queueHeroBattleSheets(this);
+    queueMonsterSprites(this);
+    queueArenaTiles(this);
   }
 
   create(): void {
     this.settings = loadSettings(() => window.localStorage);
     this.inputMode = resolveInputMode(this.settings, isTouchPrimaryDevice());
     this.cueMapper = new BattleCueMapper();
+    this.cameras.main.setBackgroundColor(BACKGROUND_COLOR);
+    this.actors = new BattleActors(this);
     this.createArena();
-    this.hud = new BattleHud(this, HUD_DEPTH);
     this.fx = new FxPlayer(this);
     this.sounds = new BattleSounds(this.settings.soundEnabled);
-    this.ring = new WordRing(this, (wordId) => this.submit({ kind: 'ring', wordId }), undefined, HUD_DEPTH);
-    this.typing = this.createTypingInput();
-    this.createButtons();
+    this.createHud();
+    this.questTracker()?.setVisible(false);
     this.input.on(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDown);
     this.input.keyboard?.on(Phaser.Input.Keyboard.Events.ANY_KEY_DOWN, this.unlockSound);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup);
@@ -167,18 +141,32 @@ export class BattleScene extends Phaser.Scene {
     if (session.isOver) void this.finishBattle(session);
   }
 
-  private createArena(): void {
-    this.cameras.main.setBackgroundColor(ARENA_COLOR);
-    this.add.ellipse(LOGICAL_WIDTH / 2, HERO_POSITION.y, 520, 70, FLOOR_COLOR);
-    const look = prepareHeroLook(this);
-    this.hero = this.add.sprite(HERO_POSITION.x, HERO_POSITION.y, look.textureKey, 'right').setOrigin(0.5, look.feetY / look.frameSize).setDepth(SPRITE_DEPTH);
-    this.enemy = this.add.sprite(ENEMY_POSITION.x, ENEMY_POSITION.y, TEXTURE_KEYS.enemy).setOrigin(0.5, 1).setDepth(SPRITE_DEPTH).setAlpha(0);
+  private quality(): QualityController | undefined {
+    return this.registry.get(REGISTRY_KEYS.quality) as QualityController | undefined;
   }
 
-  private createTypingInput(): TypingInput {
+  private createArena(): void {
+    const quality = this.quality();
+    const arena = new BattleArena(this, buildArenaLayout(arenaThemeFor(this.encounterId)), {
+      lightingEnabled: quality?.profile.dynamicLightingEnabled ?? true,
+      actorLights: [
+        { source: this.actors.heroLight, radius: ACTOR_LIGHT_RADIUS },
+        { source: this.actors.enemyLight, radius: ACTOR_LIGHT_RADIUS },
+      ],
+    });
+    // Máy tụt fps giữa trận: bỏ lớp tối như ở bản đồ.
+    const unsubscribeQuality = quality?.subscribe((profile) => {
+      if (!profile.dynamicLightingEnabled) arena.atmosphere.disable();
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => unsubscribeQuality?.());
+  }
+
+  private createHud(): void {
     const parent = this.game.canvas.parentElement ?? document.body;
-    return new TypingInput(parent, {
-      onChange: (text) => this.hud.setTyped(text),
+    const me = this.registry.get(REGISTRY_KEYS.me) as MeResponse | undefined;
+    this.hud = new BattleHud(parent, this.game.canvas, me?.hero?.name ?? DEV_HERO_NAME);
+    this.ring = new WordRing((wordId) => this.submit({ kind: 'ring', wordId }));
+    this.typing = new TypingInput({
       onSubmit: (text) => {
         // Đề vừa hiện chưa nhận input (luật chống bấm vội của server): giữ nguyên chữ để người chơi Enter lại.
         if (text.trim() === '' || this.session?.isInputLocked === true) return;
@@ -186,21 +174,14 @@ export class BattleScene extends Phaser.Scene {
         this.typing.clear();
       },
     });
+    this.hud.dockCenter.append(this.typing.element, this.ring.element);
+    this.hud.addDockButton('start', { label: 'Rời trận', onClick: () => void this.flee() });
+    this.modeButton = this.hud.addDockButton('start', { label: INPUT_MODE_LABELS[this.inputMode], onClick: () => this.toggleInputMode() });
+    this.soundButton = this.hud.addDockButton('end', { label: this.soundLabel(), onClick: () => this.toggleSound() });
   }
 
-  private createButtons(): void {
-    const { width, height } = this.scale.gameSize;
-    this.modeButton = this.addButton(12, height - 10, INPUT_MODE_LABELS[this.inputMode], () => this.toggleInputMode()).setOrigin(0, 1);
-    this.soundButton = this.addButton(width - 12, height - 10, this.soundLabel(), () => this.toggleSound()).setOrigin(1, 1);
-    this.addButton(14, 50, 'Rời trận', () => void this.flee());
-  }
-
-  private addButton(x: number, y: number, label: string, onClick: () => void): Phaser.GameObjects.Text {
-    return this.add
-      .text(x, y, label, BUTTON_STYLE)
-      .setDepth(HUD_DEPTH)
-      .setInteractive({ useHandCursor: true })
-      .on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, onClick);
+  private questTracker(): QuestTracker | undefined {
+    return this.registry.get(REGISTRY_KEYS.questTracker) as QuestTracker | undefined;
   }
 
   private soundLabel(): string {
@@ -211,7 +192,7 @@ export class BattleScene extends Phaser.Scene {
     this.sounds.unlock();
   };
 
-  /** Chạm màn ở chế độ gõ thì mở lại bàn phím (iPhone chỉ mở bàn phím ảo trong thao tác chạm). */
+  /** Chạm sân ở chế độ gõ thì mở lại bàn phím (iPhone chỉ mở bàn phím ảo trong thao tác chạm). */
   private readonly handlePointerDown = (): void => {
     this.sounds.unlock();
     if (this.inputMode === 'typing' && !this.ended) this.typing.focus();
@@ -221,14 +202,16 @@ export class BattleScene extends Phaser.Scene {
     this.input.off(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDown);
     this.input.keyboard?.off(Phaser.Input.Keyboard.Events.ANY_KEY_DOWN, this.unlockSound);
     this.typing.destroy();
+    this.hud.destroy();
     this.sounds.destroy();
+    this.tweens.timeScale = 1;
   };
 
   private applyInputMode(): void {
     const typing = this.inputMode === 'typing';
-    this.ring.setVisible(!typing);
-    this.hud.setTypingVisible(typing);
-    this.modeButton.setText(INPUT_MODE_LABELS[this.inputMode]);
+    this.ring.setVisible(!typing && !this.ended);
+    this.typing.setVisible(typing && !this.ended);
+    this.modeButton.textContent = INPUT_MODE_LABELS[this.inputMode];
     if (typing && !this.ended) this.typing.focus();
     else this.typing.blur();
   }
@@ -245,7 +228,7 @@ export class BattleScene extends Phaser.Scene {
     saveSettings(() => window.localStorage, this.settings);
     this.sounds.setEnabled(this.settings.soundEnabled);
     if (this.settings.soundEnabled) this.sounds.unlock();
-    this.soundButton.setText(this.soundLabel());
+    this.soundButton.textContent = this.soundLabel();
   }
 
   private submit(input: BattleInput): void {
@@ -272,7 +255,7 @@ export class BattleScene extends Phaser.Scene {
     if (this.isStale(run)) return;
     if (result.kind === 'ok') {
       this.startSession(result.value.setup, { token, battleId: result.value.battleId });
-      if (result.value.tutorial) this.hud.floatText(LOGICAL_WIDTH / 2, 150, 'Trận hướng dẫn: học thêm từ ở LingoBrain để mạnh hơn', 'info');
+      if (result.value.tutorial) this.hud.floatText(LOGICAL_WIDTH / 2, 170, 'Trận hướng dẫn: học thêm từ ở LingoBrain để mạnh hơn', 'info');
     } else if (result.kind === 'unauthenticated') {
       this.showEnd(SESSION_EXPIRED_MESSAGE);
     } else {
@@ -303,8 +286,10 @@ export class BattleScene extends Phaser.Scene {
 
   private handleEvent(event: BattleEvent): void {
     if (event.type === 'prompt') this.showPrompt(event.wordId, event.options);
-    else if (event.type === 'enemySpawn') this.showEnemy(event.kind, event.elite);
-    else if (event.type === 'enemyDefeated') this.tweens.add({ targets: this.enemy, alpha: 0, duration: ENEMY_FADE_MS / 2 });
+    else if (event.type === 'enemySpawn') this.actors.showEnemy(event.kind, event.elite);
+    else if (event.type === 'enemyDefeated') this.actors.defeatEnemy();
+    else if (event.type === 'defeat') this.actors.fall();
+    else if (event.type === 'miss' && event.reason === 'wrong') this.typing.shake();
     for (const cue of this.cueMapper.cuesFor(event)) this.playCue(cue);
   }
 
@@ -314,35 +299,15 @@ export class BattleScene extends Phaser.Scene {
     if (session === null || word === undefined) return;
     this.hud.setPrompt(word.emoji, word.meaning);
     this.ring.setOptions(options.map((id) => ({ wordId: id, label: session.wordById(id)?.word ?? '' })));
-    this.ring.setVisible(this.inputMode === 'ring');
     this.typing.clear();
-  }
-
-  private showEnemy(kind: string, elite: boolean): void {
-    this.tweens.killTweensOf(this.enemy);
-    const file = MONSTER_SPRITES[kind];
-    const textureKey = file === undefined ? undefined : monsterTextureKey(file);
-    if (textureKey !== undefined && this.textures.exists(textureKey)) {
-      this.enemy.setTexture(textureKey);
-      const height = BOSS_KINDS.has(kind) ? BOSS_DISPLAY_HEIGHT : ENEMY_DISPLAY_HEIGHT;
-      this.enemy.setScale(height / this.enemy.height);
-    } else {
-      this.enemy.setTexture(TEXTURE_KEYS.enemy).setScale(1);
-    }
-    this.enemy.setAlpha(0).setX(ENEMY_POSITION.x);
-    if (elite) this.enemy.setTint(ELITE_TINT);
-    else this.enemy.clearTint();
-    this.tweens.add({ targets: this.enemy, alpha: 1, duration: ENEMY_FADE_MS });
   }
 
   private refreshHud(session: BattleSession): void {
     const { hero, enemy, combo } = session.current;
     this.hud.setHero(hero.hp, hero.maxHp, hero.shield);
     if (enemy !== null) {
-      this.hud.setEnemy(enemy.kind, enemy.hp, enemy.maxHp, enemy.elite);
-      if (enemy.shielded) this.enemy.setTint(FIRE_SHIELD_TINT);
-      else if (enemy.elite) this.enemy.setTint(ELITE_TINT);
-      else this.enemy.clearTint();
+      this.hud.setEnemy(enemy.kind, enemy.hp, enemy.maxHp, enemy.elite, enemy.shielded);
+      this.actors.setEnemyState(enemy.elite, enemy.shielded);
     }
     this.hud.setComboCount(combo.count);
   }
@@ -356,51 +321,42 @@ export class BattleScene extends Phaser.Scene {
     this.ring.setEnabled(!session.isInputLocked);
   }
 
-  private positionOf(target: CueTarget): { readonly x: number; readonly y: number } {
-    return target === 'hero' ? HERO_POSITION : ENEMY_POSITION;
+  private feetOf(target: CueTarget): ActorPoint {
+    return target === 'hero' ? HERO_FEET : ENEMY_FEET;
   }
 
   private playCue(cue: BattleCue): void {
     switch (cue.type) {
       case 'fx': {
-        const at = this.positionOf(cue.target);
-        this.fx.play(cue.fx, at.x, at.y, { scale: cue.scale, depth: FX_DEPTH, flipX: cue.mirrored === true });
+        const at = this.feetOf(cue.target);
+        const angle = cue.mirrored === true ? FX_ANGLE_DOWN : FX_ANGLE_UP;
+        this.fx.play(cue.fx, at.x, at.y + FX_BODY_OFFSET_Y, { scale: cue.scale, depth: FX_DEPTH, angle });
         break;
       }
       case 'sound':
         this.sounds.play(cue.sound);
         break;
       case 'floatText': {
-        const at = this.positionOf(cue.target);
+        const at = this.feetOf(cue.target);
         this.hud.floatText(at.x, at.y + FLOAT_OFFSET_Y, cue.text, cue.tone);
         break;
       }
       case 'heroMove':
-        this.moveHero(cue.move);
+        this.actors.moveHero(cue.move, () => this.fx.play(SYSTEM_FX.blinkIn, HERO_FEET.x, HERO_FEET.y + FX_BODY_OFFSET_Y, { depth: FX_DEPTH }));
+        break;
+      case 'actor':
+        this.actors.act(cue.target, cue.action);
+        break;
+      case 'hitstop':
+        this.actors.hitstop(cue.durationMs);
         break;
       case 'shake': {
-        const quality = this.registry.get(REGISTRY_KEYS.quality) as QualityController | undefined;
-        if (quality?.profile.screenShakeEnabled === false) break;
+        if (this.quality()?.profile.screenShakeEnabled === false) break;
         const shake = cue.strong ? SHAKE.strong : SHAKE.light;
         this.cameras.main.shake(shake.durationMs, shake.intensity);
         break;
       }
     }
-  }
-
-  /** Né trong trận: lướt lùi rồi về chỗ, hoặc tan biến rồi hiện lại (thuấn bộ). */
-  private moveHero(move: HeroMove): void {
-    this.tweens.killTweensOf(this.hero);
-    this.hero.setPosition(HERO_POSITION.x, HERO_POSITION.y).setAlpha(1);
-    if (move === 'dash') {
-      this.tweens.add({ targets: this.hero, x: HERO_POSITION.x + DASH_OFFSET_PX, duration: DASH_DURATION_MS, yoyo: true, ease: 'Quad.easeOut' });
-      return;
-    }
-    this.hero.setAlpha(0);
-    this.time.delayedCall(BLINK_HIDDEN_MS, () => {
-      this.fx.play(SYSTEM_FX.blinkIn, HERO_POSITION.x, HERO_POSITION.y, { depth: FX_DEPTH });
-      this.hero.setAlpha(1);
-    });
   }
 
   private async finishBattle(session: BattleSession): Promise<void> {
@@ -426,7 +382,6 @@ export class BattleScene extends Phaser.Scene {
 
   /** Gửi log cho server chạy lại; lỗi thì cho thử lại để không mất thưởng của trận đã đánh. */
   private async submitResult(session: BattleSession, online: OnlineBattle, title: string): Promise<void> {
-    this.clearEndButtons();
     this.hud.showCenter(`${title}\nĐang ghi kết quả…`);
     const run = this.battleRun;
     const result = await submitBattleResult(online.token, online.battleId, session.resultRequest(), window.fetch.bind(window));
@@ -471,20 +426,10 @@ export class BattleScene extends Phaser.Scene {
   private showEnd(message: string, retry?: () => void): void {
     this.ended = true;
     this.typing.blur();
-    this.ring.setVisible(false);
-    this.hud.setTypingVisible(false);
-    this.hud.showCenter(message);
-    this.clearEndButtons();
-    const { width, height } = this.scale.gameSize;
-    const y = height / 2 + END_BUTTON_OFFSET_Y;
-    const exitX = retry === undefined ? width / 2 : width / 2 + END_BUTTON_GAP_X;
-    this.endButtons.push(this.addButton(exitX, y, 'Về bản đồ', () => this.exitBattle()).setOrigin(0.5));
-    if (retry !== undefined) this.endButtons.push(this.addButton(width / 2 - END_BUTTON_GAP_X, y, 'Thử lại', retry).setOrigin(0.5));
-  }
-
-  private clearEndButtons(): void {
-    for (const button of this.endButtons) button.destroy();
-    this.endButtons = [];
+    this.applyInputMode();
+    const buttons: BattleHudButton[] = [{ label: EXIT_LABEL, onClick: () => this.exitBattle() }];
+    if (retry !== undefined) buttons.push({ label: 'Thử lại', onClick: retry });
+    this.hud.showCenter(message, buttons);
   }
 
   /** Rời trận giữa chừng: báo server (trận tính "rời trận", vẫn ghi từ sai) rồi về bản đồ. */

@@ -24,6 +24,8 @@ export interface FxPlayOptions {
   readonly scale?: number;
   readonly depth?: number;
   readonly flipX?: boolean;
+  /** Xoay hiệu ứng (độ). Khung dọc: hiệu ứng pixelfx vẽ hướng phải, xoay -90° để hướng lên (về phía quái). */
+  readonly angle?: number;
 }
 
 /**
@@ -85,6 +87,7 @@ export class FxPlayer {
       .setTexture(textureKey(name), fxFrameName(info, 0))
       .setOrigin(options.flipX === true ? 1 - origin.x : origin.x, origin.y)
       .setFlipX(options.flipX === true)
+      .setAngle(options.angle ?? 0)
       .setScale(options.scale ?? 1)
       .setDepth(options.depth ?? 0)
       .setPosition(x, y)

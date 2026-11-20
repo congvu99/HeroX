@@ -52,28 +52,31 @@ describe('facingFromVector', () => {
 });
 
 describe('computeDisplayZoom', () => {
-  it('màn PC lấy zoom số nguyên', () => {
-    expect(computeDisplayZoom(1920, 1080)).toBe(3);
-    expect(computeDisplayZoom(1366, 768)).toBe(2);
+  it('khung dọc khớp bội số nguyên thì lấy zoom số nguyên', () => {
+    // 1080×1560 (DPR 1): chiều cao chia đúng 2 lần 780, chiều rộng dư → zoom 2.
+    expect(computeDisplayZoom(1080, 1560)).toBe(2);
+    // 360×780 (DPR 1): đúng một lần kích thước logic → zoom 1.
+    expect(computeDisplayZoom(360, 780)).toBe(1);
   });
 
-  it('iPhone 12 ngang (844×390 trừ safe-area) dùng zoom 1 vì lấp trên 85%', () => {
-    expect(computeDisplayZoom(750, 390)).toBe(1);
+  it('màn rất rộng (desktop) bị giới hạn theo chiều cao, có viền hai bên', () => {
+    // Khung dọc trên desktop ngang: chiều cao quyết định zoom, hai bên là viền đen.
+    expect(computeDisplayZoom(1920, 1080)).toBeCloseTo(1080 / 780);
   });
 
-  it('iPhone dọc dùng zoom lẻ để không còn viền đen lớn', () => {
-    expect(computeDisplayZoom(390, 800)).toBeCloseTo(390 / 640);
+  it('iPhone 14 Plus dọc (430×932) dùng zoom lẻ để không còn viền đen lớn', () => {
+    expect(computeDisplayZoom(430, 932)).toBeCloseTo(Math.min(430 / 360, 932 / 780));
   });
 
   it('làm tròn theo pixel thiết bị khi màn hình có DPR lẻ', () => {
-    // Laptop 1920×1080 scale 125% → 1536×864 px CSS: mỗi pixel logic đúng 3 px thiết bị.
-    expect(computeDisplayZoom(1536, 864, 1.25)).toBeCloseTo(2.4);
-    // Không làm tròn theo px CSS (2) vì sẽ ra 2,5 px thiết bị.
-    expect(computeDisplayZoom(1536, 864, 1.25) * 1.25).toBe(3);
+    // 900×1248 px CSS, DPR 1,25: chiều cao giới hạn, mỗi pixel logic đúng 2 px thiết bị.
+    expect(computeDisplayZoom(900, 1248, 1.25)).toBeCloseTo(1.6);
+    // Zoom × DPR là số nguyên px thiết bị (không còn lẻ).
+    expect(computeDisplayZoom(900, 1248, 1.25) * 1.25).toBe(2);
   });
 
-  it('iPhone 12 ngang DPR 3 (750×369) cho số nguyên px thiết bị', () => {
-    expect(computeDisplayZoom(750, 369, 3) * 3).toBe(3);
+  it('iPhone dọc DPR 3 (360×780) cho số nguyên px thiết bị', () => {
+    expect(computeDisplayZoom(360, 780, 3) * 3).toBe(3);
   });
 
   it('kích thước 0 (chưa layout) không làm hỏng zoom', () => {

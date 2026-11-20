@@ -7,7 +7,7 @@ import { STORY_CHAPTERS } from '../../shared/src/story/story-rules.js';
 import type { StoryChapter } from '../../shared/src/story/story-types.js';
 
 /** Tên project Playwright; mỗi project có bộ người dùng riêng để hai trình duyệt chạy song song không giẫm dữ liệu. */
-export const E2E_PROJECT_NAMES = ['desktop-chrome', 'iphone-12'] as const;
+export const E2E_PROJECT_NAMES = ['pixel-5', 'iphone-12'] as const;
 export type E2eProjectName = (typeof E2E_PROJECT_NAMES)[number];
 
 /** Mỗi nhóm spec dùng một người dùng riêng: trận đánh cộng vàng không làm lệch số vàng của spec lò rèn. */

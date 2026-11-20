@@ -1,6 +1,6 @@
-/** Thông số hiển thị đã chốt: top-down 3/4, lưới 32px, độ phân giải logic 640×360 (khoảng 20×11 ô). */
-export const LOGICAL_WIDTH = 640;
-export const LOGICAL_HEIGHT = 360;
+/** Thông số hiển thị đã chốt: top-down 3/4, lưới 32px, khung dọc (portrait) 360×780 (khoảng 11×24 ô), sát iPhone 14 Plus. */
+export const LOGICAL_WIDTH = 360;
+export const LOGICAL_HEIGHT = 780;
 export const TILE_SIZE = 32;
 /** Khung hero LPC. */
 export const HERO_FRAME_SIZE = 64;
@@ -8,7 +8,7 @@ export const BACKGROUND_COLOR = '#0b0b12';
 
 /**
  * Nếu zoom số nguyên lấp được ít nhất tỉ lệ này của zoom FIT thì dùng số nguyên (pixel đều, sắc);
- * thấp hơn thì dùng zoom lẻ để màn nhỏ (iPhone dọc) không bị viền đen quá lớn.
+ * thấp hơn thì dùng zoom lẻ để màn nhỏ không bị viền đen quá lớn.
  */
 const INTEGER_ZOOM_MIN_FILL = 0.85;
 const MIN_ZOOM = 0.25;

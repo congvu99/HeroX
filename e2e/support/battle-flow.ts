@@ -1,7 +1,8 @@
-import type { Page, Response } from '@playwright/test';
+import type { Locator, Page, Response } from '@playwright/test';
 import type { BattleInputMode } from '../../client/src/config/game-settings.js';
+import { SCENE_KEYS } from '../../client/src/scenes/scene-keys.js';
 import { E2E_ENCOUNTER_ID } from '../fixtures/e2e-fixture.js';
-import { battleExitPosition, readBattle, ringOptionPosition, waitForReadyPrompt, waitForWorldLevel, waitForWorldResumed } from './game-driver.js';
+import { readBattle, waitForReadyPrompt, waitForSceneInactive, waitForWorldLevel, waitForWorldResumed } from './game-driver.js';
 import { usePortal, walkIntoBattle } from './story-flow.js';
 
 /** Level hero xuất hiện khi vào game (Lexhold, có các công trình) và level chứa vùng trận E2E. */
@@ -41,10 +42,12 @@ export function waitForBattleResult(page: Page): Promise<Response> {
   return page.waitForResponse((response) => BATTLE_RESULT_PATH.test(new URL(response.url()).pathname), { timeout: 0 });
 }
 
-/** Bấm (chuột) hoặc chạm (cảm ứng) vào một điểm trên canvas. */
-async function pressCanvasAt(player: BattlePlayer, point: { x: number; y: number }): Promise<void> {
-  if (player.useTouch) await player.page.touchscreen.tap(point.x, point.y);
-  else await player.page.mouse.click(point.x, point.y);
+const EXIT_BUTTON_LABEL = 'Về bản đồ';
+
+/** Bấm (chuột) hoặc chạm (cảm ứng) vào một nút DOM của HUD trận. */
+async function pressButton(player: BattlePlayer, button: Locator): Promise<void> {
+  if (player.useTouch) await button.tap();
+  else await button.click();
 }
 
 /**
@@ -60,7 +63,7 @@ export async function answerNextPrompt(player: BattlePlayer, previousShownAtMs: 
     await input.fill(prompt.word);
     await input.press('Enter');
   } else {
-    await pressCanvasAt(player, await ringOptionPosition(page, prompt.wordId));
+    await pressButton(player, page.locator(`[data-word-id="${prompt.wordId}"]`));
   }
   return prompt.shownAtMs;
 }
@@ -78,10 +81,19 @@ export async function playUntilBattleEnds(player: BattlePlayer, previousShownAtM
   return { outcome: (await readBattle(player.page)).outcome, answered };
 }
 
-/** Trả lời đúng tới hết trận (phải thắng), bấm `Về bản đồ`, chờ bản đồ chạy lại. */
-export async function winBattleAndReturn(player: BattlePlayer): Promise<void> {
+/**
+ * Trả lời đúng tới hết trận (phải thắng), bấm `Về bản đồ`, chờ màn trận đóng.
+ * Không chờ bản đồ chạy lại: thắng trùm thì thoại kết chương mở ngay và tạm dừng bản đồ.
+ */
+export async function winBattleAndExit(player: BattlePlayer): Promise<void> {
   const ending = await playUntilBattleEnds(player, null);
   if (ending.outcome !== 'victory') throw new Error(`Trận kết thúc với kết quả ${ending.outcome}`);
-  await pressCanvasAt(player, await battleExitPosition(player.page));
+  await pressButton(player, player.page.getByRole('button', { name: EXIT_BUTTON_LABEL }));
+  await waitForSceneInactive(player.page, SCENE_KEYS.battle);
+}
+
+/** Thắng trận, về bản đồ và chờ bản đồ chạy lại. */
+export async function winBattleAndReturn(player: BattlePlayer): Promise<void> {
+  await winBattleAndExit(player);
   await waitForWorldResumed(player.page);
 }

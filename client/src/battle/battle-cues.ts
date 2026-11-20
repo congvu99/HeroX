@@ -12,18 +12,24 @@ export type CueTarget = 'hero' | 'enemy';
 export type BattleSound = 'cast' | 'hit' | 'heavyHit' | 'enemyHit' | 'miss' | 'combo' | 'evade' | 'victory' | 'defeat';
 export type HeroMove = 'dash' | 'blink';
 export type FloatTone = 'damage' | 'info' | 'bad';
+/** Động tác nhân vật: hiệp sĩ chém/niệm, quái lao vào, ai trúng đòn thì giật lùi. */
+export type ActorAction = 'strike' | 'cast' | 'lunge' | 'hurt';
 
 /** Việc màn trận cần làm để thể hiện một sự kiện của `battle-state`; tách khỏi Phaser để test được. */
 export type BattleCue =
-  /** `mirrored`: hiệu ứng vốn hướng sang phải (phía quái), lật lại khi đòn đi từ quái về phía hiệp sĩ. */
+  /** `mirrored`: đòn đi từ quái về phía hiệp sĩ; khung dọc xoay hiệu ứng xuống thay vì hướng lên mặc định. */
   | { readonly type: 'fx'; readonly fx: string; readonly target: CueTarget; readonly scale: number; readonly mirrored?: boolean }
   | { readonly type: 'sound'; readonly sound: BattleSound }
   | { readonly type: 'floatText'; readonly target: CueTarget; readonly text: string; readonly tone: FloatTone }
   | { readonly type: 'heroMove'; readonly move: HeroMove }
+  | { readonly type: 'actor'; readonly target: CueTarget; readonly action: ActorAction }
+  /** Khựng hình ngắn khi đòn kết liễu trúng, cho cảm giác đòn nặng. */
+  | { readonly type: 'hitstop'; readonly durationMs: number }
   | { readonly type: 'shake'; readonly strong: boolean };
 
 const NORMAL_SCALE = 1;
 const SHIELD_FX_SCALE = 1.6;
+const FINISHER_HITSTOP_MS = 80;
 
 /** Né bằng thuấn bộ khi biến thể chiêu dùng hiệu ứng biến mất; còn lại là lướt. */
 function heroMoveFor(variant: SkillVariant): HeroMove {
@@ -96,6 +102,7 @@ export class BattleCueMapper {
       { type: 'sound', sound: 'cast' },
     ];
     if (skill === 'evade') cues.push({ type: 'heroMove', move: heroMoveFor(variant) });
+    else cues.push({ type: 'actor', target: 'hero', action: skill === 'attack' ? 'strike' : 'cast' });
     return cues;
   }
 
@@ -104,12 +111,15 @@ export class BattleCueMapper {
     const impact = finisher
       ? { fx: SYSTEM_FX.finisher, scale: NORMAL_SCALE }
       : { fx: variant?.impactFx ?? SYSTEM_FX.enemyStrike, scale: variant?.fxScale ?? NORMAL_SCALE };
-    return [
+    const cues: BattleCue[] = [
       { type: 'fx', fx: impact.fx, target: 'enemy', scale: impact.scale },
+      { type: 'actor', target: 'enemy', action: 'hurt' },
       { type: 'floatText', target: 'enemy', text: `-${damage}`, tone: 'damage' },
       { type: 'sound', sound: finisher ? 'heavyHit' : 'hit' },
       { type: 'shake', strong: finisher },
     ];
+    if (finisher) cues.push({ type: 'hitstop', durationMs: FINISHER_HITSTOP_MS });
+    return cues;
   }
 
   private enemyAttackCues(damage: number, absorbed: number, evaded: boolean): BattleCue[] {
@@ -121,9 +131,13 @@ export class BattleCueMapper {
         { type: 'sound', sound: 'evade' },
       ];
     }
-    const cues: BattleCue[] = [{ type: 'fx', fx: SYSTEM_FX.enemyStrike, target: 'hero', scale: NORMAL_SCALE, mirrored: true }];
+    const cues: BattleCue[] = [
+      { type: 'actor', target: 'enemy', action: 'lunge' },
+      { type: 'fx', fx: SYSTEM_FX.enemyStrike, target: 'hero', scale: NORMAL_SCALE, mirrored: true },
+    ];
     if (absorbed > 0) cues.push({ type: 'fx', fx: SYSTEM_FX.shieldBlock, target: 'hero', scale: NORMAL_SCALE });
     const taken = damage - absorbed;
+    if (taken > 0) cues.push({ type: 'actor', target: 'hero', action: 'hurt' });
     cues.push(
       { type: 'floatText', target: 'hero', text: taken > 0 ? `-${taken}` : 'Khiên đỡ', tone: taken > 0 ? 'bad' : 'info' },
       { type: 'sound', sound: 'enemyHit' },

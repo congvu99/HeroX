@@ -34,8 +34,9 @@ export default defineConfig({
     trace: 'on',
     screenshot: 'on',
   },
+  // Game chạy khung dọc (portrait-only): cả hai project dùng thiết bị dọc, giữ hai engine Chromium + WebKit.
   projects: [
-    { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] } },
+    { name: 'pixel-5', use: { ...devices['Pixel 5'] } },
     { name: 'iphone-12', use: { ...devices['iPhone 12'] } },
   ],
   webServer: externalBaseUrl

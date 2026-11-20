@@ -14,6 +14,8 @@ import { ASSETS_DIR, SOURCES, upsertCredits } from '../../tools/lib/credits-stor
 const MAP_NAME = 'chapter-1-misty-village';
 const TILESET_FILE = 'chapter-1.png';
 const TILESET_REL_PATH = `../tilesets/${TILESET_FILE}`;
+/** Tên tile → chỉ số trong atlas; màn trận vẽ sân theo tên tile nên không phụ thuộc thứ tự ghép. */
+const TILE_INDEX_FILE = 'chapter-1-tiles.json';
 const ATLAS_COLUMNS = 8;
 const MAIN_VARIANT_SHARE = 0.7;
 const ATLAS_MAX_PX = 2048; // trần texture WebGL an toàn trên iPhone
@@ -344,6 +346,7 @@ function main() {
   const atlas = buildAtlas(tiles);
   mkdirSync(join(ASSETS_DIR, 'tilesets'), { recursive: true });
   writePng(join(ASSETS_DIR, 'tilesets', TILESET_FILE), atlas.image);
+  writeJson(join(ASSETS_DIR, 'tilesets', TILE_INDEX_FILE), Object.fromEntries(atlas.indexByName));
 
   const context = { tilesetRelPath: TILESET_REL_PATH, columns: ATLAS_COLUMNS };
   const levels = LEVELS.map((spec, index) => {
