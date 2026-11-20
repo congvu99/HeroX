@@ -45,7 +45,7 @@ describe('BattleCueMapper', () => {
     mapper.cuesFor({ type: 'cast', wordId: 'w', skill: 'attack', accuracy: 'exact', mastered: false });
     const cues = mapper.cuesFor({ ...HIT, finisher: true });
     expect(fxOf(cues)).toEqual(['finisher']);
-    expect(cues).toContainEqual({ type: 'shake', strong: true });
+    expect(cues).toContainEqual({ type: 'shake', strong: true, delayMs: 120 });
   });
 
   it('quái đánh: né, khiên đỡ hết, trúng đòn', () => {
@@ -57,7 +57,19 @@ describe('BattleCueMapper', () => {
     expect(textsOf(blocked)).toEqual(['Khiên đỡ']);
     const hit = mapper.cuesFor({ type: 'enemyAttack', damage: 10, absorbed: 4, evaded: false, heroHp: 94, shield: 0 });
     expect(textsOf(hit)).toEqual(['-6']);
-    expect(hit.find((cue) => cue.type === 'fx')).toMatchObject({ fx: 'enemy-strike', mirrored: true });
+    // Quái lao xuống trước, đòn trúng hiệp sĩ phát sau đó.
+    expect(hit[0]).toMatchObject({ type: 'actor', action: 'lunge' });
+    expect(hit[0]?.delayMs).toBeUndefined();
+    expect(hit.find((cue) => cue.type === 'fx')).toMatchObject({ fx: 'enemy-strike', delayMs: 150 });
+  });
+
+  it('nhịp đòn: chém trúng khi hiệp sĩ lao tới, phép nguyền bay tới quái rồi mới trúng', () => {
+    const mapper = new BattleCueMapper();
+    mapper.cuesFor({ type: 'cast', wordId: 'w', skill: 'attack', accuracy: 'exact', mastered: false });
+    expect(mapper.cuesFor(HIT).every((cue) => cue.delayMs === 120)).toBe(true);
+    const spell = mapper.cuesFor({ type: 'cast', wordId: 'w', skill: 'empower', accuracy: 'exact', mastered: false });
+    expect(spell.find((cue) => cue.type === 'projectile')).toMatchObject({ from: 'hero', tone: 'curse', durationMs: 320 });
+    expect(mapper.cuesFor(HIT).every((cue) => cue.delayMs === 320)).toBe(true);
   });
 
   it('động tác: chém khi tấn công, niệm khi đỡ/cường hoá, quái giật khi trúng, hiệp sĩ chỉ giật khi mất máu', () => {

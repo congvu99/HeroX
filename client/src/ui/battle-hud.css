@@ -61,7 +61,7 @@
 }
 
 .battle-top-center {
-  /* Đề chung nằm ở dải trống giữa quái (trên) và hiệp sĩ (dưới), không đè lên quái ở đầu sân. */
+  /* Combo nằm ở dải trống giữa quái (trên) và hiệp sĩ (dưới), không đè lên ai. */
   position: absolute;
   top: calc(var(--u) * 250);
   left: 0;
@@ -182,6 +182,8 @@
 }
 
 .battle-prompt {
+  grid-area: prompt;
+  box-sizing: border-box;
   width: 100%;
   padding: calc(var(--u) * 6) calc(var(--u) * 10) calc(var(--u) * 7);
   text-align: center;
@@ -289,6 +291,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     'start end'
+    'prompt prompt'
     'center center';
   align-items: end;
   gap: calc(var(--u) * 6);

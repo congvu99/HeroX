@@ -103,7 +103,7 @@ export class BattleHud {
 
     const top = createElement('div', { className: 'battle-top' }, [
       heroCard,
-      createElement('div', { className: 'battle-top-center' }, [this.promptCard, this.combo]),
+      createElement('div', { className: 'battle-top-center' }, [this.combo]),
       this.enemyCard,
     ]);
 
@@ -121,7 +121,8 @@ export class BattleHud {
     this.dockStart = createElement('div', { className: 'battle-dock-side' });
     this.dockCenter = createElement('div', { className: 'battle-dock-center' });
     this.dockEnd = createElement('div', { className: 'battle-dock-side is-end' });
-    const dock = createElement('div', { className: 'battle-dock' }, [this.dockStart, this.dockCenter, this.dockEnd]);
+    // Đề nằm ngay trên ô gõ / vòng từ, dưới hiệp sĩ: mắt đọc đề rồi chọn chữ mà không phải nhìn lên đầu sân.
+    const dock = createElement('div', { className: 'battle-dock' }, [this.dockStart, this.promptCard, this.dockCenter, this.dockEnd]);
 
     this.stage = createElement('div', { className: 'battle-stage' }, [this.floats, top, dock, this.center]);
     this.root = createElement('div', { className: 'battle-hud' }, [this.stage]);

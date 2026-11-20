@@ -30,6 +30,11 @@ for (const battleCase of BATTLE_CASES) {
         expect(previous, 'Trận kết thúc trước khi đủ combo').not.toBeNull();
       }
       await waitForCombo(page, COMBO_TARGET);
+      // Đề nằm ngay trên ô gõ / vòng từ (dưới hiệp sĩ).
+      const prompt = page.locator('.battle-dock .battle-prompt');
+      await expect(prompt).toBeVisible();
+      await prompt.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+      await attachScreenshot(page, `${battleCase.mode}-de-bai`);
       await attachScreenshot(page, `${battleCase.mode}-combo-3`);
 
       const ending = await playUntilBattleEnds(player, previous);

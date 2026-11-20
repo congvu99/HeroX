@@ -16,20 +16,33 @@ export type FloatTone = 'damage' | 'info' | 'bad';
 export type ActorAction = 'strike' | 'cast' | 'lunge' | 'hurt';
 
 /** Việc màn trận cần làm để thể hiện một sự kiện của `battle-state`; tách khỏi Phaser để test được. */
-export type BattleCue =
-  /** `mirrored`: đòn đi từ quái về phía hiệp sĩ; khung dọc xoay hiệu ứng xuống thay vì hướng lên mặc định. */
-  | { readonly type: 'fx'; readonly fx: string; readonly target: CueTarget; readonly scale: number; readonly mirrored?: boolean }
+export type BattleCue = (
+  | { readonly type: 'fx'; readonly fx: string; readonly target: CueTarget; readonly scale: number }
+  /** Luồng sáng bay từ nhân vật `from` sang đối thủ, để thấy chiêu đi tới đâu trước khi trúng. */
+  | { readonly type: 'projectile'; readonly from: CueTarget; readonly tone: ProjectileTone; readonly durationMs: number }
   | { readonly type: 'sound'; readonly sound: BattleSound }
   | { readonly type: 'floatText'; readonly target: CueTarget; readonly text: string; readonly tone: FloatTone }
   | { readonly type: 'heroMove'; readonly move: HeroMove }
   | { readonly type: 'actor'; readonly target: CueTarget; readonly action: ActorAction }
   /** Khựng hình ngắn khi đòn kết liễu trúng, cho cảm giác đòn nặng. */
   | { readonly type: 'hitstop'; readonly durationMs: number }
-  | { readonly type: 'shake'; readonly strong: boolean };
+  | { readonly type: 'shake'; readonly strong: boolean }
+) & {
+  /** Chờ bao lâu (ms) mới phát, để đòn trúng khớp lúc chiêu bay tới / nhân vật lao tới. */
+  readonly delayMs?: number;
+};
+
+export type ProjectileTone = 'holy' | 'curse';
 
 const NORMAL_SCALE = 1;
 const SHIELD_FX_SCALE = 1.6;
 const FINISHER_HITSTOP_MS = 80;
+/** Đòn chém: hiệp sĩ lao lên chạm quái thì mới trúng (khớp `strikeLungeMs` của battle-actors). */
+const MELEE_IMPACT_DELAY_MS = 120;
+/** Phép nguyền bay từ hiệp sĩ tới quái. */
+const SPELL_FLIGHT_MS = 320;
+/** Quái lao xuống chạm hiệp sĩ (khớp `enemyLungeMs`). */
+const ENEMY_IMPACT_DELAY_MS = 150;
 
 /** Né bằng thuấn bộ khi biến thể chiêu dùng hiệu ứng biến mất; còn lại là lướt. */
 function heroMoveFor(variant: SkillVariant): HeroMove {
@@ -42,6 +55,7 @@ function heroMoveFor(variant: SkillVariant): HeroMove {
  */
 export class BattleCueMapper {
   private lastVariant: SkillVariant | null = null;
+  private impactDelayMs = 0;
 
   constructor(private readonly tiers: SkillTiers = BASE_SKILL_TIERS) {}
 
@@ -103,6 +117,8 @@ export class BattleCueMapper {
     ];
     if (skill === 'evade') cues.push({ type: 'heroMove', move: heroMoveFor(variant) });
     else cues.push({ type: 'actor', target: 'hero', action: skill === 'attack' ? 'strike' : 'cast' });
+    if (skill === 'empower') cues.push({ type: 'projectile', from: 'hero', tone: 'curse', durationMs: SPELL_FLIGHT_MS });
+    this.impactDelayMs = skill === 'empower' ? SPELL_FLIGHT_MS : MELEE_IMPACT_DELAY_MS;
     return cues;
   }
 
@@ -119,7 +135,7 @@ export class BattleCueMapper {
       { type: 'shake', strong: finisher },
     ];
     if (finisher) cues.push({ type: 'hitstop', durationMs: FINISHER_HITSTOP_MS });
-    return cues;
+    return withDelay(cues, this.impactDelayMs);
   }
 
   private enemyAttackCues(damage: number, absorbed: number, evaded: boolean): BattleCue[] {
@@ -131,10 +147,7 @@ export class BattleCueMapper {
         { type: 'sound', sound: 'evade' },
       ];
     }
-    const cues: BattleCue[] = [
-      { type: 'actor', target: 'enemy', action: 'lunge' },
-      { type: 'fx', fx: SYSTEM_FX.enemyStrike, target: 'hero', scale: NORMAL_SCALE, mirrored: true },
-    ];
+    const cues: BattleCue[] = [{ type: 'fx', fx: SYSTEM_FX.enemyStrike, target: 'hero', scale: NORMAL_SCALE }];
     if (absorbed > 0) cues.push({ type: 'fx', fx: SYSTEM_FX.shieldBlock, target: 'hero', scale: NORMAL_SCALE });
     const taken = damage - absorbed;
     if (taken > 0) cues.push({ type: 'actor', target: 'hero', action: 'hurt' });
@@ -143,6 +156,10 @@ export class BattleCueMapper {
       { type: 'sound', sound: 'enemyHit' },
       { type: 'shake', strong: false },
     );
-    return cues;
+    return [{ type: 'actor', target: 'enemy', action: 'lunge' }, ...withDelay(cues, ENEMY_IMPACT_DELAY_MS)];
   }
+}
+
+function withDelay(cues: readonly BattleCue[], delayMs: number): BattleCue[] {
+  return delayMs > 0 ? cues.map((cue) => ({ ...cue, delayMs })) : [...cues];
 }

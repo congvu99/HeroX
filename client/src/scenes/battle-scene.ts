@@ -27,6 +27,7 @@ import {
   type GameSettings,
 } from '../config/game-settings';
 import { FxPlayer, queueFxAssets } from '../fx/fx-player';
+import { BattleProjectiles } from '../render/battle-projectile';
 import { isTouchPrimaryDevice } from '../input/input-controller';
 import type { QualityController } from '../platform/quality-settings';
 import { BattleActors, ENEMY_FEET, HERO_FEET, queueMonsterSprites, type ActorPoint } from '../render/battle-actors';
@@ -53,13 +54,10 @@ interface OnlineBattle {
 /** Hiệu ứng chiêu đặt ngang thân nhân vật (chân ở `HERO_FEET`/`ENEMY_FEET`, thân cao khoảng 90 px sau khi phóng). */
 const FX_BODY_OFFSET_Y = -44;
 /**
- * Khung dọc: hiệu ứng pixelfx vẽ hướng phải. Đòn thường đi từ hiệp sĩ (dưới) lên quái (trên) → xoay -90°;
- * đòn quái dội về hiệp sĩ (`mirrored`) đi xuống → xoay +90°.
+ * Chữ nổi: trên đầu quái (khoảng trống dưới thẻ máu); dưới chân hiệp sĩ, vì trên đầu hiệp sĩ là thẻ combo và
+ * đường bay của chiêu.
  */
-const FX_ANGLE_UP = -90;
-const FX_ANGLE_DOWN = 90;
-/** Chữ nổi hiện trên đầu nhân vật. */
-const FLOAT_OFFSET_Y = -110;
+const FLOAT_OFFSET_Y: Readonly<Record<CueTarget, number>> = { enemy: -110, hero: 34 };
 const FX_DEPTH = 20;
 const ACTOR_LIGHT_RADIUS = 110;
 const SHAKE = { light: { durationMs: 120, intensity: 0.004 }, strong: { durationMs: 260, intensity: 0.012 } } as const;
@@ -83,6 +81,7 @@ export class BattleScene extends Phaser.Scene {
   private ended = false;
   private hud!: BattleHud;
   private fx!: FxPlayer;
+  private projectiles!: BattleProjectiles;
   private sounds!: BattleSounds;
   private ring!: WordRing;
   private typing!: TypingInput;
@@ -121,6 +120,7 @@ export class BattleScene extends Phaser.Scene {
     this.actors = new BattleActors(this);
     this.createArena();
     this.fx = new FxPlayer(this);
+    this.projectiles = new BattleProjectiles(this, FX_DEPTH);
     this.sounds = new BattleSounds(this.settings.soundEnabled);
     this.createHud();
     this.questTracker()?.setVisible(false);
@@ -290,7 +290,7 @@ export class BattleScene extends Phaser.Scene {
     else if (event.type === 'enemyDefeated') this.actors.defeatEnemy();
     else if (event.type === 'defeat') this.actors.fall();
     else if (event.type === 'miss' && event.reason === 'wrong') this.typing.shake();
-    for (const cue of this.cueMapper.cuesFor(event)) this.playCue(cue);
+    for (const cue of this.cueMapper.cuesFor(event)) this.scheduleCue(cue);
   }
 
   private showPrompt(wordId: string, options: readonly string[]): void {
@@ -325,12 +325,28 @@ export class BattleScene extends Phaser.Scene {
     return target === 'hero' ? HERO_FEET : ENEMY_FEET;
   }
 
+  private bodyOf(target: CueTarget): ActorPoint {
+    const feet = this.feetOf(target);
+    return { x: feet.x, y: feet.y + FX_BODY_OFFSET_Y };
+  }
+
+  /** Cue có `delayMs` chờ trên đồng hồ scene (dừng theo scene, tự huỷ khi rời trận). */
+  private scheduleCue(cue: BattleCue): void {
+    if (cue.delayMs === undefined) this.playCue(cue);
+    else this.time.delayedCall(cue.delayMs, () => this.playCue(cue));
+  }
+
   private playCue(cue: BattleCue): void {
     switch (cue.type) {
       case 'fx': {
-        const at = this.feetOf(cue.target);
-        const angle = cue.mirrored === true ? FX_ANGLE_DOWN : FX_ANGLE_UP;
-        this.fx.play(cue.fx, at.x, at.y + FX_BODY_OFFSET_Y, { scale: cue.scale, depth: FX_DEPTH, angle });
+        // Hiệu ứng pixelfx vẽ sẵn theo góc nhìn chính diện; giữ nguyên, không xoay theo trục sân.
+        const at = this.bodyOf(cue.target);
+        this.fx.play(cue.fx, at.x, at.y, { scale: cue.scale, depth: FX_DEPTH });
+        break;
+      }
+      case 'projectile': {
+        const to = cue.from === 'hero' ? 'enemy' : 'hero';
+        this.projectiles.fire(this.bodyOf(cue.from), this.bodyOf(to), cue.tone, cue.durationMs);
         break;
       }
       case 'sound':
@@ -338,7 +354,7 @@ export class BattleScene extends Phaser.Scene {
         break;
       case 'floatText': {
         const at = this.feetOf(cue.target);
-        this.hud.floatText(at.x, at.y + FLOAT_OFFSET_Y, cue.text, cue.tone);
+        this.hud.floatText(at.x, at.y + FLOAT_OFFSET_Y[cue.target], cue.text, cue.tone);
         break;
       }
       case 'heroMove':

@@ -69,11 +69,15 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
 - **Trận:** sân nhìn dọc (6×11 ô) dựng từ tile atlas chương 1, phóng ×2, theo chủ đề trận (`battle-arena-layout.ts`).
   - Cánh đồng cho trận dã ngoại, làng cho lò rèn, hang có tàn lửa cho trùm; có lớp tối và quầng sáng theo nhân vật.
   - Hero đứng dưới nhìn lên (sheet LPC hàng hướng lên: đứng, chém, niệm, gục), quái đứng trên (sprite 64 px ×2, trùm 128 px ×1.5).
-  - Đòn trúng có lao tới, giật lùi, loé trắng; đòn kết khựng hình 80 ms. Hiệu ứng chiêu xoay theo trục dọc (lên/xuống).
+  - Đòn trúng có lao tới, giật lùi, loé trắng; đòn kết khựng hình 80 ms.
+  - Hiệu ứng pixelfx giữ nguyên góc vẽ, không xoay. Đòn trúng chờ hiệp sĩ lao tới (120 ms) hoặc phép nguyền bay tới quái
+    (luồng sáng tím 320 ms); đòn quái trúng sau khi quái lao xuống (150 ms).
   - Sân căn giữa khung 360×780 (lưới 384 px cắt đều 12 px hai mép); hero, quái cùng tâm ngang với thẻ đề.
   - HUD là DOM/CSS phủ trên canvas (`battle-hud.ts`, `battle-hud.css`): hàng trên là thẻ máu hiệp sĩ và quái,
-    thẻ đề chung (emoji, nghĩa tiếng Việt, thanh thời gian, combo) ở dải giữa quái và hiệp sĩ.
-  - Dock dưới: hàng nút phụ, rồi ô gõ hoặc vòng từ 2 cột × 3 hàng chiếm trọn chiều ngang; từ dài xuống dòng, không cắt.
+    thẻ combo ở dải giữa quái và hiệp sĩ. Chữ nổi: trên đầu quái, dưới chân hiệp sĩ.
+  - Dock dưới (dưới hiệp sĩ): hàng nút phụ, thẻ đề (emoji, nghĩa tiếng Việt, thanh thời gian), rồi ô gõ hoặc vòng từ
+    2 cột × 3 hàng chiếm trọn chiều ngang; từ dài xuống dòng, không cắt.
+  - Bảng kết quả hiện ở đáy, đè dock; combo, chữ nổi và dock ẩn khi bảng mở.
   - Khung dọc (portrait-only): dock dưới né bàn phím ảo iOS qua `--keyboard-inset`.
 
 ## Bản xem tham chiếu
