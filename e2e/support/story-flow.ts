@@ -1,6 +1,6 @@
 import type { Locator, Page, Response } from '@playwright/test';
 import { SCENE_KEYS } from '../../client/src/scenes/scene-keys.js';
-import { chestZone, findMapEntity, npcZone, waitForSceneActive, waitForWorldLevel, walkInto, type WalkDirection } from './game-driver.js';
+import { chestZone, findMapEntity, npcZone, waitForSceneActive, waitForWorldLevel, walkInto, type HeroxWindow, type WalkDirection } from './game-driver.js';
 
 /** Đường dẫn ghi mốc truyện (`POST /herox/api/story/beat`). */
 const STORY_BEAT_PATH = '/herox/api/story/beat';
@@ -64,4 +64,23 @@ export async function usePortal(page: Page, levelId: string, targetLevel: string
 export async function walkIntoBattle(page: Page, levelId: string, encounterId: string, direction: WalkDirection): Promise<void> {
   const trigger = findMapEntity(levelId, 'BattleTrigger', 'encounterId', encounterId);
   await walkInto(page, trigger, direction, () => waitForSceneActive(page, SCENE_KEYS.battle));
+}
+
+/** Tiền tố texture quái (giống `MONSTER_KEY_PREFIX` của client). */
+const MONSTER_TEXTURE_PREFIX = 'monster:';
+
+/** Đi bộ chạm vào một con quái lang thang ở level hiện tại, chờ màn trận mở. */
+export async function touchRoamingMonster(page: Page): Promise<void> {
+  const target = await page.evaluate(
+    ({ key, prefix }) => {
+      const world = (window as HeroxWindow).__HEROX_GAME__?.scene.getScene(key) as
+        | { children: { list: { texture?: { key: string }; x: number; y: number; active: boolean }[] } }
+        | undefined;
+      const monster = world?.children.list.find((child) => child.active && child.texture?.key.startsWith(prefix) === true);
+      return monster === undefined ? null : { x: monster.x - 10, y: monster.y - 14, width: 20, height: 14 };
+    },
+    { key: SCENE_KEYS.world, prefix: MONSTER_TEXTURE_PREFIX },
+  );
+  if (target === null) throw new Error('Không thấy quái lang thang trên bản đồ');
+  await walkInto(page, target, 'left', () => waitForSceneActive(page, SCENE_KEYS.battle));
 }
