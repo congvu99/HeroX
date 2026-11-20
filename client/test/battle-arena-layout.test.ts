@@ -29,7 +29,7 @@ describe('battle-arena-layout', () => {
     expect(buildArenaLayout('fields')).toEqual(buildArenaLayout('fields'));
   });
 
-  it('mọi trận chương 1 có chủ đề; lò rèn ở làng, trùm ở hang dung nham có tàn lửa', () => {
+  it('mọi trận chương 1 có chủ đề; lò rèn ở làng, trùm ở hầm có tàn lửa', () => {
     for (const encounter of ENCOUNTERS) expect(ARENA_THEMES).toContain(arenaThemeFor(encounter.id));
     expect(arenaThemeFor(SMITHY_ENCOUNTER_ID)).toBe('village');
     expect(arenaThemeFor(SCARECROW_BOSS_ENCOUNTER_ID)).toBe('lair');

@@ -4,7 +4,8 @@ export const LOGICAL_HEIGHT = 780;
 export const TILE_SIZE = 32;
 /** Khung hero LPC. */
 export const HERO_FRAME_SIZE = 64;
-export const BACKGROUND_COLOR = '#0b0b12';
+/** Nền chiều tà tím ấm quanh canvas và sau sân trận; khớp index.html, manifest.webmanifest (không import được hằng). */
+export const BACKGROUND_COLOR = '#2e2233';
 
 /**
  * Chỉ dùng zoom số nguyên (pixel đều, sắc) khi nó lấp gần hết khung FIT — tức mất chưa tới ~0,5%.

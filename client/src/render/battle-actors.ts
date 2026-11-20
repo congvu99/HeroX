@@ -108,7 +108,7 @@ export class BattleActors {
     this.playHero('idle');
   }
 
-  /** Điểm sáng đi theo nhân vật (ngang ngực), cho lớp tối của sân. */
+  /** Điểm sáng đi theo nhân vật (ngang ngực), cho quầng sáng của sân. */
   get heroLight(): ActorPoint {
     const root = this.heroRoot;
     return { get x() { return root.x; }, get y() { return root.y - 40; } };

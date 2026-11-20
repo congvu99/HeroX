@@ -1,24 +1,26 @@
 # Định hướng hình ảnh HeroX
 
-Nguồn chuẩn cho mọi asset nhân vật, quái, map, UI. Chốt với người dùng ngày 2026-11-12.
+Nguồn chuẩn cho mọi asset nhân vật, quái, map, UI. Chốt lần đầu 2026-11-12; phong cách map đổi sang làng hiệp sĩ giờ
+vàng ngày 2026-11-20.
 
 ## Đích hình ảnh
 
-Ảnh mẫu: `prototypes/style-preview/public/assets/reference/style-target.png` (người dùng cung cấp, chỉ dùng tham khảo nội bộ, không phát hành).
+- **Map:** làng hiệp sĩ trung cổ, pixel art 16 px phóng ×2, top-down 3/4, ánh sáng theo level: **nắng giờ vàng**,
+  **hoàng hôn đỏ bóng sâu**, **ánh trăng**; tia sáng chéo, cửa sổ/cửa/cổng phát sáng, bóng nhà đổ, vignette.
+- Mỗi level một chất riêng nhưng cùng tông: Lexhold (tường thành, tháp, cổng), cánh đồng (cây, rào, nghĩa trang),
+  làng (nhà mái cam/xám, nhà nguyện đá), nhà nguyện (sàn đá, ghế, bàn thờ), hầm trùm (đất đỏ, đá vụn, bia mộ).
+- Nhân vật giữ như cũ: thập tự quân áo trắng thập tự đỏ, khiên lớn; quái DCSS/LPC đang có.
+- Hiệu ứng: vệt chém vàng, vòng thánh vàng, vòng huyết đỏ (pixelfx).
 
-- Dark fantasy gothic, top-down 3/4, pixel art chi tiết, tỉ lệ người thật (không chibi).
-- Không khí: tu viện đổ nát, đêm mưa, nghĩa địa, cổng sắt, nến và lò lửa vàng ấm, vòng huyết đỏ phát sáng.
-- Thập tự quân áo trắng thập tự đỏ, khiên lớn; quái: ghoul, chó địa ngục, giáo sĩ áo choàng đỏ, xương kỵ sĩ; trùm giám mục sa ngã cầm lư hương.
-- Hiệu ứng: vệt chém vàng, vòng thánh vàng, vòng huyết đỏ (đã có bản tương đương trong pixelfx).
-
-## Thông số kỹ thuật (giữ nguyên quyết định cũ)
+## Thông số kỹ thuật
 
 | Mục | Giá trị |
 |---|---|
 | Góc nhìn | top-down 3/4 (không isometric, LDtk không hỗ trợ) |
-| Độ phân giải logic | 640x360, phóng nguyên khối, `pixelArt: true` |
-| Lưới tile | 32px |
-| Nhân vật, quái thường | khung 64x64, thân cao khoảng 48–56px, 4 hướng (8 hướng nếu PixelLab cho rẻ) |
+| Độ phân giải logic | 360x780 khung dọc (portrait-only), `pixelArt: true` (`client/src/config/display.ts`) |
+| Lưới tile | 32px (tile Kenney 16px phóng nearest ×2) |
+| Chiều cao level | 25 ô (800 px) |
+| Nhân vật, quái thường | khung 64x64, thân cao khoảng 48–56px, 4 hướng |
 | Quái tinh anh | khung 64–96px |
 | Trùm | khung 128x128 |
 | Chân dung hội thoại | 64x64 hoặc 96x96 |
@@ -26,9 +28,27 @@ Nguồn chuẩn cho mọi asset nhân vật, quái, map, UI. Chốt với ngư�
 
 ## Bảng màu
 
+### Ánh sáng: 3 preset (map và sân trận)
+
+Màu, độ đậm, góc tia, bóng đổ nằm trong `client/src/render/lighting-presets.ts` (preset và bảng gán level/sân);
+`golden-hour-atmosphere.ts` chỉ dựng lớp phủ. Level chưa khai báo dùng `sunny`.
+
+| Preset | Dùng cho | Dải màu (MULTIPLY) | Tia sáng | Bóng đổ | Vignette |
+|---|---|---|---|---|---|
+| `sunny` – ánh nắng giờ vàng | Lexhold, Misty_Fields, sân `fields` | `#f7c6a6` → `#a37c92` | cam vàng, 20° | 0.4, lệch (−18, +28) | 0.18 |
+| `sunset` – hoàng hôn đỏ, bóng sâu | Misty_Village, sân `village` | `#f29a7a` → `#6e4a78` | đỏ cam, 38° (nắng thấp) | 0.55, dài (−34, +40) | 0.26 |
+| `moonlight` – ánh trăng | Misty_Chapel, Scarecrow_Lair, sân `lair` | `#8fa6d6` → `#3c4470` | trắng xanh nhạt, 15° | xanh tím 0.5, lệch (+14, +24) | 0.34 |
+
+Lớp chung mọi preset: quầng sáng góc trên phải (ADD), cửa sổ/cửa/cổng phát sáng theo
+`assets/tilesets/chapter-1-glow.json`, quầng ấm quanh hero/quái/đuốc (đuốc chập chờn), bụi lơ lửng màu theo preset.
+Ở `moonlight`, cửa sổ và đuốc đậm hơn để nổi trên nền lạnh. Nền ngoài canvas `#2e2233` (`BACKGROUND_COLOR`, khớp
+`index.html`, manifest); nền level LDtk `#5DA84B` (màu cỏ).
+
+### UI (HUD, hội thoại, panel)
+
 | Tên | Hex | Dùng cho |
 |---|---|---|
-| Mực đêm | `#0b0a10` | nền, bóng tối |
+| Mực đêm | `#0b0a10` | nền hộp thoại/panel, chữ trên nút sáng |
 | Tro | `#1b1720` | panel UI |
 | Xương | `#d9d2c0` | chữ thường |
 | Máu thánh | `#7a141c` | áo choàng, thập tự, viền nguy hiểm |
@@ -41,33 +61,45 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
 
 ## Nguồn asset
 
-1. **Bản chính: PixelLab** (https://pixellab.ai, MCP `https://api.pixellab.ai/mcp`).
-   - Tạo nhân vật, quái, trùm, chân dung, có thể cả tileset top-down.
-   - Mọi lần tạo đều dùng ảnh mẫu ở trên làm chuẩn phong cách và khoá bảng màu.
-   - Theo `llms.txt` của PixelLab, gói nào cũng được dùng thương mại; kiểm lại điều khoản trước khi phát hành.
-   - Người dùng tự đăng ký và tự thêm MCP. Token không đưa vào repo, chat hay log.
-2. **Bản tạm khi chưa có PixelLab:** LPC, DCSS (CC0), pixelfx (MIT).
-   - Công thức ghép hero tạm nằm ở `prototypes/style-preview/tools/build_style_assets.py`: kiểu "Crusader" của Sorthen, gồm mũ bascinet + mặt nạ pigface, giáp tấm, giáp vai, khiên thập tự lớn, áo choàng đỏ, kiếm dài.
+1. **Nguồn chính: Kenney** (https://kenney.nl, CC0): Tiny Town + Tiny Dungeon, ảnh gốc 16 px ở `assets/tiles/kenney/`
+   (kèm `LICENSE-*.txt`).
+   - Asset mới cùng phong cách 16 px phóng ×2; ưu tiên pack Kenney dòng "Tiny".
+   - **Không** chạy `tools/palette-harmonize.mjs` lên asset Kenney (khử bão hoà, làm lệch tông ánh sáng).
+2. **Ngoại lệ được giữ:** hero LPC, quái DCSS (CC0), hiệu ứng pixelfx (MIT) đang có, vì đã gắn hoạt ảnh trận.
+   - Công thức ghép hero ở `prototypes/style-preview/tools/build_style_assets.py`: kiểu "Crusader" của Sorthen.
    - Chỉ dùng layer LPC có ít nhất một license không phải GPL.
-3. Mỗi asset phải có dòng credit (nguồn, license, công cụ, ngày tạo). Asset PixelLab cần lưu thêm prompt, seed, ảnh tham chiếu để tạo lại được.
+3. PixelLab không còn là nguồn chính. Nếu dùng cho asset lẻ: lưu prompt, seed, ảnh tham chiếu để tạo lại được; token
+   không đưa vào repo, chat hay log.
+4. Mỗi asset có dòng credit (nguồn, license, công cụ, ngày) trong `assets/credits.json`, rồi chạy
+   `node tools/build-credits.mjs` để sinh `assets/CREDITS.md`.
+
+## Sửa map chương 1
+
+- Map, atlas `assets/tilesets/chapter-1.png`, bảng tên tile `chapter-1-tiles.json`, vùng sáng `chapter-1-glow.json`
+  sinh bằng `npm run generate:chapter-1 -w @herox/client`, sau đó `node tools/build-credits.mjs`.
+- Bố cục level: `client/scripts/chapter-1/levels.mjs`; bảng tile Kenney: `client/scripts/chapter-1/kenney-atlas.mjs`.
+- **Không sửa tay file `.ldtkl`**: lần sinh sau ghi đè. Script tất định, chạy lại ra đúng file cũ.
 
 ## Hero
 
 - **Hiệp sĩ Thánh Ngôn:** giáp tấm bạc, mũ kín có mặt nạ, áo khoác trắng thập tự đỏ, **khiên thập tự lớn** (người dùng yêu cầu giữ), áo choàng đỏ, kiếm dài.
 - Phải đọc ra "bá khí": dáng cao, vai rộng. Tránh đầu to, mũ tròn, tỉ lệ chibi. Người dùng đã chê bản LPC armet là "trông hài".
 - Hoạt ảnh tối thiểu: đứng, đi, chém, niệm phép, trúng đòn, chết.
-- Ngoại trang (Xưởng may, phase 06) là biến thể của cùng hero: đổi áo choàng, hoạ tiết khiên, mũ, màu giáp. Giữ nguyên dáng và khung để hoạt ảnh khớp.
+- Ngoại trang (Xưởng may) là biến thể của cùng hero: đổi áo choàng, hoạ tiết khiên, mũ, màu giáp. Giữ nguyên dáng và khung để hoạt ảnh khớp.
 
 ## Trình bày trong game
 
-- **Bóng tối:** một lớp tối toàn màn hình, khoét vùng sáng quanh hero và nguồn lửa, thêm quầng sáng cộng màu ở nguồn lửa.
-  - Mưa phủ màn hình, tàn lửa bay trên dung nham.
-  - Nền ghép sẵn thành một texture và phủ màu chung để tile khác nguồn về cùng một tông.
+- **Ánh sáng** (`client/src/render/golden-hour-atmosphere.ts`, preset ở `lighting-presets.ts`): xem bảng preset phía trên.
+  - Đổi cỡ màn hình: dải màu, quầng, tia sáng được tạo lại theo cỡ mới.
+  - Phần tĩnh (dải màu, tia nắng, bóng nhà, cửa sổ) vẽ một lần; mỗi khung chỉ dời quầng sáng động và cuộn tia nắng.
+  - Quality thấp (`dynamicLightingEnabled = false`) tắt toàn bộ lớp phủ; art Kenney vẫn đọc rõ.
+  - Tàn lửa bay lên ở hầm trùm.
 - **Chữ HUD và hội thoại:** chữ tiếng Việt cần sắc nét.
   - Tiêu đề dùng `Cambria, 'Times New Roman', serif`. Georgia thiếu glyph ố, ề, ầ nên vỡ dấu.
   - Thân chữ dùng font sans của hệ thống.
 - **Trận:** sân nhìn dọc (6×11 ô) dựng từ tile atlas chương 1, phóng ×2, theo chủ đề trận (`battle-arena-layout.ts`).
-  - Cánh đồng cho trận dã ngoại, làng cho lò rèn, hang có tàn lửa cho trùm; có lớp tối và quầng sáng theo nhân vật.
+  - Cánh đồng (cây, rào, bia tập bắn) cho trận dã ngoại, làng (nhà, giếng, đe) cho lò rèn, hầm có tàn lửa cho trùm;
+    mỗi sân một preset ánh sáng (nắng / hoàng hôn / trăng) và quầng sáng theo nhân vật.
   - Hero đứng dưới nhìn lên (sheet LPC hàng hướng lên: đứng, chém, niệm, gục), quái đứng trên (sprite 64 px ×2, trùm 128 px ×1.5).
   - Đòn trúng có lao tới, giật lùi, loé trắng; đòn kết khựng hình 80 ms.
   - Hiệu ứng pixelfx giữ nguyên góc vẽ, không xoay, chạy chậm còn 0,6 lần. Đòn trúng chờ hiệp sĩ lao tới (220 ms) hoặc
@@ -75,8 +107,8 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
   - Xem chiêu: sau mỗi đáp án đúng, đồng hồ trận đứng 1,1–1,8 s (theo loại chiêu) và chưa nhận đáp án mới.
   - Vào trận: bản đồ rung, loé, phóng to rồi tối dần (550 ms), màn trận hiện dần (450 ms). Asset trận tải ngầm sau
     khi vào bản đồ nên không đứng hình; bảng "Đang vào trận…" chỉ hiện nếu chờ quá 0,7 s.
-- **Quái lang thang:** Misty_Fields có 7 quái (sau mốc tới làng) đứng nhún, bước quanh chỗ sinh, có quầng sáng nhỏ
-  trong sương. Chạm vào là vào trận dã ngoại; trận xong con đó tan đi, 30 s sau sinh con mới (`roaming-monsters.ts`).
+- **Quái lang thang:** Misty_Fields có 7 quái (sau mốc tới làng) đứng nhún, bước quanh chỗ sinh, có quầng sáng nhỏ.
+  Chạm vào là vào trận dã ngoại; trận xong con đó tan đi, 30 s sau sinh con mới (`roaming-monsters.ts`).
   - Chuỗi đúng: từ đòn thứ 2 chiêu mượn hình bậc 2 và chém kèm kiếm khí sáng; từ đòn thứ 4 thêm hào quang và phóng to.
     Khiên có thêm hình khiên hiện quanh hiệp sĩ. Chỉ đổi hình, không đổi sức mạnh.
   - Sân căn giữa khung 360×780 (lưới 384 px cắt đều 12 px hai mép); hero, quái cùng tâm ngang với thẻ đề.
@@ -88,13 +120,7 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
   - Bảng kết quả hiện ở đáy, đè dock; chữ nổi và dock ẩn khi bảng mở.
   - Khung dọc (portrait-only): dock dưới né bàn phím ảo iOS qua `--keyboard-inset`.
 
-## Bản xem tham chiếu
+## Bản xem tham chiếu (cũ)
 
-Chạy bản xem: `npx vite prototypes/style-preview --port 5190`.
-
-Bản xem gồm 3 tab:
-- **Thiết kế:** bảng thiết kế.
-- **Màn 1:** khám phá làng.
-- **Màn 2:** trận đánh.
-
-Đây là bản xem phong cách viết bằng JS thuần. Code game chính nằm ở `client/` và không import từ bản xem này.
+`npx vite prototypes/style-preview --port 5190` mở bản xem phong cách gothic cũ (JS thuần). Không còn là chuẩn phong
+cách map; code game ở `client/` không import từ đây.

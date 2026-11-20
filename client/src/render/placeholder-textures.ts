@@ -59,36 +59,94 @@ function paintHeroFrame(context: CanvasRenderingContext2D, originX: number, faci
   context.fillRect(centerX + 2, 56, 6, 6);
 }
 
-/** Đổ nát: tường gãy, không mái; đang dựng: giàn gỗ, mái dở; hồi sinh: mái đỏ, cửa sáng nến. */
-function paintBuilding(context: CanvasRenderingContext2D, stage: CitadelStage): void {
+/** Bảng màu Kenney Tiny Town (nét phẳng, viền tối) cho công trình. */
+const BUILDING_PALETTE = {
+  outline: '#3b2a24',
+  stone: '#a8a29a',
+  stoneShade: '#7d776f',
+  wood: '#c98b4f',
+  woodShade: '#8a5a2b',
+  roof: '#e0743a',
+  roofShade: '#b5532a',
+  door: '#6b4226',
+  windowLit: '#ffd86b',
+  grass: '#5da84b',
+} as const;
+
+/** Khối chữ nhật có viền 2px tối như tile Kenney. */
+function fillOutlinedRect(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, fill: string): void {
+  context.fillStyle = BUILDING_PALETTE.outline;
+  context.fillRect(x, y, width, height);
+  context.fillStyle = fill;
+  context.fillRect(x + 2, y + 2, width - 4, height - 4);
+}
+
+/** Tường ván gỗ: thân gỗ sáng, vạch ván ngang tối. */
+function paintWoodWall(context: CanvasRenderingContext2D, top: number): void {
   const width = BUILDING_TEXTURE_WIDTH;
   const height = BUILDING_TEXTURE_HEIGHT;
-  context.fillStyle = '#3a3440';
-  if (stage === 'ruined') {
-    context.fillRect(4, 28, 24, height - 28);
-    context.fillRect(40, 40, 20, height - 40);
-    context.fillRect(70, 22, 22, height - 22);
-    context.fillStyle = '#25212b';
-    context.fillRect(30, height - 10, 36, 10);
-    return;
-  }
-  context.fillRect(4, 18, width - 8, height - 18);
-  context.fillStyle = '#1b1720';
-  context.fillRect(width / 2 - 10, height - 24, 20, 24);
-  if (stage === 'rebuilding') {
-    context.fillStyle = '#7a5a34';
-    for (let x = 6; x < width; x += 18) context.fillRect(x, 4, 3, height - 4);
-    context.fillRect(4, 10, width - 8, 3);
-    context.fillStyle = '#7a141c';
-    context.fillRect(4, 14, width / 2, 6);
-    return;
-  }
-  context.fillStyle = '#7a141c';
-  context.fillRect(0, 6, width, 14);
-  context.fillStyle = '#e8c66a';
-  context.fillRect(width / 2 - 8, height - 22, 16, 22);
-  context.fillRect(14, 28, 10, 10);
-  context.fillRect(width - 24, 28, 10, 10);
+  fillOutlinedRect(context, 8, top, width - 16, height - top, BUILDING_PALETTE.wood);
+  context.fillStyle = BUILDING_PALETTE.woodShade;
+  for (let y = top + 8; y < height - 2; y += 8) context.fillRect(10, y, width - 20, 2);
+}
+
+function paintDoor(context: CanvasRenderingContext2D): void {
+  fillOutlinedRect(context, BUILDING_TEXTURE_WIDTH / 2 - 9, BUILDING_TEXTURE_HEIGHT - 22, 18, 22, BUILDING_PALETTE.door);
+}
+
+/** Mái ngói cam: các dải ngói so le, phủ từ mép trái tới `roofWidth`. */
+function paintRoof(context: CanvasRenderingContext2D, roofWidth: number): void {
+  fillOutlinedRect(context, 2, 6, roofWidth, 22, BUILDING_PALETTE.roof);
+  context.fillStyle = BUILDING_PALETTE.roofShade;
+  context.fillRect(4, 14, roofWidth - 4, 2);
+  context.fillRect(4, 21, roofWidth - 4, 2);
+}
+
+function paintRuinedBuilding(context: CanvasRenderingContext2D): void {
+  const height = BUILDING_TEXTURE_HEIGHT;
+  // Tường đá gãy khúc, không mái; đá vụn rơi dưới chân.
+  fillOutlinedRect(context, 6, 30, 22, height - 30, BUILDING_PALETTE.stone);
+  fillOutlinedRect(context, 40, 44, 18, height - 44, BUILDING_PALETTE.stone);
+  fillOutlinedRect(context, 68, 24, 22, height - 24, BUILDING_PALETTE.stone);
+  context.fillStyle = BUILDING_PALETTE.stoneShade;
+  context.fillRect(8, 42, 18, 2);
+  context.fillRect(70, 38, 18, 2);
+  fillOutlinedRect(context, 30, height - 8, 10, 8, BUILDING_PALETTE.stoneShade);
+  fillOutlinedRect(context, 58, height - 6, 8, 6, BUILDING_PALETTE.stoneShade);
+}
+
+function paintRebuildingBuilding(context: CanvasRenderingContext2D): void {
+  paintWoodWall(context, 26);
+  paintDoor(context);
+  // Mái mới lợp một nửa; giàn giáo gỗ dựng quanh.
+  paintRoof(context, BUILDING_TEXTURE_WIDTH / 2);
+  context.fillStyle = BUILDING_PALETTE.woodShade;
+  for (const x of [4, 46, 88]) context.fillRect(x, 4, 4, BUILDING_TEXTURE_HEIGHT - 4);
+  context.fillRect(BUILDING_TEXTURE_WIDTH / 2, 10, BUILDING_TEXTURE_WIDTH / 2 - 4, 3);
+}
+
+function paintRestoredBuilding(context: CanvasRenderingContext2D): void {
+  const width = BUILDING_TEXTURE_WIDTH;
+  fillOutlinedRect(context, width - 26, 0, 10, 14, BUILDING_PALETTE.stone);
+  paintWoodWall(context, 26);
+  paintRoof(context, width - 4);
+  paintDoor(context);
+  // Cửa sổ sáng đèn cho thấy thành trì đã có người ở lại.
+  fillOutlinedRect(context, 16, 34, 14, 12, BUILDING_PALETTE.windowLit);
+  fillOutlinedRect(context, width - 30, 34, 14, 12, BUILDING_PALETTE.windowLit);
+  context.fillStyle = BUILDING_PALETTE.grass;
+  context.fillRect(10, BUILDING_TEXTURE_HEIGHT - 4, 20, 4);
+  context.fillRect(width - 30, BUILDING_TEXTURE_HEIGHT - 4, 20, 4);
+}
+
+/** Đổ nát: tường đá gãy, không mái; đang dựng: giàn gỗ, mái cam dở; hồi sinh: mái cam đủ, cửa sổ sáng. */
+function paintBuilding(context: CanvasRenderingContext2D, stage: CitadelStage): void {
+  const painters: Record<CitadelStage, Painter> = {
+    ruined: paintRuinedBuilding,
+    rebuilding: paintRebuildingBuilding,
+    restored: paintRestoredBuilding,
+  };
+  painters[stage](context);
 }
 
 /** Tạo toàn bộ texture tạm; gọi lại nhiều lần an toàn (bỏ qua khoá đã có). */

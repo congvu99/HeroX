@@ -2,7 +2,10 @@ import Phaser from 'phaser';
 import { ARENA_CELL_PX, ARENA_ORIGIN, ARENA_TILE_SCALE, arenaCellCenter, type ArenaLayout } from '../battle/battle-arena-layout';
 import { TILE_SIZE } from '../config/display';
 import { mapAssetUrl } from '../maps/map-asset-urls';
-import { DarkAtmosphere, type LightSource } from './dark-atmosphere';
+import { CHAPTER_1_TILE_INDEX } from './chapter-1-tile-data';
+import { GoldenHourAtmosphere } from './golden-hour-atmosphere';
+import { lightingForArena } from './lighting-presets';
+import type { LightSource } from './scene-atmosphere';
 
 const ATLAS_PATH = 'tilesets/chapter-1.png';
 const ATLAS_TEXTURE_KEY = 'battle-arena-tiles';
@@ -11,17 +14,11 @@ const EMBER_SIZE = 2;
 const EMBER_COLOR = 0xffa040;
 const GROUND_DEPTH = 0;
 const DECOR_DEPTH = 1;
-/** Hạt lửa trên nhân vật, dưới lớp tối (độ sâu 9000 của `DarkAtmosphere`). */
+/** Hạt lửa trên nhân vật, dưới lớp ánh sáng giờ vàng (độ sâu 9000 của `GoldenHourAtmosphere`). */
 const EMBER_DEPTH = 50;
 const EMBER_LIFESPAN_MS = 1800;
 const EMBER_FREQUENCY_MS = 60;
 const EMBER_RISE = { min: -40, max: -14 } as const;
-
-const tileIndexFiles = import.meta.glob<Record<string, number>>('../../../assets/tilesets/chapter-1-tiles.json', {
-  eager: true,
-  import: 'default',
-});
-const TILE_INDEX: Readonly<Record<string, number>> = Object.values(tileIndexFiles)[0] ?? {};
 
 /** Xếp atlas tile chương 1 vào hàng đợi tải (gọi ở `preload`). */
 export function queueArenaTiles(scene: Phaser.Scene): void {
@@ -36,15 +33,15 @@ export interface BattleArenaOptions {
 }
 
 /**
- * Sân trận: lưới tile vẽ một lần, lớp tối khoét sáng quanh nến/lò/dung nham và quanh nhân vật, tàn lửa ở hang trùm.
+ * Sân trận: lưới tile vẽ một lần, ánh sáng giờ vàng với quầng ấm quanh cửa sổ/lò/cờ hiệu và quanh nhân vật, tàn lửa ở hầm trùm.
  * Thiếu atlas (lỗi tải) thì chỉ còn nền màu, trận vẫn chơi được.
  */
 export class BattleArena {
-  readonly atmosphere: DarkAtmosphere;
+  readonly atmosphere: GoldenHourAtmosphere;
 
   constructor(scene: Phaser.Scene, layout: ArenaLayout, options: BattleArenaOptions) {
     if (scene.textures.exists(ATLAS_TEXTURE_KEY)) this.paintTiles(scene, layout);
-    this.atmosphere = new DarkAtmosphere(scene, { enabled: options.lightingEnabled });
+    this.atmosphere = new GoldenHourAtmosphere(scene, { enabled: options.lightingEnabled, preset: lightingForArena(layout.theme) });
     for (const light of layout.lights) {
       this.atmosphere.addLight(arenaCellCenter(light.column, light.row), light.radius, light.flicker);
     }
@@ -63,7 +60,7 @@ export class BattleArena {
   }
 
   private addTile(scene: Phaser.Scene, name: string, at: LightSource, depth: number): void {
-    const frame = TILE_INDEX[name];
+    const frame = CHAPTER_1_TILE_INDEX[name];
     if (frame === undefined) return;
     scene.add.image(at.x, at.y, ATLAS_TEXTURE_KEY, frame).setScale(ARENA_TILE_SCALE).setDepth(depth);
   }

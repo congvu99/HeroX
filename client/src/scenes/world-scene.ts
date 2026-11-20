@@ -16,7 +16,10 @@ import {
 import { buildLevelTilemap } from '../maps/ldtk-tilemap-builder';
 import { mapAssetUrl } from '../maps/map-asset-urls';
 import type { QualityController } from '../platform/quality-settings';
-import { DarkAtmosphere } from '../render/dark-atmosphere';
+import { CHAPTER_1_ATLAS_FILE, CHAPTER_1_TILE_GLOW, CHAPTER_1_TILE_INDEX } from '../render/chapter-1-tile-data';
+import { GoldenHourAtmosphere } from '../render/golden-hour-atmosphere';
+import { lightingForLevel } from '../render/lighting-presets';
+import { findTileGlows, glowByTileIndex } from '../render/golden-hour-layout';
 import { prepareHeroLook, queueHeroSheet, walkAnimationKey, type HeroLook } from '../render/hero-sprite';
 import { chestTextureKey, npcTextureKey, queuePropSprites } from '../render/prop-sprites';
 import { BUILDING_TEXTURE_KEYS, TEXTURE_KEYS } from '../render/placeholder-textures';
@@ -128,7 +131,7 @@ export class WorldScene extends Phaser.Scene {
   private hero: Phaser.Physics.Arcade.Sprite | null = null;
   private heroLook!: HeroLook;
   private movementInput!: InputController;
-  private atmosphere: DarkAtmosphere | null = null;
+  private atmosphere: GoldenHourAtmosphere | null = null;
   private facing: Facing = 'down';
   private portals: PortalEntity[] = [];
   /** Cổng chỉ kích hoạt sau khi hero đã rời mọi cổng, tránh vừa tới đã bị đẩy về. */
@@ -243,8 +246,12 @@ export class WorldScene extends Phaser.Scene {
     camera.fadeIn(FADE_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);
 
     const quality = this.registry.get(REGISTRY_KEYS.quality) as QualityController | undefined;
-    const atmosphere = new DarkAtmosphere(this, { enabled: quality?.profile.dynamicLightingEnabled ?? true });
+    const atmosphere = new GoldenHourAtmosphere(this, {
+      enabled: quality?.profile.dynamicLightingEnabled ?? true,
+      preset: lightingForLevel(level.identifier),
+    });
     this.atmosphere = atmosphere;
+    this.decorateLevelLighting(atmosphere, level);
     const unsubscribeQuality = quality?.subscribe((profile) => {
       if (!profile.dynamicLightingEnabled) atmosphere.disable();
     });
@@ -281,6 +288,13 @@ export class WorldScene extends Phaser.Scene {
     this.warmBattleAssets();
     // Chờ màn mờ dần xong rồi mới mở hội thoại tự động (mở đầu, kết chương).
     this.time.delayedCall(FADE_MS, () => this.story?.refresh());
+  }
+
+  /** Bóng nhà và cửa sổ phát sáng; chỉ thắp cửa sổ trên layer dùng atlas chương 1 (map khác có chỉ số tile riêng). */
+  private decorateLevelLighting(atmosphere: GoldenHourAtmosphere, level: MapLevel): void {
+    if (level.collision !== null) atmosphere.addShadows(level.collision, level.widthPx, level.heightPx);
+    const chapterLayers = level.tileLayers.filter((layer) => this.map.project.tilesets.get(layer.tilesetUid)?.relPath.endsWith(CHAPTER_1_ATLAS_FILE) === true);
+    atmosphere.addWindowGlows(findTileGlows(chapterLayers, glowByTileIndex(CHAPTER_1_TILE_INDEX, CHAPTER_1_TILE_GLOW)));
   }
 
   /** Quái lang thang chỉ hiện khi truyện đã cho đánh trận luyện ở level này. */

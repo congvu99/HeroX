@@ -10,7 +10,7 @@ const ACTIVATION_AREA_RATIO = 0.5;
 const BASE_ALPHA = 0.35;
 const THUMB_ALPHA = 0.6;
 const JOYSTICK_COLOR = 0xe8d9a8;
-/** Trên cùng mọi lớp game và lớp tối. */
+/** Trên cùng mọi lớp game và lớp ánh sáng. */
 export const UI_DEPTH = 10_000;
 
 /** Joystick động: xuất hiện ở chỗ ngón tay chạm trong nửa trái màn hình, ẩn khi nhấc tay. */

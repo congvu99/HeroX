@@ -51,7 +51,7 @@ export interface ArenaLayout {
   readonly theme: ArenaThemeId;
   readonly cells: readonly (readonly ArenaCell[])[];
   readonly lights: readonly ArenaLight[];
-  /** Hang trùm có tàn lửa bay lên từ dung nham. */
+  /** Hầm trùm có tàn lửa bay lên từ hàng đá vụn dưới cùng. */
   readonly embers: boolean;
 }
 
@@ -61,52 +61,62 @@ interface ThemeSpec {
   readonly wallFace: readonly string[];
   /** Ký tự trong bản vẽ ASCII → tile vật thể. */
   readonly decor: Readonly<Record<string, string>>;
-  /** Ký tự → tile nền riêng (dung nham, máu); không có thì dùng sàn. */
+  /** Ký tự → tile nền riêng (mái, tường nhà, đá vụn); không có thì dùng sàn. */
   readonly ground: Readonly<Record<string, readonly string[]>>;
-  /** Ký tự phát sáng (nến, lò rèn, dung nham) → bán kính. */
+  /** Ký tự phát sáng (cửa sổ, lò rèn, cờ hiệu) → bán kính. */
   readonly glow: Readonly<Record<string, number>>;
   readonly rows: readonly string[];
   readonly embers: boolean;
 }
 
-const CANDLE_GLOW = 70;
+/** Bán kính quầng sáng ấm (pixel logic): cửa sổ, cửa nhà, lò rèn, đuốc cờ hiệu, đá vụn hầm trùm. */
+const WINDOW_GLOW = 70;
 const FORGE_GLOW = 110;
-const LAVA_GLOW = 90;
+const BANNER_GLOW = 80;
+const RUBBLE_GLOW = 60;
+
+const GRASS = ['grass', 'grass', 'grass_tuft', 'grass_flowers'];
 
 /**
  * '#' mặt trên tường, '|' mặt tường, '.' sàn; ký tự khác tra `decor`/`ground` của chủ đề.
- * Khung dọc 6×11: hàng 0 tường trên, hàng 1 mặt tường + vật thể/nguồn sáng; hàng 2–8 để trống
- * cho quái (trên) và hiệp sĩ (dưới); hàng 9 vật thể mép dưới; hàng 10 sàn. Vật thể chỉ ở mép trên/dưới.
+ * Khung dọc 6×11: hàng 0–1 mép trên (cây, nhà, tường) + nguồn sáng; hàng 2–8 để trống
+ * cho quái (trên) và hiệp sĩ (dưới); hàng 9–10 vật thể mép dưới. Vật thể chỉ ở mép trên/dưới.
  */
 const THEMES: Readonly<Record<ArenaThemeId, ThemeSpec>> = {
   fields: {
-    floor: ['mist_grass0', 'mist_grass1'],
-    wallTop: ['tree1_red', 'tree2_red'],
-    wallFace: ['tree2_red', 'tree1_red'],
-    decor: { g: 'grave', n: 'candles', o: 'crumbled_column', x: 'bones' },
-    ground: { m: ['mud'] },
-    glow: { n: CANDLE_GLOW },
-    rows: ['######', '|gnng|', '..m...', '......', '......', '...m..', '......', '......', '......', 'o.nn.o', 'x....g'],
+    floor: GRASS,
+    wallTop: ['grass'],
+    wallFace: ['grass'],
+    decor: { T: 'tree_pine', A: 'tree_autumn', C: 'tree_cone_autumn', l: 'fence_left', f: 'fence_mid', r: 'fence_right', t: 'target', b: 'bush', v: 'beehive' },
+    ground: { m: ['dirt', 'dirt_pebble'] },
+    glow: { t: WINDOW_GLOW, v: WINDOW_GLOW },
+    rows: ['TATCTA', 'lffrbt', '..m...', '...m..', '......', '..m...', '......', '......', '......', 'b.v..C', 'TATTAT'],
     embers: false,
   },
   village: {
-    floor: ['grey_dirt0', 'grey_dirt3'],
-    wallTop: ['brick_dark0'],
-    wallFace: ['brick_dark_face'],
-    decor: { F: 'forge', n: 'candles', r: 'rubble', o: 'crumbled_column' },
-    ground: { '=': ['cobble_blood1', 'cobble_blood2'] },
-    glow: { F: FORGE_GLOW, n: CANDLE_GLOW },
-    rows: ['######', '|oFno|', '.==...', '...=..', '......', '..=...', '......', '......', '......', 'r.nn.r', '.r..r.'],
+    floor: ['dirt', 'dirt', 'dirt_pebble', 'dirt_tuft'],
+    wallTop: ['roof_orange_mid'],
+    wallFace: ['wood_wall_mid'],
+    decor: { F: 'anvil', o: 'barrel', q: 'sack', U: 'well', s: 'sign' },
+    ground: {
+      a: ['roof_orange_left'], b: ['roof_orange_dormer'], c: ['roof_orange_right'],
+      d: ['roof_grey_left'], e: ['roof_grey_dormer'], g: ['roof_grey_right'],
+      w: ['wood_window'], h: ['wood_door'], i: ['wood_wall_right'],
+      x: ['stone_window'], y: ['stone_door'], z: ['stone_wall_right'],
+      '=': ['cobble'],
+    },
+    glow: { w: WINDOW_GLOW, h: WINDOW_GLOW, x: WINDOW_GLOW, y: WINDOW_GLOW, F: FORGE_GLOW },
+    rows: ['abcdeg', 'whixyz', '.==...', '...=..', '......', '..=...', '......', '......', '......', 'o.F.Uq', '.s..o.'],
     embers: false,
   },
   lair: {
-    floor: ['volcanic_floor0', 'volcanic_floor1'],
-    wallTop: ['volcanic_wall0'],
-    wallFace: ['volcanic_wall_face'],
-    decor: { x: 'bones', S: 'dngn_granite_statue', n: 'candles' },
-    ground: { L: ['lava0', 'lava1'], l: ['lava_crack'] },
-    glow: { L: LAVA_GLOW, l: LAVA_GLOW / 2, n: CANDLE_GLOW },
-    rows: ['######', '|SnnS|', '......', '...l..', '......', '......', '..l...', '......', '......', 'nL..Ln', 'LLlxLL'],
+    floor: ['cave_floor', 'cave_floor', 'cave_gravel'],
+    wallTop: ['brick_wall'],
+    wallFace: ['brick_wall_barred', 'brick_wall'],
+    decor: { x: 'skull_pile', S: 'gargoyle', n: 'banner', g: 'gravestone' },
+    ground: { L: ['cave_rubble'] },
+    glow: { n: BANNER_GLOW, L: RUBBLE_GLOW },
+    rows: ['######', '|SnnS|', '......', '...L..', '......', '......', '..L...', '......', '......', 'nLg.Ln', 'LLxgLL'],
     embers: true,
   },
 };

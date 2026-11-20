@@ -164,7 +164,7 @@ export class BattleScene extends Phaser.Scene {
         { source: this.actors.enemyLight, radius: ACTOR_LIGHT_RADIUS },
       ],
     });
-    // Máy tụt fps giữa trận: bỏ lớp tối như ở bản đồ.
+    // Máy tụt fps giữa trận: bỏ lớp ánh sáng như ở bản đồ.
     const unsubscribeQuality = quality?.subscribe((profile) => {
       if (!profile.dynamicLightingEnabled) arena.atmosphere.disable();
     });

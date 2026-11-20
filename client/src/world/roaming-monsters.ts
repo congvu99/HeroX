@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { findEncounter } from '@herox/shared';
 import { isSolidCell, type CollisionGrid } from '../maps/ldtk-loader';
-import type { DarkAtmosphere, LightSource } from '../render/dark-atmosphere';
+import type { LightSource, SceneAtmosphere } from '../render/scene-atmosphere';
 import { monsterTextureFor } from '../render/battle-actors';
 import type { Rect } from './movement-skills';
 import { rectsOverlap } from './trigger-zones';
@@ -17,8 +17,8 @@ export interface RoamingMonstersOptions {
   readonly collision: CollisionGrid;
   /** Vùng không đặt quái (cổng, NPC, rương, cửa, vùng trận cố định, chỗ hero đứng). */
   readonly keepOut: readonly Rect[];
-  /** Lớp tối của bản đồ: mỗi con quái có quầng sáng nhỏ để nhìn thấy trong sương. */
-  readonly atmosphere: DarkAtmosphere | null;
+  /** Lớp ánh sáng của bản đồ: mỗi con quái có quầng sáng ấm nhỏ. */
+  readonly atmosphere: SceneAtmosphere | null;
 }
 
 /** Sprite quái 64 px thu về khoảng 1,2 ô bản đồ. */

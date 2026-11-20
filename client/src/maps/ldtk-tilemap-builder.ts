@@ -5,7 +5,7 @@ import type { MapLevel, MapProject, MapTileLayer } from './ldtk-loader';
 const OVERHEAD_LAYER_PREFIX = 'Overhead';
 /** Lớp nền nằm dưới mọi sprite (sprite dùng depth = toạ độ y chân, luôn ≥ 0). */
 const GROUND_DEPTH_BASE = -1000;
-/** Trên mọi sprite trong level, dưới lớp tối và UI. */
+/** Trên mọi sprite trong level, dưới lớp ánh sáng và UI. */
 export const OVERHEAD_DEPTH = 5000;
 const COLLISION_LAYER_NAME = '__collision';
 /** Lớp con của cùng một layer LDtk nằm sát nhau, vẫn dưới layer kế tiếp (chênh 1). */
