@@ -237,6 +237,13 @@
   text-shadow: 0 0 calc(var(--u) * 6) #e0602a99;
 }
 
+/* Khi bảng giữa mở, gỡ combo, chữ nổi và dải điều khiển để chúng không lẫn vào bảng. */
+.battle-stage.is-center-open .battle-combo,
+.battle-stage.is-center-open .battle-floats,
+.battle-stage.is-center-open .battle-dock {
+  visibility: hidden;
+}
+
 /* ---------- Chữ nổi ---------- */
 
 .battle-floats {
@@ -421,8 +428,10 @@
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: center;
+  /* Bảng kết quả nằm đè lên dải điều khiển dưới đáy (đã hết dùng), không che hiệp sĩ và quái. */
+  align-items: flex-end;
   justify-content: center;
+  padding-bottom: calc(var(--u) * 24);
   background: radial-gradient(ellipse at center, #0b0a1066, #0b0a10cc 80%);
   pointer-events: auto;
 }

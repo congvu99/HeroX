@@ -187,12 +187,14 @@ export class BattleHud {
     this.centerText.textContent = message;
     this.centerButtons.replaceChildren(...buttons.map((button) => createButton(button.label, button.onClick, 'battle-button')));
     this.center.hidden = false;
+    this.stage.classList.add('is-center-open');
     const first = this.centerButtons.querySelector('button');
     first?.focus({ preventScroll: true });
   }
 
   hideCenter(): void {
     this.center.hidden = true;
+    this.stage.classList.remove('is-center-open');
     this.centerButtons.replaceChildren();
   }
 
