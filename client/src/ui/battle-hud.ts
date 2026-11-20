@@ -1,4 +1,4 @@
-import { ENEMY_NAMES, MIN_VISIBLE_COMBO } from '@herox/shared';
+import { ENEMY_NAMES } from '@herox/shared';
 import type { FloatTone } from '../battle/battle-cues';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
 import { createButton, createElement } from './panels/panel-dom';
@@ -18,7 +18,7 @@ export interface BattleHudButton {
   readonly onClick: () => void;
 }
 
-/** Thanh đo (máu, khiên, đồng hồ đề, cửa sổ combo); chỉ đổi `transform` nên đổi mỗi khung cũng rẻ. */
+/** Thanh đo (máu, khiên, đồng hồ đề); chỉ đổi `transform` nên đổi mỗi khung cũng rẻ. */
 class Meter {
   readonly element: HTMLElement;
   private readonly fill: HTMLElement;
@@ -60,9 +60,6 @@ export class BattleHud {
   private readonly promptEmoji: HTMLElement;
   private readonly promptMeaning: HTMLElement;
   private readonly promptTimer = new Meter('is-timer');
-  private readonly combo: HTMLElement;
-  private readonly comboCount: HTMLElement;
-  private readonly comboTimer = new Meter('is-combo');
   private readonly floats: HTMLElement;
   private readonly center: HTMLElement;
   private readonly centerText: HTMLElement;
@@ -97,13 +94,9 @@ export class BattleHud {
     this.promptCard.setAttribute('aria-live', 'polite');
     this.promptCard.hidden = true;
 
-    this.comboCount = createElement('span', { className: 'battle-combo-count' });
-    this.combo = createElement('div', { className: 'battle-combo' }, [this.comboCount, this.comboTimer.element]);
-    this.combo.hidden = true;
 
     const top = createElement('div', { className: 'battle-top' }, [
       heroCard,
-      createElement('div', { className: 'battle-top-center' }, [this.combo]),
       this.enemyCard,
     ]);
 
@@ -170,17 +163,6 @@ export class BattleHud {
   setPromptTimer(ratio: number): void {
     this.promptTimer.set(ratio);
     this.promptCard.classList.toggle('is-urgent', ratio > 0 && ratio < URGENT_RATIO);
-  }
-
-  /** Gọi khi combo đổi (không gọi mỗi khung); dưới `MIN_VISIBLE_COMBO` thì ẩn. */
-  setComboCount(count: number): void {
-    const visible = count >= MIN_VISIBLE_COMBO;
-    this.combo.hidden = !visible;
-    if (visible) this.comboCount.textContent = `Combo ×${count}`;
-  }
-
-  setComboTimer(remainingRatio: number): void {
-    this.comboTimer.set(remainingRatio);
   }
 
   /** Bảng giữa màn (đang vào trận, kết quả); `buttons` rỗng thì chỉ hiện chữ. */

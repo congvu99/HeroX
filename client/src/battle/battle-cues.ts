@@ -44,6 +44,26 @@ const SPELL_FLIGHT_MS = 320;
 /** Quái lao xuống chạm hiệp sĩ (khớp `enemyLungeMs`). */
 const ENEMY_IMPACT_DELAY_MS = 150;
 
+/** Bậc hoành tráng theo chuỗi đòn đúng: 0 thường, 1 từ đòn thứ 2, 2 từ đòn thứ 4. */
+const RISING_STAGE = 1;
+const GRAND_STAGE = 2;
+const GRAND_STREAK = 4;
+const GRAND_FX_SCALE_BONUS = 0.3;
+const GUARD_FORM_DELAY_MS = 260;
+
+function streakStage(streak: number): number {
+  if (streak >= GRAND_STREAK) return GRAND_STAGE;
+  return streak >= 2 ? RISING_STAGE : 0;
+}
+
+/** Chuỗi lên bậc thì chiêu bậc 1 mượn hình bậc 2 (`-1` → `-2`), chuỗi dài phóng to thêm. Chỉ đổi hình, không đổi sức mạnh. */
+function escalate(variant: SkillVariant, stage: number): SkillVariant {
+  if (stage === 0 || variant.kind === 'evade') return variant;
+  const upgrade = (fx: string): string => fx.replace(/-1$/, '-2');
+  const fxScale = stage >= GRAND_STAGE ? variant.fxScale + GRAND_FX_SCALE_BONUS : variant.fxScale;
+  return { ...variant, castFx: upgrade(variant.castFx), impactFx: upgrade(variant.impactFx), fxScale };
+}
+
 /** Né bằng thuấn bộ khi biến thể chiêu dùng hiệu ứng biến mất; còn lại là lướt. */
 function heroMoveFor(variant: SkillVariant): HeroMove {
   return variant.castFx === SYSTEM_FX.blinkOut ? 'blink' : 'dash';
@@ -56,6 +76,8 @@ function heroMoveFor(variant: SkillVariant): HeroMove {
 export class BattleCueMapper {
   private lastVariant: SkillVariant | null = null;
   private impactDelayMs = 0;
+  /** Số đòn đúng liên tiếp đã thấy, để chiêu càng về sau chuỗi càng hoành tráng. */
+  private streak = 0;
 
   constructor(private readonly tiers: SkillTiers = BASE_SKILL_TIERS) {}
 
@@ -68,6 +90,7 @@ export class BattleCueMapper {
       case 'cast':
         return this.castCues(event.skill, event.mastered);
       case 'comboUp':
+        this.streak = event.count;
         return [
           { type: 'fx', fx: SYSTEM_FX.comboUp, target: 'hero', scale: NORMAL_SCALE },
           { type: 'floatText', target: 'hero', text: event.chainId === null ? `Combo ×${event.count}` : 'Chuỗi thánh ngôn!', tone: 'info' },
@@ -76,11 +99,13 @@ export class BattleCueMapper {
       case 'hit':
         return this.hitCues(event.damage, event.finisher);
       case 'miss':
+        this.streak = 0;
         return [
           { type: 'floatText', target: 'hero', text: event.reason === 'timeout' ? 'Hết giờ' : 'Sai từ', tone: 'bad' },
           { type: 'sound', sound: 'miss' },
         ];
       case 'comboBreak':
+        this.streak = 0;
         return [{ type: 'floatText', target: 'hero', text: `Đứt chuỗi ×${event.count}`, tone: 'bad' }];
       case 'enemyAttack':
         return this.enemyAttackCues(event.damage, event.absorbed, event.evaded);
@@ -109,16 +134,23 @@ export class BattleCueMapper {
   }
 
   private castCues(skill: SkillKind, mastered: boolean): BattleCue[] {
-    const variant = skillVariantFor(skill, this.tiers[skill], mastered);
+    const stage = streakStage(this.streak + 1);
+    const variant = escalate(skillVariantFor(skill, this.tiers[skill], mastered), stage);
     this.lastVariant = variant;
     const cues: BattleCue[] = [
       { type: 'fx', fx: variant.castFx, target: 'hero', scale: variant.fxScale },
       { type: 'sound', sound: 'cast' },
     ];
+    // Chuỗi dài: hào quang thánh quanh hiệp sĩ trước khi ra chiêu.
+    if (stage >= GRAND_STAGE) cues.unshift({ type: 'fx', fx: SYSTEM_FX.levelUp, target: 'hero', scale: NORMAL_SCALE });
     if (skill === 'evade') cues.push({ type: 'heroMove', move: heroMoveFor(variant) });
     else cues.push({ type: 'actor', target: 'hero', action: skill === 'attack' ? 'strike' : 'cast' });
+    // Khiên hiện dần quanh hiệp sĩ sau động tác niệm.
+    if (skill === 'guard') cues.push({ type: 'fx', fx: variant.impactFx, target: 'hero', scale: variant.fxScale, delayMs: GUARD_FORM_DELAY_MS });
     if (skill === 'empower') cues.push({ type: 'projectile', from: 'hero', tone: 'curse', durationMs: SPELL_FLIGHT_MS });
-    this.impactDelayMs = skill === 'empower' ? SPELL_FLIGHT_MS : MELEE_IMPACT_DELAY_MS;
+    // Từ đòn thứ 2 của chuỗi, nhát chém phóng thêm kiếm khí sáng bay tới quái.
+    if (skill === 'attack' && stage >= RISING_STAGE) cues.push({ type: 'projectile', from: 'hero', tone: 'holy', durationMs: SPELL_FLIGHT_MS });
+    this.impactDelayMs = skill === 'empower' || stage >= RISING_STAGE ? SPELL_FLIGHT_MS : MELEE_IMPACT_DELAY_MS;
     return cues;
   }
 

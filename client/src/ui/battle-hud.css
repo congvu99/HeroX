@@ -60,14 +60,6 @@
   grid-area: enemy;
 }
 
-.battle-top-center {
-  /* Combo nằm ở dải trống giữa quái (trên) và hiệp sĩ (dưới), không đè lên ai. */
-  position: absolute;
-  top: calc(var(--u) * 250);
-  left: 0;
-  right: 0;
-}
-
 .battle-card {
   padding: calc(var(--u) * 5) calc(var(--u) * 7) calc(var(--u) * 6);
   background: linear-gradient(180deg, #241c26ee, #120e16ee);
@@ -168,19 +160,6 @@
   transition: none;
 }
 
-.battle-meter.is-combo > i {
-  background: var(--ember);
-  transition: none;
-}
-
-.battle-top-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(var(--u) * 4);
-  min-width: 0;
-}
-
 .battle-prompt {
   grid-area: prompt;
   box-sizing: border-box;
@@ -222,25 +201,7 @@
   animation: battle-pulse 500ms ease-in-out infinite alternate;
 }
 
-.battle-combo {
-  min-width: 40%;
-  padding: calc(var(--u) * 2) calc(var(--u) * 8) calc(var(--u) * 3);
-  text-align: center;
-  background: #120e16dd;
-  border: 1px solid var(--ember);
-}
-
-.battle-combo-count {
-  display: block;
-  margin-bottom: calc(var(--u) * 2);
-  font-family: var(--title-font);
-  font-size: 1.1em;
-  color: var(--ember);
-  text-shadow: 0 0 calc(var(--u) * 6) #e0602a99;
-}
-
-/* Khi bảng giữa mở, gỡ combo, chữ nổi và dải điều khiển để chúng không lẫn vào bảng. */
-.battle-stage.is-center-open .battle-combo,
+/* Khi bảng giữa mở, gỡ chữ nổi và dải điều khiển để chúng không lẫn vào bảng. */
 .battle-stage.is-center-open .battle-floats,
 .battle-stage.is-center-open .battle-dock {
   visibility: hidden;
@@ -257,18 +218,20 @@
 .battle-float {
   position: absolute;
   transform: translate(-50%, -50%);
-  font-family: var(--title-font);
-  font-size: 1.5em;
+  /* Chữ pixel nhỏ, viền cứng 1 px kiểu sprite: bật lên rồi tắt, không đứng che sân. */
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: max(11px, calc(var(--u) * 12));
   font-weight: 700;
+  letter-spacing: 0.05em;
   white-space: nowrap;
-  -webkit-text-stroke: 1px #000;
-  text-shadow: 0 2px 0 #000, 0 0 6px #000;
-  animation: battle-float-up 900ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  -webkit-font-smoothing: none;
+  text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, 1px 1px 0 #000;
+  animation: battle-float-up 700ms steps(7, end) forwards;
 }
 
 .battle-float.is-damage {
   color: #ffe08a;
-  font-size: 1.8em;
+  font-size: max(13px, calc(var(--u) * 15));
 }
 
 .battle-float.is-info {
@@ -479,18 +442,19 @@
 @keyframes battle-float-up {
   0% {
     opacity: 0;
-    transform: translate(-50%, -30%) scale(0.7);
+    transform: translate(-50%, -20%);
   }
-  15% {
+  20% {
     opacity: 1;
-    transform: translate(-50%, -60%) scale(1.15);
+    transform: translate(-50%, -140%);
   }
-  30% {
-    transform: translate(-50%, -70%) scale(1);
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -110%);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -220%) scale(1);
+    transform: translate(-50%, -110%);
   }
 }
 

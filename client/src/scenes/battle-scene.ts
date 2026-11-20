@@ -1,7 +1,5 @@
 import Phaser from 'phaser';
 import {
-  comboExpiresAtMs,
-  COMBO_WINDOW_MS,
   beatForEncounter,
   InvalidBattleSetupError,
   SYSTEM_FX,
@@ -9,6 +7,7 @@ import {
   type BattleInput,
   type BattleSetup,
   type MeResponse,
+  type SkillKind,
 } from '@herox/shared';
 import { submitBattleResult, startBattle } from '../api/battle-api';
 import { readEngSessionToken } from '../api/me-api';
@@ -59,6 +58,8 @@ const FX_BODY_OFFSET_Y = -44;
  */
 const FLOAT_OFFSET_Y: Readonly<Record<CueTarget, number>> = { enemy: -110, hero: 34 };
 const FX_DEPTH = 20;
+/** Thời gian dừng nhịp trận sau mỗi chiêu đúng để người chơi xem trọn động tác, đường bay và hiệu ứng trúng. */
+const SHOWCASE_MS: Readonly<Record<SkillKind, number>> = { attack: 900, empower: 1100, guard: 800, evade: 700 };
 const ACTOR_LIGHT_RADIUS = 110;
 const SHAKE = { light: { durationMs: 120, intensity: 0.004 }, strong: { durationMs: 260, intensity: 0.012 } } as const;
 const DEV_HERO_NAME = 'Hiệp sĩ';
@@ -74,6 +75,7 @@ const INPUT_MODE_LABELS: Readonly<Record<BattleInputMode, string>> = { typing: '
  */
 export class BattleScene extends Phaser.Scene {
   private encounterId = '';
+  private showcaseUntilMs = 0;
   private settings!: GameSettings;
   private inputMode: BattleInputMode = 'typing';
   private session: BattleSession | null = null;
@@ -102,6 +104,7 @@ export class BattleScene extends Phaser.Scene {
     this.online = null;
     this.ended = false;
     this.battleRun += 1;
+    this.showcaseUntilMs = 0;
   }
 
   preload(): void {
@@ -134,7 +137,9 @@ export class BattleScene extends Phaser.Scene {
   override update(_time: number, delta: number): void {
     const session = this.session;
     if (session === null || this.ended) return;
-    const events = session.tick(delta);
+    // Lúc xem chiêu, đồng hồ trận đứng yên: đề, combo, đòn quái đều chờ. Log chỉ ghi thời gian trận nên server
+    // chạy lại vẫn khớp.
+    const events = session.tick(this.isShowcasing() ? 0 : delta);
     for (const event of events) this.handleEvent(event);
     if (events.length > 0) this.refreshHud(session);
     this.refreshTimers(session);
@@ -169,7 +174,7 @@ export class BattleScene extends Phaser.Scene {
     this.typing = new TypingInput({
       onSubmit: (text) => {
         // Đề vừa hiện chưa nhận input (luật chống bấm vội của server): giữ nguyên chữ để người chơi Enter lại.
-        if (text.trim() === '' || this.session?.isInputLocked === true) return;
+        if (text.trim() === '' || this.session?.isInputLocked === true || this.isShowcasing()) return;
         this.submit({ kind: 'type', text });
         this.typing.clear();
       },
@@ -232,7 +237,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private submit(input: BattleInput): void {
-    if (this.session === null || this.ended) return;
+    if (this.session === null || this.ended || this.isShowcasing()) return;
     this.sounds.unlock();
     this.session.submit(input);
   }
@@ -290,6 +295,7 @@ export class BattleScene extends Phaser.Scene {
     else if (event.type === 'enemyDefeated') this.actors.defeatEnemy();
     else if (event.type === 'defeat') this.actors.fall();
     else if (event.type === 'miss' && event.reason === 'wrong') this.typing.shake();
+    else if (event.type === 'cast') this.showcaseUntilMs = this.time.now + SHOWCASE_MS[event.skill];
     for (const cue of this.cueMapper.cuesFor(event)) this.scheduleCue(cue);
   }
 
@@ -303,22 +309,24 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private refreshHud(session: BattleSession): void {
-    const { hero, enemy, combo } = session.current;
+    const { hero, enemy } = session.current;
     this.hud.setHero(hero.hp, hero.maxHp, hero.shield);
     if (enemy !== null) {
       this.hud.setEnemy(enemy.kind, enemy.hp, enemy.maxHp, enemy.elite, enemy.shielded);
       this.actors.setEnemyState(enemy.elite, enemy.shielded);
     }
-    this.hud.setComboCount(combo.count);
   }
 
-  /** Thanh thời gian đề và cửa sổ combo đổi mỗi khung; chỉ đổi tỉ lệ, không tạo đối tượng. */
+  /** Thanh thời gian đề đổi mỗi khung; chỉ đổi tỉ lệ, không tạo đối tượng. */
   private refreshTimers(session: BattleSession): void {
-    const { prompt, elapsedMs, combo, setup } = session.current;
+    const { prompt, elapsedMs, setup } = session.current;
     this.hud.setPromptTimer(prompt === null ? 0 : (prompt.deadlineMs - elapsedMs) / setup.promptTimeMs);
-    const comboEnd = comboExpiresAtMs(combo);
-    this.hud.setComboTimer(comboEnd === null ? 0 : (comboEnd - elapsedMs) / COMBO_WINDOW_MS);
-    this.ring.setEnabled(!session.isInputLocked);
+    this.ring.setEnabled(!session.isInputLocked && !this.isShowcasing());
+  }
+
+  /** Đang dừng nhịp trận để người chơi xem chiêu vừa tung (đồng hồ trận đứng, chưa nhận đáp án mới). */
+  private isShowcasing(): boolean {
+    return this.time.now < this.showcaseUntilMs;
   }
 
   private feetOf(target: CueTarget): ActorPoint {

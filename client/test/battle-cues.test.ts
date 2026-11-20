@@ -18,11 +18,28 @@ describe('BattleCueMapper', () => {
       const mapper = new BattleCueMapper();
       const cast = fxOf(mapper.cuesFor({ type: 'cast', wordId: 'w', skill, accuracy: 'exact', mastered: false }));
       const hit = fxOf(mapper.cuesFor(HIT));
-      expect(cast).toHaveLength(1);
+      // Khiên có thêm hình khiên hiện quanh hiệp sĩ sau động tác niệm.
+      expect(cast).toHaveLength(skill === 'guard' ? 2 : 1);
       expect(hit).toHaveLength(1);
       castFx.add(cast[0] ?? '');
     }
     expect(castFx.size).toBe(4);
+  });
+
+  it('chuỗi đúng càng dài chiêu càng hoành tráng: đòn 2 mượn hình bậc 2 kèm kiếm khí, đòn 4 thêm hào quang', () => {
+    const mapper = new BattleCueMapper();
+    const cast = (): BattleCue[] => mapper.cuesFor({ type: 'cast', wordId: 'w', skill: 'attack', accuracy: 'exact', mastered: false });
+    const first = cast();
+    expect(fxOf(first)).toEqual(['attack-cast-1']);
+    expect(first.some((cue) => cue.type === 'projectile')).toBe(false);
+    mapper.cuesFor({ type: 'comboUp', count: 1, bonus: 'same-pos', multiplier: 1, chainId: null });
+    const second = cast();
+    expect(fxOf(second)).toEqual(['attack-cast-2']);
+    expect(second.find((cue) => cue.type === 'projectile')).toMatchObject({ tone: 'holy' });
+    mapper.cuesFor({ type: 'comboUp', count: 3, bonus: 'same-pos', multiplier: 1.3, chainId: null });
+    expect(fxOf(cast())).toEqual(['level-up', 'attack-cast-2']);
+    mapper.cuesFor({ type: 'miss', wordId: 'w', reason: 'wrong' });
+    expect(fxOf(cast())).toEqual(['attack-cast-1']);
   });
 
   it('từ đã thuộc dùng hiệu ứng bậc cao hơn', () => {
