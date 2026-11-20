@@ -32,9 +32,9 @@ Phạm vi chỉ ở gói `client/` (render, layout, HUD, input) và E2E config. 
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Phase 1: Khung dọc & bỏ landscape](./phase-01-portrait-frame.md) | Done |
-| 2 | [Phase 2: Xoay sân trận sang dọc](./phase-02-arena-vertical.md) | Done (code) |
-| 3 | [Phase 3: HUD, panel, joystick khung dọc](./phase-03-hud-panels.md) | Done (code) |
-| 4 | [Phase 4: E2E & kiểm thử toàn flow dọc](./phase-04-e2e-verify.md) | Blocked (cổng bận) |
+| 2 | [Phase 2: Xoay sân trận sang dọc](./phase-02-arena-vertical.md) | Done |
+| 3 | [Phase 3: HUD, panel, joystick khung dọc](./phase-03-hud-panels.md) | Done |
+| 4 | [Phase 4: E2E & kiểm thử toàn flow dọc](./phase-04-e2e-verify.md) | Done |
 
 ## Success Criteria
 

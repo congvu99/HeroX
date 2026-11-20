@@ -1,8 +1,8 @@
 ---
-status: active
+status: done
 skill: g1:atoz
 gate: 3
-updated: 2026-11-20T04:28:00Z
+updated: 2026-11-20T05:00:00Z
 ---
 
 # Hợp đồng A-to-Z: portrait-only + bầu trận/HUD DOM
