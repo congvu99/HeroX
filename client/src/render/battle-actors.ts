@@ -14,7 +14,8 @@ export interface ActorPoint {
 
 /** Chân hiệp sĩ (dưới) và quái (trên) trên sân dọc (pixel logic); dải giữa để hiệu ứng chiêu bay dọc. */
 // Giữa khung theo chiều ngang (cùng tâm với thẻ đề HUD); chiều dọc tính theo góc lưới sân.
-export const HERO_FEET: ActorPoint = { x: LOGICAL_WIDTH / 2, y: ARENA_ORIGIN.y + 552 };
+// Hiệp sĩ đứng trên mép dock: vòng từ 3 hàng chiếm khoảng 280 px đáy khung, chân thấp hơn sẽ bị che.
+export const HERO_FEET: ActorPoint = { x: LOGICAL_WIDTH / 2, y: ARENA_ORIGIN.y + 442 };
 export const ENEMY_FEET: ActorPoint = { x: LOGICAL_WIDTH / 2, y: ARENA_ORIGIN.y + 168 };
 
 /** Sprite 64 px phóng số nguyên ×2 để pixel đều; trùm 128 px phóng ×1.5 cho khỏi tràn sân. */

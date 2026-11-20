@@ -72,7 +72,7 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
   - Đòn trúng có lao tới, giật lùi, loé trắng; đòn kết khựng hình 80 ms. Hiệu ứng chiêu xoay theo trục dọc (lên/xuống).
   - Sân căn giữa khung 360×780 (lưới 384 px cắt đều 12 px hai mép); hero, quái cùng tâm ngang với thẻ đề.
   - HUD là DOM/CSS phủ trên canvas (`battle-hud.ts`, `battle-hud.css`): hàng trên là thẻ máu hiệp sĩ và quái,
-    dưới đó một thẻ đề chung chiếm trọn chiều ngang (emoji, nghĩa tiếng Việt, thanh thời gian, combo).
+    thẻ đề chung (emoji, nghĩa tiếng Việt, thanh thời gian, combo) ở dải giữa quái và hiệp sĩ.
   - Dock dưới: hàng nút phụ, rồi ô gõ hoặc vòng từ 2 cột × 3 hàng chiếm trọn chiều ngang; từ dài xuống dòng, không cắt.
   - Khung dọc (portrait-only): dock dưới né bàn phím ảo iOS qua `--keyboard-inset`.
 

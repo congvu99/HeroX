@@ -45,11 +45,9 @@
   left: calc(var(--u) * 8);
   right: calc(var(--u) * 8);
   display: grid;
-  /* Khung dọc hẹp: hai thẻ chung một hàng, đề chung nằm hàng riêng chiếm hết chiều ngang. */
+  /* Khung dọc hẹp: hai thẻ máu chung một hàng; đề chung đặt riêng ở giữa màn. */
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas:
-    'hero enemy'
-    'prompt prompt';
+  grid-template-areas: 'hero enemy';
   align-items: start;
   gap: calc(var(--u) * 6);
 }
@@ -63,7 +61,11 @@
 }
 
 .battle-top-center {
-  grid-area: prompt;
+  /* Đề chung nằm ở dải trống giữa quái (trên) và hiệp sĩ (dưới), không đè lên quái ở đầu sân. */
+  position: absolute;
+  top: calc(var(--u) * 250);
+  left: 0;
+  right: 0;
 }
 
 .battle-card {
