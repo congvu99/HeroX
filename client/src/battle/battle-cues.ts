@@ -38,11 +38,11 @@ const NORMAL_SCALE = 1;
 const SHIELD_FX_SCALE = 1.6;
 const FINISHER_HITSTOP_MS = 80;
 /** Đòn chém: hiệp sĩ lao lên chạm quái thì mới trúng (khớp `strikeLungeMs` của battle-actors). */
-const MELEE_IMPACT_DELAY_MS = 120;
+const MELEE_IMPACT_DELAY_MS = 220;
 /** Phép nguyền bay từ hiệp sĩ tới quái. */
-const SPELL_FLIGHT_MS = 320;
+const SPELL_FLIGHT_MS = 520;
 /** Quái lao xuống chạm hiệp sĩ (khớp `enemyLungeMs`). */
-const ENEMY_IMPACT_DELAY_MS = 150;
+const ENEMY_IMPACT_DELAY_MS = 260;
 
 /** Bậc hoành tráng theo chuỗi đòn đúng: 0 thường, 1 từ đòn thứ 2, 2 từ đòn thứ 4. */
 const RISING_STAGE = 1;

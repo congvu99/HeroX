@@ -70,9 +70,13 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
   - Cánh đồng cho trận dã ngoại, làng cho lò rèn, hang có tàn lửa cho trùm; có lớp tối và quầng sáng theo nhân vật.
   - Hero đứng dưới nhìn lên (sheet LPC hàng hướng lên: đứng, chém, niệm, gục), quái đứng trên (sprite 64 px ×2, trùm 128 px ×1.5).
   - Đòn trúng có lao tới, giật lùi, loé trắng; đòn kết khựng hình 80 ms.
-  - Hiệu ứng pixelfx giữ nguyên góc vẽ, không xoay. Đòn trúng chờ hiệp sĩ lao tới (120 ms) hoặc phép nguyền bay tới quái
-    (luồng sáng tím 320 ms); đòn quái trúng sau khi quái lao xuống (150 ms).
-  - Xem chiêu: sau mỗi đáp án đúng, đồng hồ trận đứng 0,7–1,1 s (theo loại chiêu) và chưa nhận đáp án mới.
+  - Hiệu ứng pixelfx giữ nguyên góc vẽ, không xoay, chạy chậm còn 0,6 lần. Đòn trúng chờ hiệp sĩ lao tới (220 ms) hoặc
+    phép nguyền bay tới quái (luồng sáng tím 520 ms); đòn quái trúng sau khi quái lao xuống (260 ms).
+  - Xem chiêu: sau mỗi đáp án đúng, đồng hồ trận đứng 1,1–1,8 s (theo loại chiêu) và chưa nhận đáp án mới.
+  - Vào trận: bản đồ rung, loé, phóng to rồi tối dần (550 ms), màn trận hiện dần (450 ms). Asset trận tải ngầm sau
+    khi vào bản đồ nên không đứng hình; bảng "Đang vào trận…" chỉ hiện nếu chờ quá 0,7 s.
+- **Quái lang thang:** Misty_Fields có 7 quái (sau mốc tới làng) đứng nhún, bước quanh chỗ sinh, có quầng sáng nhỏ
+  trong sương. Chạm vào là vào trận dã ngoại; trận xong con đó tan đi, 30 s sau sinh con mới (`roaming-monsters.ts`).
   - Chuỗi đúng: từ đòn thứ 2 chiêu mượn hình bậc 2 và chém kèm kiếm khí sáng; từ đòn thứ 4 thêm hào quang và phóng to.
     Khiên có thêm hình khiên hiện quanh hiệp sĩ. Chỉ đổi hình, không đổi sức mạnh.
   - Sân căn giữa khung 360×780 (lưới 384 px cắt đều 12 px hai mép); hero, quái cùng tâm ngang với thẻ đề.

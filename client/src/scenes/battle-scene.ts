@@ -58,8 +58,13 @@ const FX_BODY_OFFSET_Y = -44;
  */
 const FLOAT_OFFSET_Y: Readonly<Record<CueTarget, number>> = { enemy: -110, hero: 34 };
 const FX_DEPTH = 20;
+/** Sân trận mờ dần vào sau màn tối của chuyển cảnh trên bản đồ. */
+const INTRO_FADE_MS = 450;
+const WAITING_NOTICE_DELAY_MS = 700;
+/** Hiệu ứng pixelfx phát chậm hơn fps gốc để chiêu không loé qua trong chớp mắt. */
+const FX_TIME_SCALE = 0.6;
 /** Thời gian dừng nhịp trận sau mỗi chiêu đúng để người chơi xem trọn động tác, đường bay và hiệu ứng trúng. */
-const SHOWCASE_MS: Readonly<Record<SkillKind, number>> = { attack: 900, empower: 1100, guard: 800, evade: 700 };
+const SHOWCASE_MS: Readonly<Record<SkillKind, number>> = { attack: 1500, empower: 1800, guard: 1300, evade: 1100 };
 const ACTOR_LIGHT_RADIUS = 110;
 const SHAKE = { light: { durationMs: 120, intensity: 0.004 }, strong: { durationMs: 260, intensity: 0.012 } } as const;
 const DEV_HERO_NAME = 'Hiệp sĩ';
@@ -119,7 +124,7 @@ export class BattleScene extends Phaser.Scene {
     this.settings = loadSettings(() => window.localStorage);
     this.inputMode = resolveInputMode(this.settings, isTouchPrimaryDevice());
     this.cueMapper = new BattleCueMapper();
-    this.cameras.main.setBackgroundColor(BACKGROUND_COLOR);
+    this.cameras.main.setBackgroundColor(BACKGROUND_COLOR).fadeIn(INTRO_FADE_MS);
     this.actors = new BattleActors(this);
     this.createArena();
     this.fx = new FxPlayer(this);
@@ -243,7 +248,11 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private async beginBattle(): Promise<void> {
-    this.hud.showCenter('Đang vào trận…');
+    // Mạng nhanh thì không hiện bảng chờ: sân mờ dần vào rồi quái xuất hiện luôn.
+    const waitingRun = this.battleRun;
+    this.time.delayedCall(WAITING_NOTICE_DELAY_MS, () => {
+      if (!this.isStale(waitingRun) && this.session === null && !this.ended) this.hud.showCenter('Đang vào trận…');
+    });
     // Dev vào map bằng nút thử (không có phiên LingoBrain): chơi bộ từ thử, không gửi kết quả.
     if (import.meta.env.DEV && this.registry.get(REGISTRY_KEYS.me) === undefined) {
       this.startSession(devBattleSetup(this.encounterId), null);
@@ -349,7 +358,7 @@ export class BattleScene extends Phaser.Scene {
       case 'fx': {
         // Hiệu ứng pixelfx vẽ sẵn theo góc nhìn chính diện; giữ nguyên, không xoay theo trục sân.
         const at = this.bodyOf(cue.target);
-        this.fx.play(cue.fx, at.x, at.y, { scale: cue.scale, depth: FX_DEPTH });
+        this.fx.play(cue.fx, at.x, at.y, { scale: cue.scale, depth: FX_DEPTH, timeScale: FX_TIME_SCALE });
         break;
       }
       case 'projectile': {

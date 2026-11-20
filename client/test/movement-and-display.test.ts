@@ -68,6 +68,14 @@ describe('computeDisplayZoom', () => {
     expect(computeDisplayZoom(430, 932)).toBeCloseTo(Math.min(430 / 360, 932 / 780));
   });
 
+  it('iPhone 14 Plus DPR 3: không làm tròn integer gây viền đen 4 phía, lấp đầy bằng FIT', () => {
+    // Khung game sau safe-area ~430×839. FIT theo chiều cao ≈ 1,075; làm tròn integer (3,23→3) chỉ lấp ~93%
+    // nên phải bỏ, dùng FIT để canvas chạm biên (hết đen 4 phía). Zoom đúng bằng FIT, không bị kéo xuống 1,0.
+    const fit = Math.min(430 / 360, 839 / 780);
+    expect(computeDisplayZoom(430, 839, 3)).toBeCloseTo(fit);
+    expect(computeDisplayZoom(430, 839, 3)).toBeGreaterThan(1);
+  });
+
   it('làm tròn theo pixel thiết bị khi màn hình có DPR lẻ', () => {
     // 900×1248 px CSS, DPR 1,25: chiều cao giới hạn, mỗi pixel logic đúng 2 px thiết bị.
     expect(computeDisplayZoom(900, 1248, 1.25)).toBeCloseTo(1.6);

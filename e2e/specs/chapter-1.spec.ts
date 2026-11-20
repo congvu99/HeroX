@@ -66,6 +66,7 @@ test.describe('Chương 1', () => {
 
     await test.step('Cánh đồng: quét lũ quỷ', async () => {
       await usePortal(page, VILLAGE, FIELDS, 'left');
+      await attachScreenshot(page, 'canh-dong-quai-lang-thang');
       const cleared = waitForStoryBeat(page, B.fieldCleared);
       await walkIntoBattle(page, FIELDS, FIELD_ENCOUNTER_ID, 'left');
       await winBattleAndReturn(player);

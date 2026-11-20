@@ -42,13 +42,13 @@ const HIT_FLASH_COLOR = 0xffffff;
 
 const TIMING = {
   enemyFadeMs: 400,
-  strikeLungeMs: 110,
-  strikeReturnMs: 200,
-  strikeHoldMs: 260,
-  knockbackMs: 70,
+  strikeLungeMs: 220,
+  strikeReturnMs: 320,
+  strikeHoldMs: 360,
+  knockbackMs: 120,
   flashMs: 70,
   hurtTintMs: 160,
-  enemyLungeMs: 150,
+  enemyLungeMs: 260,
   dashMs: 110,
   blinkHiddenMs: 260,
   bobMs: 900,
@@ -56,8 +56,22 @@ const TIMING = {
 // Khung dọc: hiệp sĩ ở dưới, quái ở trên. strikeLunge/enemyLunge là khoảng lao dọc; dash là khoảng hiệp sĩ né lùi xuống.
 const DISTANCE = { strikeLunge: 120, knockback: 12, enemyLunge: 90, dash: 34, bob: 3 } as const;
 
+const MONSTER_KEY_PREFIX = 'monster:';
+
 function monsterTextureKey(file: string): string {
-  return `monster:${file}`;
+  return `${MONSTER_KEY_PREFIX}${file}`;
+}
+
+/** Khoá loader của sprite quái, để bản đồ bỏ qua lỗi tải quái (quái lang thang chỉ là trang trí phụ). */
+export function isMonsterTextureKey(key: string): boolean {
+  return key.startsWith(MONSTER_KEY_PREFIX);
+}
+
+/** Khoá texture sprite của loại quái đã tải; `undefined` khi loại đó chưa có sprite hoặc chưa tải xong. */
+export function monsterTextureFor(scene: Phaser.Scene, kind: string): string | undefined {
+  const file = MONSTER_SPRITES[kind];
+  const key = file === undefined ? undefined : monsterTextureKey(file);
+  return key !== undefined && scene.textures.exists(key) ? key : undefined;
 }
 
 /** Xếp sprite quái vào hàng đợi tải (gọi ở `preload`); thiếu file thì dùng hình tạm vẽ bằng canvas. */

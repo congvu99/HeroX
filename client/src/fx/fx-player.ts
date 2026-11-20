@@ -26,6 +26,8 @@ export interface FxPlayOptions {
   readonly flipX?: boolean;
   /** Xoay hiệu ứng (độ). Khung dọc: hiệu ứng pixelfx vẽ hướng phải, xoay -90° để hướng lên (về phía quái). */
   readonly angle?: number;
+  /** Tốc độ phát (1 = đúng fps gốc); < 1 phát chậm để người chơi kịp xem. */
+  readonly timeScale?: number;
 }
 
 /**
@@ -94,6 +96,7 @@ export class FxPlayer {
       .setActive(true)
       .setVisible(true);
     sprite.play(animationKey(name));
+    sprite.anims.timeScale = options.timeScale ?? 1;
     return true;
   }
 

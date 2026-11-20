@@ -81,6 +81,12 @@ export class DarkAtmosphere {
     this.lights.push({ source, radius, flicker, phase: this.lights.length * FLICKER_PHASE_STEP });
   }
 
+  /** Gỡ vùng sáng đã thêm bằng đúng đối tượng `source` (vật sáng biến mất khỏi bản đồ). */
+  removeLight(source: LightSource): void {
+    const index = this.lights.findIndex((light) => light.source === source);
+    if (index >= 0) this.lights.splice(index, 1);
+  }
+
   /** Chữ ký sự kiện POST_UPDATE của scene: (systems, time, delta). */
   private readonly redraw = (_systems: Phaser.Scenes.Systems, timeMs: number): void => {
     if (!this.enabled || !this.overlay || !this.lightBrush) return;

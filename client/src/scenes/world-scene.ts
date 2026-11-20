@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { citadelStageFor, MOVEMENT_SKILL_IDS, SYSTEM_FX, type BuildingId, type CitadelStage, type MeResponse, type MovementSkillId } from '@herox/shared';
+import { citadelStageFor, FIELD_ROAM_ENCOUNTER_ID, MOVEMENT_SKILL_IDS, SYSTEM_FX, type BuildingId, type CitadelStage, type MeResponse, type MovementSkillId } from '@herox/shared';
 import { FxPlayer, isFxAssetKey, queueFxAssets } from '../fx/fx-player';
 import { InputController } from '../input/input-controller';
 import { facingFromVector, type Facing, type MovementVector } from '../input/movement-vector';
@@ -33,7 +33,11 @@ import {
 import { QuestTracker } from '../story/quest-tracker';
 import { DevStoryBackend, StoryJournal } from '../story/story-journal';
 import { WorldStory, type StoryHost } from '../story/world-story';
+import { RoamingMonsters, type RoamingSpawn } from '../world/roaming-monsters';
 import { buildingDoorRect, interactionRect, TriggerZones } from '../world/trigger-zones';
+import { queueArenaTiles } from '../render/battle-arena';
+import { isMonsterTextureKey, queueMonsterSprites } from '../render/battle-actors';
+import { queueHeroBattleSheets } from '../render/hero-battle-animations';
 import type { BattleSceneData } from './battle-scene';
 import type { CitadelSceneData } from './citadel-scene';
 import { REGISTRY_KEYS, SCENE_KEYS, type LoadedMapProject } from './scene-keys';
@@ -72,6 +76,15 @@ const HERO_BODY_HEIGHT = 12;
 const PROP_BODY_HEIGHT = 12;
 const PROP_BODY_SIDE_INSET = 2;
 const FADE_MS = 250;
+/** Chuyển cảnh vào trận: rung, loé trắng, zoom vào hero rồi tối dần. */
+const BATTLE_INTRO_MS = 550;
+const BATTLE_INTRO_ZOOM = 1.8;
+const BATTLE_INTRO_SHAKE = 0.006;
+const BATTLE_INTRO_FLASH_MS = 160;
+/** Level có quái lang thang: chạm vào là đánh trận luyện (lặp lại được). */
+const ROAMING_SPAWNS: Readonly<Record<string, RoamingSpawn>> = {
+  Misty_Fields: { encounterId: FIELD_ROAM_ENCOUNTER_ID, count: 7 },
+};
 const HERO_LIGHT_RADIUS = 120;
 const TORCH_LIGHT_RADIUS = 96;
 const HERO_LIGHT_OFFSET_Y = -24;
@@ -128,6 +141,8 @@ export class WorldScene extends Phaser.Scene {
   private chestZones = new TriggerZones<string>([]);
   private chestSprites = new Map<string, Phaser.GameObjects.Sprite>();
   private story: WorldStory | null = null;
+  private roamers: RoamingMonsters | null = null;
+  private warmingBattleAssets = false;
   /** Đã mở màn trận hoặc panel trong khung này: các vùng khác không mở thêm lớp phủ nữa. */
   private overlayOpen = false;
   /** Giữ qua các lần đổi level để hồi chiêu không reset khi qua cổng. */
@@ -176,11 +191,12 @@ export class WorldScene extends Phaser.Scene {
     queueFxAssets(this, WORLD_FX);
     queueHeroSheet(this);
     queuePropSprites(this);
+    queueMonsterSprites(this);
     // Loader thuộc scene và sống qua các lần restart: gỡ listener cũ trước khi gắn lại.
     this.load.off(Phaser.Loader.Events.FILE_LOAD_ERROR);
     this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
       // Thiếu hiệu ứng chỉ làm mất hình kỹ năng, bản đồ vẫn chơi được.
-      if (isFxAssetKey(file.key)) return;
+      if (isFxAssetKey(file.key) || isMonsterTextureKey(file.key) || this.warmingBattleAssets) return;
       this.loadError = `Không tải được ${file.key}`;
     });
     const { externalRelPath, identifier } = this.levelRef;
@@ -261,8 +277,37 @@ export class WorldScene extends Phaser.Scene {
     for (const [itemId, sprite] of this.chestSprites) {
       if (this.story.isChestOpened(itemId)) this.showChestOpened(sprite);
     }
+    this.spawnRoamers(level);
+    this.warmBattleAssets();
     // Chờ màn mờ dần xong rồi mới mở hội thoại tự động (mở đầu, kết chương).
     this.time.delayedCall(FADE_MS, () => this.story?.refresh());
+  }
+
+  /** Quái lang thang chỉ hiện khi truyện đã cho đánh trận luyện ở level này. */
+  private spawnRoamers(level: MapLevel): void {
+    this.roamers = null;
+    const spawn = ROAMING_SPAWNS[level.identifier];
+    if (spawn === undefined || level.collision === null || this.story?.canStartBattle(spawn.encounterId) !== true) return;
+    const hero = this.hero;
+    const keepOut: Rect[] = level.entities.map((entity) => ({ x: entity.x, y: entity.y, width: entity.width, height: entity.height }));
+    if (hero !== null) keepOut.push(this.bodyRect(hero));
+    this.roamers = new RoamingMonsters(this, { spawn, collision: level.collision, keepOut, atmosphere: this.atmosphere });
+  }
+
+  /**
+   * Tải sẵn ảnh và hiệu ứng của màn trận lúc đang đi bản đồ, để chạm quái là vào trận ngay, không đứng hình chờ tải.
+   * Lỗi tải ở đây bỏ qua: màn trận tự tải lại hoặc dùng hình tạm.
+   */
+  private warmBattleAssets(): void {
+    queueFxAssets(this);
+    queueHeroBattleSheets(this);
+    queueArenaTiles(this);
+    if (this.load.list.size === 0) return;
+    this.warmingBattleAssets = true;
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      this.warmingBattleAssets = false;
+    });
+    this.load.start();
   }
 
   private storyJournal(): StoryJournal {
@@ -319,6 +364,12 @@ export class WorldScene extends Phaser.Scene {
   private readonly handleResume = (): void => {
     this.input.keyboard?.resetKeys();
     this.overlayOpen = false;
+    // Về từ trận: gỡ quái vừa đánh, trả camera về như trước chuyển cảnh.
+    this.roamers?.releaseEngaged();
+    const camera = this.cameras.main;
+    camera.resetFX();
+    camera.setZoom(1);
+    camera.fadeIn(FADE_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);
     // Panel thành trì có thể vừa tải số từ đã học mới hơn lúc boot.
     const textureKey = BUILDING_TEXTURE_KEYS[this.citadelStage()];
     for (const image of this.buildingImages) image.setTexture(textureKey);
@@ -339,6 +390,7 @@ export class WorldScene extends Phaser.Scene {
     this.moveHero(this.hero, time);
     this.checkPortals(this.hero);
     this.checkBattleTriggers(this.hero);
+    this.checkRoamers(this.hero);
     this.checkBuildingDoors(this.hero);
     this.checkNpcs(this.hero);
     this.checkChests(this.hero);
@@ -431,7 +483,8 @@ export class WorldScene extends Phaser.Scene {
 
   private moveHero(hero: Phaser.Physics.Arcade.Sprite, nowMs: number): void {
     const body = hero.body as Phaser.Physics.Arcade.Body;
-    if (this.transitioning) {
+    // Đang chuyển cảnh vào trận/panel (`overlayOpen` bật trước khi bản đồ dừng): hero đứng yên.
+    if (this.transitioning || this.overlayOpen) {
       body.setVelocity(0, 0);
       return;
     }
@@ -547,8 +600,28 @@ export class WorldScene extends Phaser.Scene {
     if (this.transitioning || this.overlayOpen) return;
     const encounterId = this.battleTriggers.enter(this.bodyRect(hero));
     if (encounterId === null || this.story?.canStartBattle(encounterId) === false) return;
-    const data: BattleSceneData = { encounterId };
-    this.openOverlay(hero, SCENE_KEYS.battle, data);
+    this.enterBattle(hero, encounterId);
+  }
+
+  /** Chạm quái lang thang: quái đứng lại, vào trận luyện. */
+  private checkRoamers(hero: Phaser.Physics.Arcade.Sprite): void {
+    if (this.transitioning || this.overlayOpen || this.roamers === null) return;
+    if (this.roamers.touch(this.bodyRect(hero))) this.enterBattle(hero, this.roamers.encounterId);
+  }
+
+  /** Chuyển cảnh vào trận (rung, loé, zoom, tối dần) rồi mới mở màn trận, để không đứng hình đột ngột. */
+  private enterBattle(hero: Phaser.Physics.Arcade.Sprite, encounterId: string): void {
+    (hero.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+    this.overlayOpen = true;
+    const camera = this.cameras.main;
+    camera.shake(BATTLE_INTRO_MS, BATTLE_INTRO_SHAKE);
+    camera.flash(BATTLE_INTRO_FLASH_MS, 255, 255, 255);
+    camera.zoomTo(BATTLE_INTRO_ZOOM, BATTLE_INTRO_MS, 'Quad.easeIn');
+    camera.fadeOut(BATTLE_INTRO_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);
+    camera.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      const data: BattleSceneData = { encounterId };
+      this.openOverlay(hero, SCENE_KEYS.battle, data);
+    });
   }
 
   /** Bước tới cửa công trình: mở panel thành trì; đóng panel thì bản đồ chạy tiếp tại chỗ. */

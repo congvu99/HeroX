@@ -7,10 +7,11 @@ export const HERO_FRAME_SIZE = 64;
 export const BACKGROUND_COLOR = '#0b0b12';
 
 /**
- * Nếu zoom số nguyên lấp được ít nhất tỉ lệ này của zoom FIT thì dùng số nguyên (pixel đều, sắc);
- * thấp hơn thì dùng zoom lẻ để màn nhỏ không bị viền đen quá lớn.
+ * Chỉ dùng zoom số nguyên (pixel đều, sắc) khi nó lấp gần hết khung FIT — tức mất chưa tới ~0,5%.
+ * Ngưỡng cao để màn thật (vd iPhone DPR 3, FIT 3,23 → làm tròn 3) không bị thu nhỏ để lại viền đen 4 phía;
+ * khi integer phí nhiều thì ưu tiên lấp đầy bằng zoom lẻ (người dùng đã chốt: lấp đầy hơn pixel tuyệt đối sắc).
  */
-const INTEGER_ZOOM_MIN_FILL = 0.85;
+const INTEGER_ZOOM_MIN_FILL = 0.995;
 const MIN_ZOOM = 0.25;
 
 /**
