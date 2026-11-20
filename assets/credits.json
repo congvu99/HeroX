@@ -405,13 +405,31 @@
     "modified": "palette-harmonize"
   },
   {
+    "path": "tiles/kenney/tiny-dungeon.png",
+    "title": "Tiny Dungeon 1.0 tilemap (16px)",
+    "source": "Kenney Tiny Dungeon",
+    "url": "https://kenney.nl/assets/tiny-dungeon",
+    "authors": "Kenney (www.kenney.nl)",
+    "license": "CC0 1.0",
+    "modified": "không chỉnh (tilemap_packed.png)"
+  },
+  {
+    "path": "tiles/kenney/tiny-town.png",
+    "title": "Tiny Town 1.1 tilemap (16px)",
+    "source": "Kenney Tiny Town",
+    "url": "https://kenney.nl/assets/tiny-town",
+    "authors": "Kenney (www.kenney.nl)",
+    "license": "CC0 1.0",
+    "modified": "không chỉnh (tilemap_packed.png)"
+  },
+  {
     "path": "tilesets/chapter-1.png",
     "title": "Atlas tile chương 1 (ghép)",
-    "source": "Ghép: Dungeon Crawl Stone Soup tiles (CC0) + HeroX, vẽ bằng script",
-    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
-    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles; HeroX",
-    "license": "CC0 1.0 (tile DCSS) + thuộc dự án HeroX (tile vẽ bằng script)",
-    "modified": "ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/dcss/* (26 tile, nhuộm sương/mặt tường cho 5 tile) và 11 tile vẽ (mud, ruin_wall, foundation, carpet, grave, lava_crack, forge, candles, rubble, bones, rune_gate); palette-harmonize"
+    "source": "Ghép: Kenney Tiny Town + Tiny Dungeon (CC0)",
+    "url": "https://kenney.nl/assets",
+    "authors": "Kenney (www.kenney.nl)",
+    "license": "CC0 1.0",
+    "modified": "ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
   },
   {
     "path": "tilesets/placeholder-dungeon.png",

@@ -50,13 +50,13 @@ Trang nguồn: https://opengameart.org/content/dungeon-crawl-32x32-tiles
 | `tiles/dcss/volcanic_floor1.png` | Tile volcanic_floor1 (dc-dngn/floor/volcanic_floor1.png) | Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles | CC0 1.0 | palette-harmonize |
 | `tiles/dcss/volcanic_wall0.png` | Tile volcanic_wall0 (dc-dngn/wall/volcanic_wall0.png) | Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles | CC0 1.0 | palette-harmonize |
 
-## Ghép: Dungeon Crawl Stone Soup tiles (CC0) + HeroX, vẽ bằng script
+## Ghép: Kenney Tiny Town + Tiny Dungeon (CC0)
 
-Trang nguồn: https://opengameart.org/content/dungeon-crawl-32x32-tiles
+Trang nguồn: https://kenney.nl/assets
 
 | File | Nội dung | Tác giả | License | Chỉnh sửa |
 |---|---|---|---|---|
-| `tilesets/chapter-1.png` | Atlas tile chương 1 (ghép) | Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles; HeroX | CC0 1.0 (tile DCSS) + thuộc dự án HeroX (tile vẽ bằng script) | ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/dcss/* (26 tile, nhuộm sương/mặt tường cho 5 tile) và 11 tile vẽ (mud, ruin_wall, foundation, carpet, grave, lava_crack, forge, candles, rubble, bones, rune_gate); palette-harmonize |
+| `tilesets/chapter-1.png` | Atlas tile chương 1 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
 
 ## HeroX, vẽ bằng script
 
@@ -65,6 +65,22 @@ Trang nguồn: https://opengameart.org/content/dungeon-crawl-32x32-tiles
 | `sprites/props/chest-closed.png` | Rương đóng | HeroX | Thuộc dự án HeroX | tools/lib/prop-painters.mjs; palette-harmonize |
 | `sprites/props/chest-open.png` | Rương mở | HeroX | Thuộc dự án HeroX | tools/lib/prop-painters.mjs; palette-harmonize |
 | `tilesets/placeholder-dungeon.png` | Tileset placeholder của map thử test-room | HeroX | Thuộc dự án HeroX | sinh bằng client/scripts/generate-test-room.mjs; không chỉnh tông (chỉ dùng cho map thử) |
+
+## Kenney Tiny Dungeon
+
+Trang nguồn: https://kenney.nl/assets/tiny-dungeon
+
+| File | Nội dung | Tác giả | License | Chỉnh sửa |
+|---|---|---|---|---|
+| `tiles/kenney/tiny-dungeon.png` | Tiny Dungeon 1.0 tilemap (16px) | Kenney (www.kenney.nl) | CC0 1.0 | không chỉnh (tilemap_packed.png) |
+
+## Kenney Tiny Town
+
+Trang nguồn: https://kenney.nl/assets/tiny-town
+
+| File | Nội dung | Tác giả | License | Chỉnh sửa |
+|---|---|---|---|---|
+| `tiles/kenney/tiny-town.png` | Tiny Town 1.1 tilemap (16px) | Kenney (www.kenney.nl) | CC0 1.0 | không chỉnh (tilemap_packed.png) |
 
 ## Universal LPC Spritesheet Character Generator
 

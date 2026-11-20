@@ -21,6 +21,11 @@ export const SOURCES = {
     source: 'Universal LPC Spritesheet Character Generator',
     url: 'https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator',
   },
+  kenney: {
+    url: 'https://kenney.nl/assets',
+    authors: 'Kenney (www.kenney.nl)',
+    license: 'CC0 1.0',
+  },
   herox: {
     source: 'HeroX, vẽ bằng script',
     url: '',

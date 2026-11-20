@@ -109,7 +109,7 @@ function gridTile(tileId, cellX, cellY, widthCells, columns) {
 
 /**
  * Level đã giải mã: `cells[y][x] = { ground, decor, solid }` (ground/decor là chỉ số tile hoặc null).
- * `context`: { tilesetRelPath, columns }.
+ * `context`: { tilesetRelPath, columns, bgColor? } (bgColor mặc định nền tối cũ).
  */
 export function buildLevelJson(level, context) {
   const intGridCsv = [];
@@ -123,7 +123,7 @@ export function buildLevelJson(level, context) {
   return {
     identifier: level.identifier, iid: level.iid, uid: LEVEL_UID_BASE + level.index, worldX: level.worldX,
     worldY: level.worldY, worldDepth: 0, pxWid: level.widthCells * GRID, pxHei: level.heightCells * GRID,
-    __bgColor: BG_COLOR, bgColor: BG_COLOR, useAutoIdentifier: false, bgRelPath: null, bgPos: null, bgPivotX: 0.5,
+    __bgColor: context.bgColor ?? BG_COLOR, bgColor: context.bgColor ?? BG_COLOR, useAutoIdentifier: false, bgRelPath: null, bgPos: null, bgPivotX: 0.5,
     bgPivotY: 0.5, __smartColor: '#7A7486', __bgPos: null, externalRelPath: null, fieldInstances: [],
     layerInstances: [
       layerInstance(level, context, 'Entities', 'Entities', UID.layerEntities, {
@@ -137,7 +137,7 @@ export function buildLevelJson(level, context) {
   };
 }
 
-/** `project`: { iid, dummyWorldIid, tileset: { identifier, relPath, width, height, columns, rows } }. */
+/** `project`: { iid, dummyWorldIid, bgColor?, tileset: { identifier, relPath, width, height, columns, rows } }. */
 export function buildProjectJson(project, levels) {
   const { tileset } = project;
   return {
@@ -149,7 +149,7 @@ export function buildProjectJson(project, levels) {
     iid: project.iid, jsonVersion: LDTK_VERSION, appBuildId: APP_BUILD_ID, nextUid: NEXT_UID,
     identifierStyle: 'Capitalize', toc: [], worldLayout: 'Free', worldGridWidth: 256, worldGridHeight: 256,
     defaultLevelWidth: 640, defaultLevelHeight: 384, defaultPivotX: 0, defaultPivotY: 0, defaultGridSize: GRID,
-    defaultEntityWidth: GRID, defaultEntityHeight: GRID, bgColor: BG_COLOR, defaultLevelBgColor: BG_COLOR,
+    defaultEntityWidth: GRID, defaultEntityHeight: GRID, bgColor: project.bgColor ?? BG_COLOR, defaultLevelBgColor: project.bgColor ?? BG_COLOR,
     minifyJson: false, externalLevels: true, exportTiled: false, simplifiedExport: false, imageExportMode: 'None',
     exportLevelBg: true, pngFilePattern: null, backupOnSave: false, backupLimit: 10, backupRelPath: null,
     levelNamePattern: 'Level_%idx', tutorialDesc: null, customCommands: [], flags: [],
