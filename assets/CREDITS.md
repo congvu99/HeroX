@@ -14,7 +14,6 @@ Trang nguồn: https://opengameart.org/content/dungeon-crawl-32x32-tiles
 |---|---|---|---|---|
 | `sprites/monsters/elite-demon.png` | Quỷ tinh anh (red devil) (dc-mon/demons/red_devil.png) | Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles | CC0 1.0 | cắt sát, phóng x3, đặt khung 96 chân chạm đáy; palette-harmonize |
 | `sprites/monsters/ghoul.png` | Ghoul (dc-mon/undead/ghoul.png) | Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles | CC0 1.0 | cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize |
-| `sprites/monsters/imp.png` | Tiểu quỷ (imp) (dc-mon/demons/imp.png) | Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles | CC0 1.0 | cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize |
 | `sprites/monsters/scarecrow-demon.png` | Trùm Quỷ Bù Nhìn (balrug) (dc-mon/demons/balrug.png) | Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles | CC0 1.0 | cắt sát, phóng x4, đặt khung 128 chân chạm đáy; palette-harmonize |
 | `sprites/npc/keeper.png` | Tu sĩ Giữ Thư (doll người + áo tu sĩ) (player/base/human_m.png + player/body/monk_black.png) | Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles | CC0 1.0 | ghép doll; cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize |
 | `sprites/npc/smith.png` | Thợ rèn (doll người + giáp da + búa) (player/base/human_m.png + player/legs/pants_brown.png + player/body/leather_heavy.png + player/hair/brown1.png + player/hand1/hammer.png) | Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles | CC0 1.0 | ghép doll; cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize |
@@ -82,6 +81,14 @@ Trang nguồn: https://kenney.nl/assets/tiny-town
 |---|---|---|---|---|
 | `tiles/kenney/tiny-town.png` | Tiny Town 1.1 tilemap (16px) | Kenney (www.kenney.nl) | CC0 1.0 | không chỉnh (tilemap_packed.png) |
 
+## PixelLab (AI pixel art, api.pixellab.ai)
+
+Trang nguồn: https://www.pixellab.ai/
+
+| File | Nội dung | Tác giả | License | Chỉnh sửa |
+|---|---|---|---|---|
+| `sprites/monsters/imp.png` | Quái imp (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+
 ## Universal LPC Spritesheet Character Generator
 
 Trang nguồn: https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator/tree/04140673ec02906f8233523639733c83690df750
@@ -97,4 +104,8 @@ Trang nguồn: https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Ch
 
 ## PixelLab
 
-Chưa có asset PixelLab; mọi hình hiện tại là hình tạm ở các mục trên.
+| File | Mã công thức | Kích thước | Hướng | Hoạt ảnh | Ngày tạo |
+|---|---|---|---|---|---|
+| `sprites/monsters/imp.png` | imp | 64x64 | 4 | still | 2026-11-20 |
+
+Prompt, seed và ảnh tham chiếu để tạo lại: `tools/pixellab/art-recipes.json`.

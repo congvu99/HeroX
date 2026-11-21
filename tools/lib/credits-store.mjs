@@ -32,6 +32,12 @@ export const SOURCES = {
     authors: 'HeroX',
     license: 'Thuộc dự án HeroX',
   },
+  pixellab: {
+    source: 'PixelLab (AI pixel art, api.pixellab.ai)',
+    url: 'https://www.pixellab.ai/',
+    authors: 'HeroX qua PixelLab',
+    license: 'Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)',
+  },
 };
 
 export function readCredits() {

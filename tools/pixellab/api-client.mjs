@@ -1,0 +1,130 @@
+// Thin client cho PixelLab API (https://api.pixellab.ai/v1). Chỉ đọc khoá từ env PIXELLAB_API_KEY;
+// không bao giờ ghi khoá ra file/log. Mỗi hàm trả ảnh base64 PNG đã decode sang RGBA (png.mjs).
+import { decodePng } from '../lib/png.mjs';
+
+const BASE_URL = 'https://api.pixellab.ai/v1';
+const REQUEST_TIMEOUT_MS = 120_000;
+
+/** Lấy khoá API; ném lỗi rõ nếu thiếu để người chạy biết đặt env. */
+export function requireApiKey() {
+  const key = process.env.PIXELLAB_API_KEY;
+  if (!key) throw new Error('Thiếu env PIXELLAB_API_KEY (đặt user-level rồi mở shell mới).');
+  return key;
+}
+
+/** Lỗi API có kèm mã HTTP để nơi gọi phân biệt hết-quota (402/429) với lỗi khác. */
+export class PixelLabApiError extends Error {
+  name = 'PixelLabApiError';
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function postJson(path, body) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${requireApiKey()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new PixelLabApiError(`POST ${path} → HTTP ${res.status}: ${text.slice(0, 300)}`, res.status);
+    }
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Số dư tài khoản (USD). Dùng để báo cáo, không chặn vì tài khoản có thể chạy bằng quota generations. */
+export async function getBalance() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${BASE_URL}/balance`, {
+      headers: { Authorization: `Bearer ${requireApiKey()}` },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new PixelLabApiError(`GET /balance → HTTP ${res.status}`, res.status);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function decodeResponseImage(json, label) {
+  const base64 = json?.image?.base64;
+  if (typeof base64 !== 'string') throw new PixelLabApiError(`${label}: phản hồi không có ảnh base64`, 0);
+  return decodePng(Buffer.from(base64, 'base64'), label);
+}
+
+/**
+ * Sinh sprite từ mô tả (pixflux). Trả ảnh RGBA đã decode.
+ * @param {{description:string,width:number,height:number,view?:string,direction?:string,seed?:number,
+ *   outline?:string,shading?:string,detail?:string,negative?:string,noBackground?:boolean}} opts
+ */
+export async function generateImage(opts) {
+  const body = {
+    description: opts.description,
+    image_size: { width: opts.width, height: opts.height },
+    view: opts.view ?? 'high top-down',
+    no_background: opts.noBackground ?? true,
+    outline: opts.outline ?? 'single color black outline',
+    shading: opts.shading ?? 'detailed shading',
+    detail: opts.detail ?? 'highly detailed',
+  };
+  if (opts.direction) body.direction = opts.direction;
+  if (opts.negative) body.negative_description = opts.negative;
+  if (typeof opts.seed === 'number') body.seed = opts.seed;
+  return decodeResponseImage(await postJson('/generate-image-pixflux', body), `pixflux(${opts.description.slice(0, 30)})`);
+}
+
+function toBase64Image(rgbaImage, encodePng) {
+  return { type: 'base64', base64: encodePng(rgbaImage).toString('base64') };
+}
+
+/**
+ * Xoay sprite sang hướng khác (tạo 4 facing từ 1 base). from/to dùng Direction của PixelLab.
+ * Cần truyền encodePng để gói ảnh nguồn thành base64.
+ */
+export async function rotateImage(fromImage, { fromDirection, toDirection, width, height, seed }, encodePng) {
+  const body = {
+    from_image: toBase64Image(fromImage, encodePng),
+    image_size: { width, height },
+    from_view: 'high top-down',
+    to_view: 'high top-down',
+    from_direction: fromDirection,
+    to_direction: toDirection,
+  };
+  if (typeof seed === 'number') body.seed = seed;
+  return decodeResponseImage(await postJson('/rotate', body), `rotate(${fromDirection}->${toDirection})`);
+}
+
+/**
+ * Sinh N frame hoạt ảnh của một action từ ảnh tham chiếu (animate-with-text).
+ * Trả mảng ảnh RGBA theo thứ tự frame.
+ */
+export async function animateWithText(referenceImage, opts, encodePng) {
+  const body = {
+    image_size: { width: opts.width, height: opts.height },
+    description: opts.description,
+    action: opts.action,
+    view: opts.view ?? 'high top-down',
+    direction: opts.direction ?? 'south',
+    n_frames: opts.frames,
+    reference_image: toBase64Image(referenceImage, encodePng),
+  };
+  if (opts.negative) body.negative_description = opts.negative;
+  if (typeof opts.seed === 'number') body.seed = opts.seed;
+  const json = await postJson('/animate-with-text', body);
+  const images = json?.images;
+  if (!Array.isArray(images) || images.length === 0) {
+    throw new PixelLabApiError(`animate(${opts.action}): phản hồi không có mảng images`, 0);
+  }
+  return images.map((img, index) => decodePng(Buffer.from(img.base64, 'base64'), `animate(${opts.action})#${index}`));
+}

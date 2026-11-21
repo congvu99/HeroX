@@ -24,9 +24,13 @@ export const REGISTRY_KEYS = {
   quality: 'quality',
 } as const;
 
-/** Map khởi đầu và đường dẫn tính từ thư mục `assets/`. */
+/** Map chương 1, đường dẫn tính từ thư mục `assets/`; chương thực tế để boot do `activeChapterMapPath` chọn. */
 export const START_MAP_PATH = 'maps/chapter-1-misty-village.ldtk';
-export const START_MAP_CACHE_KEY = 'ldtk-project:chapter-1-misty-village';
+
+/** Khoá cache project có namespace theo file map để nhiều chương không đè cache của nhau. */
+export function mapProjectCacheKey(mapPath: string): string {
+  return `ldtk-project:${mapPath}`;
+}
 
 /** Project LDtk đã parse kèm đường dẫn file gốc để giải đường dẫn tương đối và đặt namespace cho cache. */
 export interface LoadedMapProject {

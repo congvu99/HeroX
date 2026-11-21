@@ -64,12 +64,12 @@
   },
   {
     "path": "sprites/monsters/imp.png",
-    "title": "Tiểu quỷ (imp) (dc-mon/demons/imp.png)",
-    "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
-    "url": "https://opengameart.org/content/dungeon-crawl-32x32-tiles",
-    "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
-    "license": "CC0 1.0",
-    "modified": "cắt sát, phóng x2, đặt khung 64 chân chạm đáy; palette-harmonize"
+    "title": "Quái imp (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
   },
   {
     "path": "sprites/monsters/scarecrow-demon.png",

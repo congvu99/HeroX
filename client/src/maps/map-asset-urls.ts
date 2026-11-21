@@ -20,3 +20,8 @@ export function mapAssetUrl(assetPath: string): string {
   if (url === undefined) throw new Error(`Không có asset map "${assetPath}" trong bản build`);
   return url;
 }
+
+/** Kiểm tra asset map có trong bản build hay không, để chọn chương mà không làm `mapAssetUrl` ném lỗi. */
+export function hasMapAsset(assetPath: string): boolean {
+  return urlsByAssetPath.has(assetPath);
+}

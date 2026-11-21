@@ -2,12 +2,13 @@ import Phaser from 'phaser';
 import type { CreateHeroRequest, MeResponse } from '@herox/shared';
 import { currentUtcOffsetMinutes, fetchMe, readEngSessionToken, waitForEngSession, type MeResult } from '../api/me-api';
 import { createHero } from '../api/story-api';
+import { activeChapterMapPath } from '../maps/chapter-maps';
 import { LdtkFormatError, parseLdtkProject } from '../maps/ldtk-loader';
 import { mapAssetUrl } from '../maps/map-asset-urls';
 import { createPlaceholderTextures } from '../render/placeholder-textures';
 import { ApiStoryBackend, DevStoryBackend, StoryJournal } from '../story/story-journal';
 import { HeroCreationForm } from '../ui/hero-creation-form';
-import { REGISTRY_KEYS, SCENE_KEYS, START_MAP_CACHE_KEY, START_MAP_PATH, type LoadedMapProject } from './scene-keys';
+import { mapProjectCacheKey, REGISTRY_KEYS, SCENE_KEYS, type LoadedMapProject } from './scene-keys';
 
 /** Trang chủ LingoBrain cùng origin, nơi người chơi đăng nhập. */
 const ENG_HOME_PATH = '/';
@@ -36,8 +37,14 @@ export class BootScene extends Phaser.Scene {
     super(SCENE_KEYS.boot);
   }
 
+  /** Đường dẫn project của chương đang chơi, chốt ở `preload` để `create` đọc lại đúng file đã tải. */
+  private mapSourcePath = activeChapterMapPath();
+
   preload(): void {
-    this.load.json(START_MAP_CACHE_KEY, mapAssetUrl(START_MAP_PATH));
+    // Chọn chương đang chơi (mặc định chương 1; phần nội dung chương đặt qua `setActiveChapter`),
+    // rồi lùi về chương sẵn có nếu file chương đó chưa dựng để không vỡ ở màn boot.
+    this.mapSourcePath = activeChapterMapPath();
+    this.load.json(mapProjectCacheKey(this.mapSourcePath), mapAssetUrl(this.mapSourcePath));
   }
 
   create(): void {
@@ -56,8 +63,8 @@ export class BootScene extends Phaser.Scene {
   private loadMapProject(): boolean {
     try {
       const loaded: LoadedMapProject = {
-        sourcePath: START_MAP_PATH,
-        project: parseLdtkProject(this.cache.json.get(START_MAP_CACHE_KEY)),
+        sourcePath: this.mapSourcePath,
+        project: parseLdtkProject(this.cache.json.get(mapProjectCacheKey(this.mapSourcePath))),
       };
       this.registry.set(REGISTRY_KEYS.mapProject, loaded);
       return true;
