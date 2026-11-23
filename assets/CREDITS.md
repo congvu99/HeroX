@@ -56,6 +56,10 @@ Trang nguồn: https://kenney.nl/assets
 | File | Nội dung | Tác giả | License | Chỉnh sửa |
 |---|---|---|---|---|
 | `tilesets/chapter-1.png` | Atlas tile chương 1 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
+| `tilesets/chapter-2.png` | Atlas tile chương 2 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-2.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
+| `tilesets/chapter-3.png` | Atlas tile chương 3 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-3.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
+| `tilesets/chapter-4.png` | Atlas tile chương 4 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-4.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
+| `tilesets/chapter-5.png` | Atlas tile chương 5 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-5.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
 
 ## HeroX, vẽ bằng script
 

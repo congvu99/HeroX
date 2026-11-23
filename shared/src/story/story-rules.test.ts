@@ -87,7 +87,10 @@ describe('chapter 1 data', () => {
     }
     expect(isChapterComplete(1, progressOf(...done))).toBe(true);
     expect(isChapterComplete(1, progressOf(...done.slice(0, -1)))).toBe(false);
-    expect(activeQuests(progressOf(...done))).toEqual([]);
+    // Xong chương 1 thì không còn nhiệm vụ chương 1 nào mở; chương 2 mới "bắt đầu" nên nhiệm vụ của nó hiện ra.
+    const after = activeQuests(progressOf(...done));
+    expect(after.every((view) => view.chapter !== 1)).toBe(true);
+    expect(after.some((view) => view.chapter === 2)).toBe(true);
   });
 });
 

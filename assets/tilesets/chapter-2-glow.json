@@ -1,0 +1,65 @@
+{
+	"roof_orange_dormer": {
+		"x": 6,
+		"y": 8,
+		"width": 20,
+		"height": 18,
+		"strength": 1
+	},
+	"roof_grey_dormer": {
+		"x": 6,
+		"y": 8,
+		"width": 20,
+		"height": 18,
+		"strength": 1
+	},
+	"wood_window": {
+		"x": 6,
+		"y": 8,
+		"width": 20,
+		"height": 18,
+		"strength": 1
+	},
+	"wood_door": {
+		"x": 8,
+		"y": 12,
+		"width": 16,
+		"height": 20,
+		"strength": 0.8
+	},
+	"stone_window": {
+		"x": 6,
+		"y": 8,
+		"width": 20,
+		"height": 18,
+		"strength": 1
+	},
+	"stone_door": {
+		"x": 8,
+		"y": 12,
+		"width": 16,
+		"height": 20,
+		"strength": 0.8
+	},
+	"gate_left": {
+		"x": 16,
+		"y": 0,
+		"width": 16,
+		"height": 32,
+		"strength": 0.9
+	},
+	"gate_right": {
+		"x": 0,
+		"y": 0,
+		"width": 16,
+		"height": 32,
+		"strength": 0.9
+	},
+	"brick_wall_barred": {
+		"x": 6,
+		"y": 8,
+		"width": 20,
+		"height": 18,
+		"strength": 1
+	}
+}

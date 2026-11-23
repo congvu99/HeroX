@@ -33,6 +33,18 @@ const SPEAKERS: Readonly<Record<Exclude<SpeakerId, 'hero'>, SpeakerInfo>> = {
   villager: { name: 'Dân làng', portrait: 'sprites/npc/villager.png' },
   smith: { name: 'Thợ rèn', portrait: 'sprites/npc/smith.png' },
   scarecrow: { name: 'Quỷ Bù Nhìn', portrait: 'sprites/monsters/scarecrow-demon.png' },
+  // Chương 2 (Rừng Tro)
+  'forest-warden': { name: 'Người Giữ Rừng', portrait: 'sprites/npc/forest-warden.png' },
+  'ash-stag': { name: 'Hươu Quỷ Tro', portrait: 'sprites/monsters/ash-stag.png' },
+  // Chương 3 (Hầm Mộ Thánh)
+  'crypt-warden': { name: 'Người Giữ Mộ', portrait: 'sprites/npc/crypt-warden.png' },
+  'nameless-bishop': { name: 'Giám Mục Mất Tên', portrait: 'sprites/monsters/nameless-bishop.png' },
+  // Chương 4 (Vực Lửa)
+  'chained-soul': { name: 'Linh Hồn Bị Xích', portrait: 'sprites/npc/chained-soul.png' },
+  'antonym-demon': { name: 'Chúa Quỷ Ngược Nghĩa', portrait: 'sprites/monsters/antonym-demon.png' },
+  // Chương 5 (Thiên Cung Vỡ)
+  'gate-seraph': { name: 'Seraph Giữ Cổng', portrait: 'sprites/npc/gate-seraph.png' },
+  'fallen-angel': { name: 'Thiên Thần Sa Ngã', portrait: 'sprites/monsters/fallen-angel.png' },
 };
 
 const ADVANCE_KEYS = new Set(['Enter', ' ', 'ArrowRight']);

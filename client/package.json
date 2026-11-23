@@ -11,7 +11,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "generate:test-room": "node scripts/generate-test-room.mjs",
-    "generate:chapter-1": "node scripts/generate-chapter-1.mjs"
+    "generate:chapter-1": "node scripts/generate-chapter-1.mjs",
+    "generate:chapter-2": "node scripts/generate-chapter-2.mjs",
+    "generate:chapter-3": "node scripts/generate-chapter-3.mjs",
+    "generate:chapter-4": "node scripts/generate-chapter-4.mjs",
+    "generate:chapter-5": "node scripts/generate-chapter-5.mjs"
   },
   "dependencies": {
     "@herox/shared": "0.1.0",

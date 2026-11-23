@@ -1,4 +1,8 @@
 import type { EnemyTemplate } from '../../combat/encounters.js';
+import { CHAPTER_2_ENEMIES } from './chapter-2.js';
+import { CHAPTER_3_ENEMIES } from './chapter-3.js';
+import { CHAPTER_4_ENEMIES } from './chapter-4.js';
+import { CHAPTER_5_ENEMIES } from './chapter-5.js';
 
 /**
  * Quỷ chương 1 (Làng Sương Sớm). Chỉ số là mức cấp 1, trận nhân theo cấp anh hùng (`scaleEncounterEnemies`).
@@ -23,7 +27,14 @@ export const CHAPTER_1_ENEMIES = {
   },
 } as const satisfies Readonly<Record<string, EnemyTemplate>>;
 
-/** Tên hiển thị theo `kind`; quái không có trong bảng dùng chính `kind`. */
+/** Tên hiển thị theo `kind` của mọi chương; quái không có trong bảng dùng chính `kind`. */
+const ALL_ENEMY_TABLES: readonly Readonly<Record<string, EnemyTemplate>>[] = [
+  CHAPTER_1_ENEMIES,
+  CHAPTER_2_ENEMIES,
+  CHAPTER_3_ENEMIES,
+  CHAPTER_4_ENEMIES,
+  CHAPTER_5_ENEMIES,
+];
 export const ENEMY_NAMES: Readonly<Record<string, string>> = Object.fromEntries(
-  Object.values(CHAPTER_1_ENEMIES).map((enemy) => [enemy.kind, enemy.name]),
+  ALL_ENEMY_TABLES.flatMap((table) => Object.values(table)).map((enemy) => [enemy.kind, enemy.name ?? enemy.kind]),
 );

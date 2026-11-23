@@ -31,8 +31,30 @@ const MONSTER_SPRITES: Readonly<Record<string, string>> = {
   skeleton: 'skeleton',
   ghoul: 'ghoul',
   'scarecrow-demon': 'scarecrow-demon',
+  // Chương 2 (Rừng Tro)
+  'ash-wolf': 'ash-wolf',
+  'ash-sprite': 'ash-sprite',
+  'ash-stag': 'ash-stag',
+  // Chương 3 (Hầm Mộ Thánh)
+  'red-cleric': 'red-cleric',
+  'bone-knight': 'bone-knight',
+  'nameless-bishop': 'nameless-bishop',
+  // Chương 4 (Vực Lửa)
+  'fire-imp': 'fire-imp',
+  'lava-hound': 'lava-hound',
+  'antonym-demon': 'antonym-demon',
+  // Chương 5 (Thiên Cung Vỡ)
+  'mute-cherub': 'mute-cherub',
+  'broken-seraph': 'broken-seraph',
+  'fallen-angel': 'fallen-angel',
 };
-const BOSS_KINDS: ReadonlySet<string> = new Set(['scarecrow-demon']);
+const BOSS_KINDS: ReadonlySet<string> = new Set([
+  'scarecrow-demon',
+  'ash-stag',
+  'nameless-bishop',
+  'antonym-demon',
+  'fallen-angel',
+]);
 
 const ELITE_TINT = 0xffa060;
 /** Khiên lửa của trùm: quái ánh cam đỏ tới khi bị xuyên. */

@@ -21,9 +21,9 @@ describe('encounters', () => {
 });
 
 describe('WORD_CHAINS', () => {
-  it('has 30 chapter 1 chains of 2–4 normalized, distinct words with unique ids', () => {
-    expect(WORD_CHAINS).toHaveLength(30);
-    expect(new Set(WORD_CHAINS.map((chain) => chain.id)).size).toBe(30);
+  it('has chains of 2–4 normalized, distinct words with unique ids', () => {
+    expect(WORD_CHAINS.length).toBeGreaterThanOrEqual(30);
+    expect(new Set(WORD_CHAINS.map((chain) => chain.id)).size).toBe(WORD_CHAINS.length);
     for (const chain of WORD_CHAINS) {
       expect(chain.words.length).toBeGreaterThanOrEqual(2);
       expect(chain.words.length).toBeLessThanOrEqual(4);

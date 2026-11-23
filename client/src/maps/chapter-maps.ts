@@ -15,9 +15,9 @@ export const FIRST_CHAPTER = 1;
 const CHAPTER_MAP_PATHS: Readonly<Record<number, string>> = {
   1: 'maps/chapter-1-misty-village.ldtk',
   2: 'maps/chapter-2-ash-forest.ldtk',
-  3: 'maps/chapter-3-tide-harbor.ldtk',
-  4: 'maps/chapter-4-ember-keep.ldtk',
-  5: 'maps/chapter-5-star-spire.ldtk',
+  3: 'maps/chapter-3-saint-catacomb.ldtk',
+  4: 'maps/chapter-4-hellmaw.ldtk',
+  5: 'maps/chapter-5-broken-heaven.ldtk',
 };
 
 /** Danh sách chương có khai báo đường dẫn, tăng dần. */

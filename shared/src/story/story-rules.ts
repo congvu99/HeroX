@@ -1,11 +1,21 @@
 import { normalizeAnswer } from '../combat/answer-matching.js';
 import type { StoryBeatRecord } from '../citadel-contract.js';
 import { CHAPTER_1_STORY } from '../data/story/chapter-1.js';
+import { CHAPTER_2_STORY } from '../data/story/chapter-2.js';
+import { CHAPTER_3_STORY } from '../data/story/chapter-3.js';
+import { CHAPTER_4_STORY } from '../data/story/chapter-4.js';
+import { CHAPTER_5_STORY } from '../data/story/chapter-5.js';
 import { isChapterUnlocked, type WordCounts } from '../progression/level-curve.js';
 import type { DialogScript, DialogVariant, StoryBeat, StoryChapter, StoryQuest } from './story-types.js';
 
 /** Các chương đã có nội dung; chương sau thêm vào đây. */
-export const STORY_CHAPTERS: readonly StoryChapter[] = [CHAPTER_1_STORY];
+export const STORY_CHAPTERS: readonly StoryChapter[] = [
+  CHAPTER_1_STORY,
+  CHAPTER_2_STORY,
+  CHAPTER_3_STORY,
+  CHAPTER_4_STORY,
+  CHAPTER_5_STORY,
+];
 
 /** Khoá một mốc trong tập đã xong: id mốc chỉ duy nhất trong một chương. */
 export function beatKey(chapter: number, beat: string): string {
@@ -31,6 +41,16 @@ export class StoryProgress {
 
 export function findChapter(chapter: number): StoryChapter | undefined {
   return STORY_CHAPTERS.find((entry) => entry.chapter === chapter);
+}
+
+/**
+ * Chương đã tới lượt chưa: chương 1 luôn mở; chương sau chỉ "bắt đầu" khi chương liền trước đã xong mốc cuối.
+ * Dùng để nhiệm vụ và hội thoại tự động của chương sau không hiện trước lúc người chơi hoàn thành chương trước
+ * (cổng vào vùng còn khoá thêm theo số từ đã học ở `levelGateState`).
+ */
+function isChapterStarted(chapter: StoryChapter, progress: StoryProgress): boolean {
+  const previous = findChapter(chapter.chapter - 1);
+  return previous === undefined || progress.has(previous.chapter, previous.finalBeat);
 }
 
 export function findBeat(chapter: number, beatId: string): StoryBeat | undefined {
@@ -99,6 +119,7 @@ export function selectDialog(dialogId: string, progress: StoryProgress): ActiveD
 /** Hội thoại phải tự mở ngay (mở đầu, kết chương), `null` nếu không có. */
 export function pendingAutoDialog(progress: StoryProgress): ActiveDialog | null {
   for (const chapter of STORY_CHAPTERS) {
+    if (!isChapterStarted(chapter, progress)) continue;
     const beat = chapter.beats.find((candidate) => candidate.autoDialogId !== undefined && isBeatAvailable(chapter, candidate, progress));
     if (beat?.autoDialogId !== undefined) return selectDialog(beat.autoDialogId, progress);
   }
@@ -180,6 +201,7 @@ export interface QuestView {
 export function activeQuests(progress: StoryProgress): QuestView[] {
   const views: QuestView[] = [];
   for (const chapter of STORY_CHAPTERS) {
+    if (!isChapterStarted(chapter, progress)) continue;
     const beatsById = new Map(chapter.beats.map((beat) => [beat.id, beat]));
     for (const quest of chapter.quests) {
       const beats = quest.beats.map((id) => beatsById.get(id)).filter((beat): beat is StoryBeat => beat !== undefined);

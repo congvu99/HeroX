@@ -40,7 +40,59 @@ const CHAPTER_1_PHRASES: readonly string[] = [
   'jump over wall',
 ];
 
-export const WORD_CHAINS: readonly WordChain[] = CHAPTER_1_PHRASES.map((phrase) => ({
+// Chuỗi theo chủ đề từng chương (mọi từ đều có trong bộ từ LingoBrain, kiểm bằng test hợp đồng ở server).
+// Chương 2 Rừng Tro: thiên nhiên + động từ di chuyển.
+const CHAPTER_2_PHRASES: readonly string[] = [
+  'run through forest',
+  'leap over stone',
+  'climb tall tree',
+  'chase fast wind',
+  'swim cold river',
+  'move forward again',
+  'hunt dark spirit',
+  'escape heavy smoke',
+];
+// Chương 3 Hầm Mộ Thánh: đồ vật + nơi chốn.
+const CHAPTER_3_PHRASES: readonly string[] = [
+  'open stone gate',
+  'hold iron cross',
+  'light dark tunnel',
+  'call old name',
+  'guard ancient bone',
+  'break cold stone',
+  'walk deep cave',
+];
+// Chương 4 Vực Lửa: công việc + cảm xúc.
+const CHAPTER_4_PHRASES: readonly string[] = [
+  'burn bright fire',
+  'build strong wall',
+  'dig deep hole',
+  'fear dark magic',
+  'hope for light',
+  'hold back fear',
+  'work hard again',
+];
+// Chương 5 Thiên Cung Vỡ: tổng hợp.
+const CHAPTER_5_PHRASES: readonly string[] = [
+  'rise into light',
+  'fall from sky',
+  'remember every word',
+  'learn true name',
+  'heal broken soul',
+  'forget old fear',
+  'bless brave hero',
+  'fight silent dark',
+];
+
+const ALL_PHRASES: readonly string[] = [
+  ...CHAPTER_1_PHRASES,
+  ...CHAPTER_2_PHRASES,
+  ...CHAPTER_3_PHRASES,
+  ...CHAPTER_4_PHRASES,
+  ...CHAPTER_5_PHRASES,
+];
+
+export const WORD_CHAINS: readonly WordChain[] = ALL_PHRASES.map((phrase) => ({
   id: phrase.replace(/ /g, '-'),
   words: phrase.split(' '),
 }));

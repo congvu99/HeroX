@@ -432,6 +432,42 @@
     "modified": "ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
   },
   {
+    "path": "tilesets/chapter-2.png",
+    "title": "Atlas tile chương 2 (ghép)",
+    "source": "Ghép: Kenney Tiny Town + Tiny Dungeon (CC0)",
+    "url": "https://kenney.nl/assets",
+    "authors": "Kenney (www.kenney.nl)",
+    "license": "CC0 1.0",
+    "modified": "ghép bằng client/scripts/generate-chapter-2.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
+  },
+  {
+    "path": "tilesets/chapter-3.png",
+    "title": "Atlas tile chương 3 (ghép)",
+    "source": "Ghép: Kenney Tiny Town + Tiny Dungeon (CC0)",
+    "url": "https://kenney.nl/assets",
+    "authors": "Kenney (www.kenney.nl)",
+    "license": "CC0 1.0",
+    "modified": "ghép bằng client/scripts/generate-chapter-3.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
+  },
+  {
+    "path": "tilesets/chapter-4.png",
+    "title": "Atlas tile chương 4 (ghép)",
+    "source": "Ghép: Kenney Tiny Town + Tiny Dungeon (CC0)",
+    "url": "https://kenney.nl/assets",
+    "authors": "Kenney (www.kenney.nl)",
+    "license": "CC0 1.0",
+    "modified": "ghép bằng client/scripts/generate-chapter-4.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
+  },
+  {
+    "path": "tilesets/chapter-5.png",
+    "title": "Atlas tile chương 5 (ghép)",
+    "source": "Ghép: Kenney Tiny Town + Tiny Dungeon (CC0)",
+    "url": "https://kenney.nl/assets",
+    "authors": "Kenney (www.kenney.nl)",
+    "license": "CC0 1.0",
+    "modified": "ghép bằng client/scripts/generate-chapter-5.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
+  },
+  {
     "path": "tilesets/placeholder-dungeon.png",
     "title": "Tileset placeholder của map thử test-room",
     "source": "HeroX, vẽ bằng script",

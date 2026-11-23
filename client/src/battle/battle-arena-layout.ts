@@ -1,5 +1,19 @@
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH, TILE_SIZE } from '../config/display';
-import { FIELD_ENCOUNTER_ID, FIELD_ROAM_ENCOUNTER_ID, SCARECROW_BOSS_ENCOUNTER_ID, SMITHY_ENCOUNTER_ID, TUTORIAL_ENCOUNTER_ID } from '@herox/shared';
+import {
+  CH2_BOSS_ENCOUNTER_ID,
+  CH2_FIELD_ENCOUNTER_ID,
+  CH3_BOSS_ENCOUNTER_ID,
+  CH3_FIELD_ENCOUNTER_ID,
+  CH4_BOSS_ENCOUNTER_ID,
+  CH4_FIELD_ENCOUNTER_ID,
+  CH5_BOSS_ENCOUNTER_ID,
+  CH5_FIELD_ENCOUNTER_ID,
+  FIELD_ENCOUNTER_ID,
+  FIELD_ROAM_ENCOUNTER_ID,
+  SCARECROW_BOSS_ENCOUNTER_ID,
+  SMITHY_ENCOUNTER_ID,
+  TUTORIAL_ENCOUNTER_ID,
+} from '@herox/shared';
 
 /**
  * Bố cục sân trận: lưới tile (theo tên tile trong atlas chương 1) và điểm sáng, tách khỏi Phaser để test được.
@@ -30,7 +44,7 @@ export function arenaCellCenter(column: number, row: number): { readonly x: numb
   };
 }
 
-export type ArenaThemeId = 'fields' | 'village' | 'lair';
+export type ArenaThemeId = 'fields' | 'village' | 'lair' | 'ash-forest' | 'catacomb' | 'hellmaw' | 'broken-heaven';
 
 export interface ArenaCell {
   /** Tile nền (sàn, tường). */
@@ -119,6 +133,50 @@ const THEMES: Readonly<Record<ArenaThemeId, ThemeSpec>> = {
     rows: ['######', '|SnnS|', '......', '...L..', '......', '......', '..L...', '......', '......', 'nLg.Ln', 'LLxgLL'],
     embers: true,
   },
+  // Chương 2 Rừng Tro: viền cây mùa thu, nền đất-cỏ, nguồn sáng từ bia/tổ ong (tông nắng tà/tro).
+  'ash-forest': {
+    floor: ['dirt', 'dirt', 'dirt_pebble', 'grass_tuft'],
+    wallTop: ['tree_autumn'],
+    wallFace: ['tree_cone_autumn'],
+    decor: { T: 'tree_pine', A: 'tree_autumn', C: 'tree_cone_autumn', b: 'bush', t: 'target', v: 'beehive', s: 'sprout' },
+    ground: { m: ['dirt', 'dirt_pebble'] },
+    glow: { t: WINDOW_GLOW, v: WINDOW_GLOW },
+    rows: ['ATCTAC', 'bt.v.b', '..m...', '...m..', '......', '..m...', '......', '......', '......', 'b.s..b', 'TACCTA'],
+    embers: false,
+  },
+  // Chương 3 Hầm Mộ Thánh: tường gạch, sàn phiến đá, cột và bia; nguồn sáng từ cờ hiệu (tông trăng).
+  catacomb: {
+    floor: ['flagstone', 'flagstone', 'cave_gravel'],
+    wallTop: ['brick_wall'],
+    wallFace: ['brick_wall_barred', 'brick_wall'],
+    decor: { x: 'skull_pile', S: 'gargoyle', n: 'banner', g: 'gravestone', o: 'column' },
+    ground: { A: ['altar'] },
+    glow: { n: BANNER_GLOW },
+    rows: ['######', '|SnnS|', '......', '......', '......', '......', '......', '......', '......', 'ognngo', 'oxg.go'],
+    embers: false,
+  },
+  // Chương 4 Vực Lửa: tường gạch song sắt, sàn hang, đá đổ; tàn lửa bay lên (tông đỏ/tím).
+  hellmaw: {
+    floor: ['cave_floor', 'cave_floor', 'cave_gravel'],
+    wallTop: ['brick_wall'],
+    wallFace: ['brick_wall_barred'],
+    decor: { x: 'skull_pile', S: 'gargoyle', n: 'banner', g: 'gravestone' },
+    ground: { L: ['cave_rubble'] },
+    glow: { n: BANNER_GLOW, L: RUBBLE_GLOW },
+    rows: ['######', '|SnnS|', '......', '...L..', '......', '......', '..L...', '......', '......', 'nLg.Ln', 'LLxgLL'],
+    embers: true,
+  },
+  // Chương 5 Thiên Cung Vỡ: cột trụ trắng, sàn phiến đá sáng, bia thờ; nguồn sáng từ cờ (tông Thánh quang).
+  'broken-heaven': {
+    floor: ['stone_slab', 'flagstone'],
+    wallTop: ['pillar_wall'],
+    wallFace: ['brick_wall'],
+    decor: { o: 'column', A: 'altar', n: 'banner', x: 'grass_flowers' },
+    ground: {},
+    glow: { n: BANNER_GLOW },
+    rows: ['######', '|AnnA|', '......', '......', '......', '......', '......', '......', '......', 'on..no', 'ooxxoo'],
+    embers: false,
+  },
 };
 
 const ENCOUNTER_THEMES: Readonly<Record<string, ArenaThemeId>> = {
@@ -127,6 +185,14 @@ const ENCOUNTER_THEMES: Readonly<Record<string, ArenaThemeId>> = {
   [FIELD_ROAM_ENCOUNTER_ID]: 'fields',
   [SMITHY_ENCOUNTER_ID]: 'village',
   [SCARECROW_BOSS_ENCOUNTER_ID]: 'lair',
+  [CH2_FIELD_ENCOUNTER_ID]: 'ash-forest',
+  [CH2_BOSS_ENCOUNTER_ID]: 'ash-forest',
+  [CH3_FIELD_ENCOUNTER_ID]: 'catacomb',
+  [CH3_BOSS_ENCOUNTER_ID]: 'catacomb',
+  [CH4_FIELD_ENCOUNTER_ID]: 'hellmaw',
+  [CH4_BOSS_ENCOUNTER_ID]: 'hellmaw',
+  [CH5_FIELD_ENCOUNTER_ID]: 'broken-heaven',
+  [CH5_BOSS_ENCOUNTER_ID]: 'broken-heaven',
 };
 
 /** Trận chưa gắn chủ đề (trận thử, chương sau) dùng cánh đồng. */
@@ -176,4 +242,4 @@ export function arenaTileNames(layout: ArenaLayout): Set<string> {
   return names;
 }
 
-export const ARENA_THEMES: readonly ArenaThemeId[] = ['fields', 'village', 'lair'];
+export const ARENA_THEMES: readonly ArenaThemeId[] = ['fields', 'village', 'lair', 'ash-forest', 'catacomb', 'hellmaw', 'broken-heaven'];

@@ -29,7 +29,25 @@ export interface StoryQuest {
   readonly beats: readonly string[];
 }
 
-export type SpeakerId = 'narrator' | 'hero' | 'keeper' | 'villager' | 'smith' | 'scarecrow';
+export type SpeakerId =
+  | 'narrator'
+  | 'hero'
+  | 'keeper'
+  | 'villager'
+  | 'smith'
+  | 'scarecrow'
+  // Chương 2 (Rừng Tro)
+  | 'ash-stag'
+  | 'forest-warden'
+  // Chương 3 (Hầm Mộ Thánh)
+  | 'nameless-bishop'
+  | 'crypt-warden'
+  // Chương 4 (Vực Lửa)
+  | 'antonym-demon'
+  | 'chained-soul'
+  // Chương 5 (Thiên Cung Vỡ)
+  | 'fallen-angel'
+  | 'gate-seraph';
 
 /** Từ tiếng Anh được dạy trong câu thoại: hiện kèm nghĩa để người chơi để ý. */
 export interface TaughtWord {

@@ -89,6 +89,14 @@ export {
 } from './combat/damage-formula.js';
 export type { CastAccuracy, CastPower } from './combat/damage-formula.js';
 export {
+  CH2_BOSS_ENCOUNTER_ID,
+  CH2_FIELD_ENCOUNTER_ID,
+  CH3_BOSS_ENCOUNTER_ID,
+  CH3_FIELD_ENCOUNTER_ID,
+  CH4_BOSS_ENCOUNTER_ID,
+  CH4_FIELD_ENCOUNTER_ID,
+  CH5_BOSS_ENCOUNTER_ID,
+  CH5_FIELD_ENCOUNTER_ID,
   ENCOUNTERS,
   FIELD_ENCOUNTER_ID,
   FIELD_ROAM_ENCOUNTER_ID,
@@ -99,6 +107,10 @@ export {
   TUTORIAL_ENCOUNTER_ID,
 } from './combat/encounters.js';
 export { CHAPTER_1_ENEMIES, ENEMY_NAMES } from './data/enemies/chapter-1.js';
+export { CHAPTER_2_ENEMIES } from './data/enemies/chapter-2.js';
+export { CHAPTER_3_ENEMIES } from './data/enemies/chapter-3.js';
+export { CHAPTER_4_ENEMIES } from './data/enemies/chapter-4.js';
+export { CHAPTER_5_ENEMIES } from './data/enemies/chapter-5.js';
 export type { Encounter, EnemyTemplate } from './combat/encounters.js';
 export { buildRingOptions, RING_LOADOUT_SLOTS, RING_SIZE } from './combat/ring-options.js';
 export { SeededRandom } from './combat/seeded-random.js';
@@ -198,6 +210,10 @@ export type {
   UpgradeTarget,
 } from './citadel-contract.js';
 export { CHAPTER_1_BEATS, CHAPTER_1_STORY } from './data/story/chapter-1.js';
+export { CHAPTER_2_BEATS, CHAPTER_2_STORY } from './data/story/chapter-2.js';
+export { CHAPTER_3_BEATS, CHAPTER_3_STORY } from './data/story/chapter-3.js';
+export { CHAPTER_4_BEATS, CHAPTER_4_STORY } from './data/story/chapter-4.js';
+export { CHAPTER_5_BEATS, CHAPTER_5_STORY } from './data/story/chapter-5.js';
 export {
   activeQuests,
   BEAT_REJECTION_MESSAGES,
