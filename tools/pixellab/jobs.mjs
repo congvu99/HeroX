@@ -7,13 +7,8 @@
 //
 // Màu quái/trùm giữ TRUNG TÍNH: client nhuộm MULTIPLY lúc chạy (elite/shield/hurt).
 // reference: ảnh mẫu phong cách có thật trong repo (test kiểm tồn tại).
-import { SOURCES } from '../lib/credits-store.mjs';
-
-const STYLE_REF = 'prototypes/style-preview/public/assets/reference/style-target.png';
-const CREDIT = (title, modified) => ({ ...SOURCES.pixellab, title, modified });
-
-// Mô tả chung để giữ phong cách nhất quán (dark fantasy, top-down 3/4, pixel art).
-const BASE_STYLE = 'top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background';
+import { monster, portrait, CREDIT, BASE_STYLE, STYLE_REF } from './job-factory.mjs';
+import { CHAPTER_2_5_JOBS } from './jobs-chapters-2-5.mjs';
 
 /** Hero: 1 base + xoay 4 hướng, animate walk + các động tác trận. Ô 192 để khớp loader hiện tại. */
 const HERO_JOB = {
@@ -39,40 +34,6 @@ const HERO_JOB = {
   credit: CREDIT('Hero Hiệp sĩ Thánh Ngôn (PixelLab)', 'sinh base + xoay 4 hướng + animate; ghép sheet ô 192 bằng tools/pixellab/generate.mjs'),
 };
 
-/** Quái/trùm: ảnh tĩnh, khung theo cỡ (thường 64, tinh anh 96, trùm 128). */
-function monster(id, file, prompt, { frameSize = 64, seed, boss = false }) {
-  return {
-    kind: 'single',
-    id,
-    path: `sprites/monsters/${file}.png`,
-    prompt: `${prompt}, color-neutral palette, ${BASE_STYLE}`,
-    negative: 'text, watermark, bright saturated red tint, strong color cast',
-    seed,
-    size: { width: boss ? 96 : 64, height: boss ? 96 : 64 },
-    frameSize,
-    directions: 4,
-    animations: ['still'],
-    reference: STYLE_REF,
-    credit: CREDIT(`Quái ${id} (PixelLab)`, `sinh tĩnh, đặt khung ${frameSize} chân chạm đáy; màu trung tính cho MULTIPLY`),
-  };
-}
-
-function portrait(id, speaker, prompt, seed) {
-  return {
-    kind: 'single',
-    id: `portrait-${speaker}`,
-    path: `sprites/npc/${speaker}.png`,
-    prompt: `portrait bust of ${prompt}, ${BASE_STYLE}`,
-    seed,
-    size: { width: 64, height: 64 },
-    frameSize: 64,
-    directions: 4,
-    animations: ['still'],
-    reference: STYLE_REF,
-    credit: CREDIT(`Chân dung/NPC ${speaker} (PixelLab)`, 'sinh tĩnh 64x64'),
-  };
-}
-
 // --- Chương 1 (thay hình tạm LPC/DCSS) ---
 const CHAPTER_1_MONSTERS = [
   monster('imp', 'imp', 'small horned imp demon, clawed', { seed: 11001 }),
@@ -90,8 +51,5 @@ const CHAPTER_1_NPCS = [
 
 // Hero GIỮ sheet LPC hiện có: animation PixelLab (rotate/animate) không đọc được ở hướng lưng/trái
 // và frame giật (thử 2026-11-20). HERO_JOB giữ lại để tham khảo nhưng KHÔNG đưa vào danh sách chạy.
-export const ASSET_JOBS = [...CHAPTER_1_MONSTERS, ...CHAPTER_1_NPCS];
+export const ASSET_JOBS = [...CHAPTER_1_MONSTERS, ...CHAPTER_1_NPCS, ...CHAPTER_2_5_JOBS];
 void HERO_JOB;
-
-// Hàm trợ giúp để file job chương 2–5 (sẽ thêm sau) tái dùng cùng phong cách.
-export { monster, portrait, CREDIT, BASE_STYLE, STYLE_REF };

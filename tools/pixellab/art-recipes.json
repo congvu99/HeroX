@@ -2,6 +2,134 @@
   "version": 1,
   "assets": [
     {
+      "id": "antonym-demon",
+      "path": "sprites/monsters/antonym-demon.png",
+      "prompt": "towering two-faced demon lord boss, opposing masks, horned crown, cracked lava body, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 41003,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "ash-sprite",
+      "path": "sprites/monsters/ash-sprite.png",
+      "prompt": "floating ember sprite, swirling ash wisp, faint glow, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 21002,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "ash-stag",
+      "path": "sprites/monsters/ash-stag.png",
+      "prompt": "towering demonic stag boss, charred antlers, burning sockets, ash-cloaked body, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 21003,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "ash-wolf",
+      "path": "sprites/monsters/ash-wolf.png",
+      "prompt": "gaunt ash-grey wolf, ember eyes, singed fur, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 21001,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "bone-knight",
+      "path": "sprites/monsters/bone-knight.png",
+      "prompt": "armored skeletal knight, dented plate, broken greatsword, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 31002,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "broken-seraph",
+      "path": "sprites/monsters/broken-seraph.png",
+      "prompt": "six-winged seraph with shattered wings, broken halo, trailing feathers, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 51002,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "fallen-angel",
+      "path": "sprites/monsters/fallen-angel.png",
+      "prompt": "towering fallen archangel boss, blackened wings, cracked halo, greatsword of light, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 51003,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "fire-imp",
+      "path": "sprites/monsters/fire-imp.png",
+      "prompt": "small molten imp, cracked obsidian skin, glowing fissures, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 41001,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
       "id": "imp",
       "path": "sprites/monsters/imp.png",
       "prompt": "small horned imp demon, clawed, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
@@ -16,6 +144,134 @@
       ],
       "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
       "createdAt": "2026-11-20"
+    },
+    {
+      "id": "lava-hound",
+      "path": "sprites/monsters/lava-hound.png",
+      "prompt": "hulking magma hound, hardened lava hide, ember maw, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 41002,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "mute-cherub",
+      "path": "sprites/monsters/mute-cherub.png",
+      "prompt": "small wingless cherub with a sewn-shut mouth, cracked halo, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 51001,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "nameless-bishop",
+      "path": "sprites/monsters/nameless-bishop.png",
+      "prompt": "towering faceless bishop boss, tall mitre, flowing vestments, crozier staff, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 31003,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "red-cleric",
+      "path": "sprites/monsters/red-cleric.png",
+      "prompt": "hollow cleric in tattered ceremonial robes, carrying a dim censer, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 31001,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "portrait-chained-soul",
+      "path": "sprites/npc/chained-soul.png",
+      "prompt": "portrait bust of gaunt tormented soul wrapped in heavy chains, faint glow, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 42001,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "portrait-crypt-warden",
+      "path": "sprites/npc/crypt-warden.png",
+      "prompt": "portrait bust of hooded crypt warden, pale robes, lantern, keyring, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 32001,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "portrait-forest-warden",
+      "path": "sprites/npc/forest-warden.png",
+      "prompt": "portrait bust of solemn forest warden, bark-grey cloak, antlered hood, carved staff, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 22001,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
+    },
+    {
+      "id": "portrait-gate-seraph",
+      "path": "sprites/npc/gate-seraph.png",
+      "prompt": "portrait bust of radiant guardian seraph, folded wings, gleaming gate keys, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 52001,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-23"
     }
   ]
 }

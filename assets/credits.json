@@ -45,6 +45,60 @@
     "modified": "ghép layer theo tools/lpc/hero-recipes.json, nhuộm áo choàng; giữ nguyên sheet ghép từ prototype (ô 192); không chỉnh tông bảng màu vì làm bệt chi tiết giáp bạc và lệch màu áo choàng Máu thánh đã nhuộm sẵn"
   },
   {
+    "path": "sprites/monsters/antonym-demon.png",
+    "title": "Quái antonym-demon (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/ash-sprite.png",
+    "title": "Quái ash-sprite (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/ash-stag.png",
+    "title": "Quái ash-stag (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/ash-wolf.png",
+    "title": "Quái ash-wolf (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/bone-knight.png",
+    "title": "Quái bone-knight (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/broken-seraph.png",
+    "title": "Quái broken-seraph (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
     "path": "sprites/monsters/elite-demon.png",
     "title": "Quỷ tinh anh (red devil) (dc-mon/demons/red_devil.png)",
     "source": "Dungeon Crawl Stone Soup tiles (crawl-tiles Oct-5-2010)",
@@ -52,6 +106,24 @@
     "authors": "Nhóm phát triển Dungeon Crawl Stone Soup và các tác giả RLTiles",
     "license": "CC0 1.0",
     "modified": "cắt sát, phóng x3, đặt khung 96 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/monsters/fallen-angel.png",
+    "title": "Quái fallen-angel (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/fire-imp.png",
+    "title": "Quái fire-imp (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
   },
   {
     "path": "sprites/monsters/ghoul.png",
@@ -65,6 +137,42 @@
   {
     "path": "sprites/monsters/imp.png",
     "title": "Quái imp (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/lava-hound.png",
+    "title": "Quái lava-hound (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/mute-cherub.png",
+    "title": "Quái mute-cherub (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/nameless-bishop.png",
+    "title": "Quái nameless-bishop (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/red-cleric.png",
+    "title": "Quái red-cleric (PixelLab)",
     "source": "PixelLab (AI pixel art, api.pixellab.ai)",
     "url": "https://www.pixellab.ai/",
     "authors": "HeroX qua PixelLab",
@@ -88,6 +196,42 @@
     "authors": "bluecarrot16, Napsio, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)",
     "license": "OGA-BY 3.0 / CC-BY-SA 3.0",
     "modified": "ghép thân + đầu, cắt sát, khung 64 chân chạm đáy; palette-harmonize"
+  },
+  {
+    "path": "sprites/npc/chained-soul.png",
+    "title": "Chân dung/NPC chained-soul (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 64x64"
+  },
+  {
+    "path": "sprites/npc/crypt-warden.png",
+    "title": "Chân dung/NPC crypt-warden (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 64x64"
+  },
+  {
+    "path": "sprites/npc/forest-warden.png",
+    "title": "Chân dung/NPC forest-warden (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 64x64"
+  },
+  {
+    "path": "sprites/npc/gate-seraph.png",
+    "title": "Chân dung/NPC gate-seraph (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 64x64"
   },
   {
     "path": "sprites/npc/keeper.png",

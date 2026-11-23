@@ -91,7 +91,23 @@ Trang nguồn: https://www.pixellab.ai/
 
 | File | Nội dung | Tác giả | License | Chỉnh sửa |
 |---|---|---|---|---|
+| `sprites/monsters/antonym-demon.png` | Quái antonym-demon (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/ash-sprite.png` | Quái ash-sprite (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/ash-stag.png` | Quái ash-stag (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/ash-wolf.png` | Quái ash-wolf (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/bone-knight.png` | Quái bone-knight (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/broken-seraph.png` | Quái broken-seraph (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/fallen-angel.png` | Quái fallen-angel (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/fire-imp.png` | Quái fire-imp (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
 | `sprites/monsters/imp.png` | Quái imp (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/lava-hound.png` | Quái lava-hound (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/mute-cherub.png` | Quái mute-cherub (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/nameless-bishop.png` | Quái nameless-bishop (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/red-cleric.png` | Quái red-cleric (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/npc/chained-soul.png` | Chân dung/NPC chained-soul (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
+| `sprites/npc/crypt-warden.png` | Chân dung/NPC crypt-warden (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
+| `sprites/npc/forest-warden.png` | Chân dung/NPC forest-warden (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
+| `sprites/npc/gate-seraph.png` | Chân dung/NPC gate-seraph (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
 
 ## Universal LPC Spritesheet Character Generator
 
@@ -110,6 +126,22 @@ Trang nguồn: https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Ch
 
 | File | Mã công thức | Kích thước | Hướng | Hoạt ảnh | Ngày tạo |
 |---|---|---|---|---|---|
+| `sprites/monsters/antonym-demon.png` | antonym-demon | 128x128 | 4 | still | 2026-11-23 |
+| `sprites/monsters/ash-sprite.png` | ash-sprite | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/monsters/ash-stag.png` | ash-stag | 128x128 | 4 | still | 2026-11-23 |
+| `sprites/monsters/ash-wolf.png` | ash-wolf | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/monsters/bone-knight.png` | bone-knight | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/monsters/broken-seraph.png` | broken-seraph | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/monsters/fallen-angel.png` | fallen-angel | 128x128 | 4 | still | 2026-11-23 |
+| `sprites/monsters/fire-imp.png` | fire-imp | 64x64 | 4 | still | 2026-11-23 |
 | `sprites/monsters/imp.png` | imp | 64x64 | 4 | still | 2026-11-20 |
+| `sprites/monsters/lava-hound.png` | lava-hound | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/monsters/mute-cherub.png` | mute-cherub | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/monsters/nameless-bishop.png` | nameless-bishop | 128x128 | 4 | still | 2026-11-23 |
+| `sprites/monsters/red-cleric.png` | red-cleric | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/npc/chained-soul.png` | portrait-chained-soul | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/npc/crypt-warden.png` | portrait-crypt-warden | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/npc/forest-warden.png` | portrait-forest-warden | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/npc/gate-seraph.png` | portrait-gate-seraph | 64x64 | 4 | still | 2026-11-23 |
 
 Prompt, seed và ảnh tham chiếu để tạo lại: `tools/pixellab/art-recipes.json`.
