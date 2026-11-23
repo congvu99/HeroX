@@ -78,4 +78,18 @@ describe('prepareBattle', () => {
   it('answers 503 when the deck lost every tutorial word', () => {
     expect(() => prepareBattle(input({ learnedWords: [], deckWords: EXTRA_DECK }))).toThrow(HttpError);
   });
+
+  it('draws only mastered words for a masteredOnly encounter, falling back to all learned when none are mastered', () => {
+    const masteredEncounter: Encounter = { ...field, id: 'test-final', masteredOnly: true };
+    const learnedWords = learned(EXTRA_DECK).map((entry) =>
+      ['word0', 'word1', 'word2'].includes(entry.word.id) ? { ...entry, mastered: true } : entry,
+    );
+    const { setup } = prepareBattle(input({ encounter: masteredEncounter, learnedWords }));
+    expect(setup.words.every((word) => ['word0', 'word1', 'word2'].includes(word.id))).toBe(true);
+    expect(setup.words.every((word) => word.mastered)).toBe(true);
+
+    // Chưa thuộc từ nào: vẫn dựng được trận từ toàn bộ từ đã học (gate mastered thường đã chặn trước).
+    const fallback = prepareBattle(input({ encounter: masteredEncounter, learnedWords: learned(EXTRA_DECK) }));
+    expect(fallback.setup.words.length).toBeGreaterThan(0);
+  });
 });

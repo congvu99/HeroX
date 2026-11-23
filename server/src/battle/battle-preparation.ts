@@ -46,9 +46,15 @@ function toBattleWord(word: DeckWord, mastered: boolean, weak: boolean): BattleW
   };
 }
 
-/** Từ đã học, từ yếu đứng trước (hay quên ở LingoBrain + hay sai trong HeroX nhiều nhất trước). */
-function learnedCandidates(input: BattlePreparationInput): BattleWord[] {
-  const scored = input.learnedWords.map((learned) => {
+/**
+ * Từ đã học, từ yếu đứng trước (hay quên ở LingoBrain + hay sai trong HeroX nhiều nhất trước).
+ * Trận `masteredOnly` (trận cuối chương 5) chỉ lấy từ đã thuộc; nếu người chơi chưa có từ đã thuộc
+ * nào thì lùi về toàn bộ từ đã học để vẫn dựng được trận (gate mastered ≥ 200 thường đã chặn trước đó).
+ */
+function learnedCandidates(input: BattlePreparationInput, masteredOnly: boolean): BattleWord[] {
+  const source = masteredOnly ? input.learnedWords.filter((learned) => learned.mastered) : input.learnedWords;
+  const pool = masteredOnly && source.length === 0 ? input.learnedWords : source;
+  const scored = pool.map((learned) => {
     const weakness = learned.lapses + (input.wordMisses.get(learned.word.id) ?? 0);
     return { weakness, word: toBattleWord(learned.word, learned.mastered, weakness > 0) };
   });
@@ -76,7 +82,7 @@ function tutorialCandidates(deckWords: readonly DeckWord[]): BattleWord[] {
 export function prepareBattle(input: BattlePreparationInput): PreparedBattle {
   const tutorial = input.learnedWords.length < MIN_LEARNED_WORDS_FOR_BATTLE;
   const encounter = tutorial ? (findEncounter(TUTORIAL_ENCOUNTER_ID) ?? input.encounter) : input.encounter;
-  const candidates = tutorial ? tutorialCandidates(input.deckWords) : learnedCandidates(input);
+  const candidates = tutorial ? tutorialCandidates(input.deckWords) : learnedCandidates(input, input.encounter.masteredOnly ?? false);
   const level = heroLevelForLearned(input.learnedWords.length);
   const seed = input.seed >>> 0;
   const { loadout, skillTiers, inventory } = input.citadel;
