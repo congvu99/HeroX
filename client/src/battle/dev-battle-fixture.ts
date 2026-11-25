@@ -12,6 +12,18 @@ import {
 /** Cấp hiệp sĩ của trận thử. */
 const DEV_HERO_LEVEL = 3;
 const DEV_SEED = 20_261_112;
+/** Query chọn seed trận thử (`?battleSeed=123`) để xem các bộ chiêu khác nhau. */
+const BATTLE_SEED_QUERY = 'battleSeed';
+/** Seed là số nguyên không âm; `battle-state` dùng 32 bit thấp (`seed >>> 0`). */
+const SEED_PATTERN = /^\d+$/;
+
+/** Seed trận thử từ query của trang (`location.search`); thiếu hoặc không hợp lệ thì dùng seed mặc định. */
+export function devBattleSeed(search: string): number {
+  const raw = new URLSearchParams(search).get(BATTLE_SEED_QUERY);
+  if (raw === null || !SEED_PATTERN.test(raw)) return DEV_SEED;
+  const seed = Number(raw);
+  return Number.isSafeInteger(seed) ? seed : DEV_SEED;
+}
 
 function fixtureWord(word: string, pos: PartOfSpeechGroup, meaning: string, emoji: string, extra: Partial<BattleWord> = {}): BattleWord {
   return { id: `dev-${word}`, word, meaning, emoji, pos, mastered: false, weak: false, ...extra };
@@ -45,11 +57,11 @@ export const DEV_BATTLE_WORDS: readonly BattleWord[] = [
 ];
 
 /** Setup trận thử theo trận `encounterId` (mặc định trận ngoài đồng chương 1); dùng khi dev chạy không có phiên LingoBrain. */
-export function devBattleSetup(encounterId: string = FIELD_ENCOUNTER_ID): BattleSetup {
+export function devBattleSetup(encounterId: string = FIELD_ENCOUNTER_ID, seed: number = DEV_SEED): BattleSetup {
   const encounter = findEncounter(encounterId);
   if (encounter === undefined) throw new Error(`Thiếu trận ${encounterId}`);
   return {
-    seed: DEV_SEED,
+    seed,
     encounterId: encounter.id,
     words: DEV_BATTLE_WORDS,
     loadout: ['dev-strike', 'dev-shield', 'dev-brave', 'dev-quickly'],

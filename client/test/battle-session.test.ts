@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MIN_REACTION_MS, replayBattle, type BattleEvent, type BattleInput } from '@herox/shared';
+import { MIN_REACTION_MS, replayBattle, SKILL_CATALOG, SKILL_MOVES, SYSTEM_FX, type BattleEvent, type BattleInput } from '@herox/shared';
 import { BattleCueMapper, type BattleCue } from '../src/battle/battle-cues';
 import { BattleSession } from '../src/battle/battle-session';
 import { DEV_BATTLE_WORDS, devBattleSetup } from '../src/battle/dev-battle-fixture';
@@ -92,7 +92,10 @@ describe('BattleSession', () => {
     expect(combos.some((event) => event.count >= 3)).toBe(true);
     // Mỗi lần tung chiêu đều có hiệu ứng tung và hiệu ứng trúng.
     const casts = played.events.filter((event) => event.type === 'cast').length;
-    const castFx = played.cues.filter((cue) => cue.type === 'fx' && cue.target === 'hero' && /-cast-|dash-dust|blink-out/.test(cue.fx));
+    // FX tung chiêu: của bộ chiêu trận, hoặc FX biến thể cũ khi atlas chưa sẵn.
+    const castNames = new Set<string>([...SKILL_MOVES.map((move) => move.castFx), ...Object.values(SKILL_CATALOG).flat().map((variant) => variant.castFx)]);
+    castNames.add(SYSTEM_FX.dashDust).add(SYSTEM_FX.blinkOut);
+    const castFx = played.cues.filter((cue) => cue.type === 'fx' && cue.target === 'hero' && castNames.has(cue.fx));
     expect(castFx.length).toBeGreaterThanOrEqual(casts);
   });
 

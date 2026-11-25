@@ -52,3 +52,13 @@ export function fxFrameName(info: FxInfo, frameIndex: number): string {
 export function fxOrigin(info: FxInfo): { readonly x: number; readonly y: number } {
   return { x: info.pivot[0] / info.frameSize[0], y: info.pivot[1] / info.frameSize[1] };
 }
+
+/**
+ * Tỉ lệ phóng sau khi giới hạn cạnh dài nhất của khung (pixel logic) không quá `maxSize`, để hiệu ứng khung to của
+ * pixelfx không tràn sân hay nuốt nhân vật. Không có `maxSize` thì giữ nguyên `scale`.
+ */
+export function fitFxScale(info: FxInfo, scale: number, maxSize?: number): number {
+  if (maxSize === undefined) return scale;
+  const longest = Math.max(info.frameSize[0], info.frameSize[1]);
+  return Math.min(scale, maxSize / longest);
+}

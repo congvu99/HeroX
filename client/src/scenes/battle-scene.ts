@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import {
   beatForEncounter,
+  buildBattleDeck,
   InvalidBattleSetupError,
   SYSTEM_FX,
   type BattleEvent,
@@ -13,9 +14,10 @@ import { submitBattleResult, startBattle } from '../api/battle-api';
 import { readEngSessionToken } from '../api/me-api';
 import { BattleSounds } from '../audio/battle-sounds';
 import { arenaThemeFor, buildArenaLayout } from '../battle/battle-arena-layout';
-import { BattleCueMapper, type BattleCue, type CueTarget, type FxAnchor } from '../battle/battle-cues';
+import { BattleCueMapper, showcaseBonusMsFor, type BattleCue, type CueTarget, type FxAnchor } from '../battle/battle-cues';
+import { battleBaseFxNames, deckFxNames } from '../battle/battle-fx-assets';
 import { BattleSession } from '../battle/battle-session';
-import { devBattleSetup } from '../battle/dev-battle-fixture';
+import { devBattleSeed, devBattleSetup } from '../battle/dev-battle-fixture';
 import { BACKGROUND_COLOR, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
 import {
   loadSettings,
@@ -25,7 +27,7 @@ import {
   type BattleInputMode,
   type GameSettings,
 } from '../config/game-settings';
-import { FxPlayer, queueFxAssets } from '../fx/fx-player';
+import { FxPlayer, queueFxAssets, releaseFxAssets } from '../fx/fx-player';
 import { BattleProjectiles } from '../render/battle-projectile';
 import { isTouchPrimaryDevice } from '../input/input-controller';
 import type { QualityController } from '../platform/quality-settings';
@@ -59,6 +61,11 @@ const FX_BODY_OFFSET_Y = -44;
  */
 const FLOAT_OFFSET_Y: Readonly<Record<CueTarget, number>> = { enemy: -110, hero: 34 };
 const FX_DEPTH = 20;
+/**
+ * Cạnh dài nhất tối đa của hiệu ứng (pixel logic) theo nhân vật, so với hiệp sĩ 128 px và quái 128–192 px trên sân
+ * rộng 360 px: chiêu bậc cao to hơn nhân vật nhưng không tràn sân, không che kín đối thủ.
+ */
+const FX_MAX_SIZE: Readonly<Record<CueTarget, number>> = { hero: 240, enemy: 280 };
 /**
  * Hào quang/khiên/tụ phép của hiệp sĩ vẽ DƯỚI sprite (actor ở depth 10) để nhân vật đứng trong vầng sáng,
  * không bị hiệu ứng che mặt. Đặt ở chân, cộng sáng (ADD) nên vầng sáng loang quanh người.
@@ -117,6 +124,8 @@ export class BattleScene extends Phaser.Scene {
   private soundButton!: HTMLButtonElement;
   /** Tăng mỗi lần mở trận; scene được dùng lại nên lời gọi mạng của trận cũ phải so số này trước khi ghi đè trạng thái. */
   private battleRun = 0;
+  /** Hiệu ứng riêng của bộ chiêu trận gần nhất (ngoài bộ nạp sẵn); gỡ khỏi GPU khi rời trận. */
+  private deckFx: readonly string[] = [];
 
   constructor() {
     super(SCENE_KEYS.battle);
@@ -133,7 +142,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   preload(): void {
-    queueFxAssets(this);
+    queueFxAssets(this, battleBaseFxNames());
     queueHeroSheet(this);
     queueHeroBattleSheets(this);
     queueHeroBattleBack(this);
@@ -254,6 +263,8 @@ export class BattleScene extends Phaser.Scene {
     this.hud.destroy();
     this.sounds.destroy();
     this.tweens.timeScale = 1;
+    // Giữ danh sách: atlas đang tải dở có thể về sau khi rời trận, trận sau sẽ gỡ nốt.
+    releaseFxAssets(this, this.deckFx);
   };
 
   private applyInputMode(): void {
@@ -308,7 +319,7 @@ export class BattleScene extends Phaser.Scene {
     });
     // Dev vào map bằng nút thử (không có phiên LingoBrain): chơi bộ từ thử, không gửi kết quả.
     if (import.meta.env.DEV && this.registry.get(REGISTRY_KEYS.me) === undefined) {
-      this.startSession(devBattleSetup(this.encounterId), null);
+      this.startSession(devBattleSetup(this.encounterId, devBattleSeed(window.location.search)), null);
       return;
     }
     const token = readEngSessionToken(() => window.localStorage);
@@ -337,7 +348,8 @@ export class BattleScene extends Phaser.Scene {
   private startSession(setup: BattleSetup, online: OnlineBattle | null): void {
     let session: BattleSession;
     // Hiệu ứng chiêu theo bậc đã nâng ở tháp phép (server ghi trong setup).
-    this.cueMapper = new BattleCueMapper(setup.skillTiers);
+    // Atlas chiêu chưa sẵn (đang tải, lỗi tải) thì cue dùng hiệu ứng dự phòng trong bộ nạp sẵn.
+    this.cueMapper = new BattleCueMapper(setup.skillTiers, (name) => this.fx.has(name));
     try {
       session = new BattleSession(setup);
     } catch (error) {
@@ -347,8 +359,22 @@ export class BattleScene extends Phaser.Scene {
     }
     this.online = online;
     this.session = session;
+    this.loadDeckFx(setup.seed);
     this.hud.hideCenter();
     this.refreshHud(session);
+  }
+
+  /**
+   * Nạp nền atlas riêng của bộ chiêu trận (cùng seed với `battle-state`), chiêu bậc thấp trước. Không chặn trận:
+   * lỗi tải chỉ làm chiêu đó dùng hiệu ứng dự phòng.
+   */
+  private loadDeckFx(seed: number): void {
+    const names = deckFxNames(buildBattleDeck(seed));
+    // Atlas của trận trước về muộn (sau khi đã rời trận) thì gỡ ở đây nếu bộ chiêu mới không dùng.
+    releaseFxAssets(this, this.deckFx.filter((name) => !names.includes(name)));
+    this.deckFx = names;
+    queueFxAssets(this, names);
+    if (this.load.list.size > 0) this.load.start();
   }
 
   private handleEvent(event: BattleEvent): void {
@@ -357,7 +383,8 @@ export class BattleScene extends Phaser.Scene {
     else if (event.type === 'enemyDefeated') this.actors.defeatEnemy();
     else if (event.type === 'defeat') this.actors.fall();
     else if (event.type === 'miss' && event.reason === 'wrong') this.typing.shake();
-    else if (event.type === 'cast') this.showcaseUntilMs = this.time.now + SHOWCASE_MS[event.skill];
+    // Chiêu bậc cao có hiệu ứng dài hơn: cho thêm thời gian xem.
+    else if (event.type === 'cast') this.showcaseUntilMs = this.time.now + SHOWCASE_MS[event.skill] + showcaseBonusMsFor(event.comboTier);
     for (const cue of this.cueMapper.cuesFor(event)) this.scheduleCue(cue);
   }
 
@@ -431,7 +458,7 @@ export class BattleScene extends Phaser.Scene {
         // Hiệu ứng pixelfx vẽ sẵn theo góc nhìn chính diện; giữ nguyên, không xoay theo trục sân.
         const placed = this.placeFx(cue.target, cue.anchor);
         const blendMode = cue.add === true ? Phaser.BlendModes.ADD : Phaser.BlendModes.NORMAL;
-        this.fx.play(cue.fx, placed.x, placed.y, { scale: cue.scale, depth: placed.depth, timeScale: FX_TIME_SCALE, blendMode });
+        this.fx.play(cue.fx, placed.x, placed.y, { scale: cue.scale, maxSize: FX_MAX_SIZE[cue.target], depth: placed.depth, timeScale: FX_TIME_SCALE, blendMode });
         break;
       }
       case 'projectile': {
