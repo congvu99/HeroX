@@ -9,6 +9,7 @@
 // reference: ảnh mẫu phong cách có thật trong repo (test kiểm tồn tại).
 import { battleMonster, monster, portrait, CREDIT, BASE_STYLE, STYLE_REF } from './job-factory.mjs';
 import { CHAPTER_2_5_JOBS } from './jobs-chapters-2-5.mjs';
+import { MAP_STRUCTURE_JOBS } from './jobs-map-structures.mjs';
 
 /** Hero: 1 base + xoay 4 hướng, animate walk + các động tác trận. Ô 192 để khớp loader hiện tại. */
 const HERO_JOB = {
@@ -199,6 +200,7 @@ export const ASSET_JOBS = [
   ...BATTLE_BACKDROP_JOBS,
   HERO_BACK_JOB,
   ...CHAPTER_1_BATTLE_MONSTERS,
+  ...MAP_STRUCTURE_JOBS,
 ];
 void HERO_JOB;
 void HERO_BATTLE_JOB;

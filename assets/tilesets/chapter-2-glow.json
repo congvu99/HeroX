@@ -1,58 +1,121 @@
 {
-	"roof_orange_dormer": {
-		"x": 6,
-		"y": 8,
-		"width": 20,
-		"height": 18,
+	"roof_orange_eave_left": {
+		"x": 16,
+		"y": 3,
+		"width": 16,
+		"height": 29,
 		"strength": 1
 	},
-	"roof_grey_dormer": {
-		"x": 6,
-		"y": 8,
-		"width": 20,
-		"height": 18,
+	"roof_orange_eave_mid": {
+		"x": 0,
+		"y": 3,
+		"width": 18,
+		"height": 29,
+		"strength": 1
+	},
+	"roof_orange_eave_right": {
+		"x": 1,
+		"y": 25,
+		"width": 10,
+		"height": 7,
+		"strength": 1
+	},
+	"roof_grey_eave_left": {
+		"x": 26,
+		"y": 0,
+		"width": 6,
+		"height": 32,
+		"strength": 1
+	},
+	"roof_grey_eave_mid": {
+		"x": 0,
+		"y": 0,
+		"width": 32,
+		"height": 32,
+		"strength": 1
+	},
+	"roof_grey_eave_right": {
+		"x": 0,
+		"y": 24,
+		"width": 7,
+		"height": 8,
+		"strength": 1
+	},
+	"wood_wall_right": {
+		"x": 1,
+		"y": 0,
+		"width": 10,
+		"height": 9,
 		"strength": 1
 	},
 	"wood_window": {
-		"x": 6,
-		"y": 8,
-		"width": 20,
+		"x": 16,
+		"y": 0,
+		"width": 16,
 		"height": 18,
 		"strength": 1
 	},
 	"wood_door": {
-		"x": 8,
-		"y": 12,
-		"width": 16,
-		"height": 20,
-		"strength": 0.8
-	},
-	"stone_window": {
-		"x": 6,
-		"y": 8,
-		"width": 20,
+		"x": 0,
+		"y": 0,
+		"width": 18,
 		"height": 18,
 		"strength": 1
 	},
-	"stone_door": {
-		"x": 8,
-		"y": 12,
-		"width": 16,
-		"height": 20,
+	"stone_wall_right": {
+		"x": 0,
+		"y": 0,
+		"width": 7,
+		"height": 9,
+		"strength": 1
+	},
+	"stone_window": {
+		"x": 26,
+		"y": 0,
+		"width": 6,
+		"height": 19,
 		"strength": 0.8
 	},
-	"gate_left": {
-		"x": 16,
+	"stone_door": {
+		"x": 0,
 		"y": 0,
-		"width": 16,
-		"height": 32,
+		"width": 32,
+		"height": 19,
+		"strength": 1
+	},
+	"tower_base_mid": {
+		"x": 8,
+		"y": 0,
+		"width": 15,
+		"height": 18,
+		"strength": 0.8
+	},
+	"gate_arch_left": {
+		"x": 20,
+		"y": 26,
+		"width": 12,
+		"height": 6,
+		"strength": 0.9
+	},
+	"gate_arch_right": {
+		"x": 0,
+		"y": 26,
+		"width": 13,
+		"height": 6,
+		"strength": 0.9
+	},
+	"gate_left": {
+		"x": 20,
+		"y": 0,
+		"width": 12,
+		"height": 28,
 		"strength": 0.9
 	},
 	"gate_right": {
 		"x": 0,
 		"y": 0,
-		"width": 16,
-		"height": 32,
+		"width": 13,
+		"height": 28,
 		"strength": 0.9
 	},
 	"brick_wall_barred": {
@@ -60,6 +123,181 @@
 		"y": 8,
 		"width": 20,
 		"height": 18,
+		"strength": 1
+	},
+	"tower_mid": {
+		"x": 8,
+		"y": 7,
+		"width": 15,
+		"height": 25,
+		"strength": 1
+	},
+	"chapel_front_0_5": {
+		"x": 25,
+		"y": 22,
+		"width": 7,
+		"height": 10,
+		"strength": 1
+	},
+	"chapel_front_0_6": {
+		"x": 0,
+		"y": 22,
+		"width": 3,
+		"height": 10,
+		"strength": 1
+	},
+	"chapel_front_1_5": {
+		"x": 17,
+		"y": 0,
+		"width": 15,
+		"height": 32,
+		"strength": 1
+	},
+	"chapel_front_1_6": {
+		"x": 0,
+		"y": 0,
+		"width": 8,
+		"height": 32,
+		"strength": 1
+	},
+	"chapel_front_2_1": {
+		"x": 18,
+		"y": 11,
+		"width": 14,
+		"height": 21,
+		"strength": 1
+	},
+	"chapel_front_2_2": {
+		"x": 0,
+		"y": 11,
+		"width": 32,
+		"height": 21,
+		"strength": 1
+	},
+	"chapel_front_2_3": {
+		"x": 0,
+		"y": 11,
+		"width": 32,
+		"height": 21,
+		"strength": 1
+	},
+	"chapel_front_2_4": {
+		"x": 0,
+		"y": 11,
+		"width": 31,
+		"height": 21,
+		"strength": 1
+	},
+	"chapel_front_2_5": {
+		"x": 15,
+		"y": 0,
+		"width": 17,
+		"height": 32,
+		"strength": 1
+	},
+	"chapel_front_2_6": {
+		"x": 0,
+		"y": 0,
+		"width": 32,
+		"height": 32,
+		"strength": 1
+	},
+	"chapel_front_2_7": {
+		"x": 0,
+		"y": 11,
+		"width": 32,
+		"height": 21,
+		"strength": 1
+	},
+	"chapel_front_2_8": {
+		"x": 0,
+		"y": 11,
+		"width": 32,
+		"height": 21,
+		"strength": 1
+	},
+	"chapel_front_2_9": {
+		"x": 0,
+		"y": 11,
+		"width": 32,
+		"height": 21,
+		"strength": 1
+	},
+	"chapel_front_2_10": {
+		"x": 0,
+		"y": 11,
+		"width": 13,
+		"height": 21,
+		"strength": 1
+	},
+	"chapel_front_3_1": {
+		"x": 18,
+		"y": 0,
+		"width": 14,
+		"height": 7,
+		"strength": 1
+	},
+	"chapel_front_3_2": {
+		"x": 0,
+		"y": 0,
+		"width": 32,
+		"height": 7,
+		"strength": 1
+	},
+	"chapel_front_3_3": {
+		"x": 0,
+		"y": 0,
+		"width": 32,
+		"height": 7,
+		"strength": 1
+	},
+	"chapel_front_3_4": {
+		"x": 0,
+		"y": 0,
+		"width": 31,
+		"height": 7,
+		"strength": 1
+	},
+	"chapel_front_3_5": {
+		"x": 15,
+		"y": 0,
+		"width": 17,
+		"height": 22,
+		"strength": 0.8
+	},
+	"chapel_front_3_6": {
+		"x": 0,
+		"y": 0,
+		"width": 32,
+		"height": 22,
+		"strength": 1
+	},
+	"chapel_front_3_7": {
+		"x": 0,
+		"y": 0,
+		"width": 32,
+		"height": 7,
+		"strength": 1
+	},
+	"chapel_front_3_8": {
+		"x": 0,
+		"y": 0,
+		"width": 32,
+		"height": 7,
+		"strength": 1
+	},
+	"chapel_front_3_9": {
+		"x": 0,
+		"y": 0,
+		"width": 32,
+		"height": 7,
+		"strength": 1
+	},
+	"chapel_front_3_10": {
+		"x": 0,
+		"y": 0,
+		"width": 13,
+		"height": 7,
 		"strength": 1
 	}
 }

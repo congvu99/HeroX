@@ -1,6 +1,8 @@
 // Mô tả 5 level chương 1 (làng hiệp sĩ Kenney) dạng lưới ký tự + khối tile đặt sẵn (nhà, tháp, cổng).
 // id level/entity là hợp đồng với client và dữ liệu truyện; toạ độ entity giữ như bản cũ để e2e và truyện không đổi.
 import { GRID } from '../../../tools/lib/ldtk-project.mjs';
+import { organicOps } from './organic-layout.mjs';
+import { CHAPEL_FRONT_TILES, CHAPEL_GATE_COLUMN } from './chapel-front.mjs';
 
 /** Mọi level cao 25 ô (800 px) để khung dọc 360×780 không lộ nền ngoài map. */
 export const LEVEL_HEIGHT = 25;
@@ -73,30 +75,19 @@ const HOUSE_GREY = [
 ];
 const TOWER = [
   ['tower_top_left', 'tower_top_mid', 'tower_top_right'],
-  ['tower_left', 'stone_slab', 'tower_right'],
+  ['tower_left', 'tower_mid', 'tower_right'],
   ['tower_base_left', 'tower_base_mid', 'tower_base_right'],
 ];
-/** Cổng vòm đóng làm cảnh (không đi qua được). */
-const GATE_CLOSED = [['gate_arch_left', 'gate_arch_right']];
+const GATE_ARCH = [['gate_arch_left', 'gate_arch_right']];
+/** Cổng thành đóng làm cảnh (vòm + cánh cổng, không đi qua được). */
+const GATE_CLOSED = [...GATE_ARCH, ['gate_left', 'gate_right']];
 
 const house = (x, y, rows) => ['stamp', x, y, rows, true];
 /** Cổng mở trên ô portal: lòng cổng phát sáng, đi qua được. */
 const openGate = (x, y) => ['stamp', x, y, [['gate_left', 'gate_right']], false];
 
-/** Mặt tiền nhà nguyện rộng `width` ô: mái xám, tường đá có cửa sổ, cổng vòm ở giữa. */
-function chapelFront(x, y, width, gateColumn) {
-  const middle = (left, mid, right, at = () => mid) => [left, ...Array.from({ length: width - 2 }, (_, index) => at(index + 1)), right];
-  const window = (column) => (column % 3 === 1 ? 'stone_window' : 'stone_wall_mid');
-  const gate = (pair) => (column) => (column === gateColumn ? pair[0] : column === gateColumn + 1 ? pair[1] : window(column));
-  return [
-    ['stamp', x, y, [
-      middle('roof_grey_left', 'roof_grey_mid', 'roof_grey_right', (column) => (column === gateColumn || column === gateColumn + 1 ? 'roof_grey_dormer' : 'roof_grey_mid')),
-      middle('roof_grey_eave_left', 'roof_grey_eave_mid', 'roof_grey_eave_right'),
-      middle('stone_wall_left', 'stone_wall_mid', 'stone_wall_right', window),
-      middle('stone_wall_left', 'stone_wall_mid', 'stone_wall_right', gate(['gate_arch_left', 'gate_arch_right'])),
-    ], true],
-  ];
-}
+/** Mặt tiền nhà nguyện 12×4 ô, cổng vòm ở cột CHAPEL_GATE_COLUMN của hàng cuối. */
+const chapelFront = (x, y) => ['stamp', x, y, CHAPEL_FRONT_TILES, true];
 
 // ---------- Entity ----------
 
@@ -113,94 +104,139 @@ const GATE_V = [GRID, 2 * GRID]; // cổng 2 ô dọc (cạnh trái/phải)
 /** Dải rừng phía dưới tường bao để level đủ 25 ô; người chơi không tới được. */
 const forestBand = (width, fromRow) => ['rect', 0, fromRow, width, LEVEL_HEIGHT - fromRow, 'Y'];
 
-/** Thành Lexhold: tường thành + 2 tháp phía bắc, 4 công trình hồi sinh, cổng nam ra cánh đồng (qua trận hướng dẫn). */
+/** Thành Lexhold: tường thành có ụ lồi, 2 tháp phía bắc, 4 công trình hồi sinh, đường uốn ra cổng nam (qua trận hướng dẫn). */
+const LEXHOLD_ENTITIES = [
+  spawn([16, 10], 'start'), spawn([17, 17], 'from-fields'),
+  npc([15, 9], 'keeper'),
+  building([4, 3], 'forge'), building([11, 3], 'arcane-tower'), building([22, 3], 'tailor'), building([29, 3], 'library'),
+  // Trận hướng dẫn chắn kín hành lang cổng nam, nằm trước cổng: không đánh xong thì không ra được cánh đồng.
+  battle([17, 19], [64, 64], 'tutorial'),
+  portal([17, 21], GATE_H, 'Misty_Fields', 'from-lexhold'),
+  // Rừng Tro thuộc chương sau, cố ý chưa có level; client tự chặn cổng tới khi đủ mốc từ.
+  portal([35, 10], GATE_V, 'Ash_Forest', 'from-lexhold'),
+  ...torches([[16, 18], [19, 18], [8, 6], [27, 6], [33, 9], [33, 12]]),
+];
 const LEXHOLD = {
   identifier: 'Lexhold', iid: 'c1a7e000-0b5d-4e1f-9a01-000000000001', theme: THEME.outpost,
   width: 36, height: LEVEL_HEIGHT, worldX: 0, worldY: 0,
   ops: [
     ['rect', 0, 0, 36, 22, '#'], ['rect', 1, 1, 34, 18, '.'], forestBand(36, 22),
-    ['rect', 3, 5, 30, 1, '='], ['rect', 17, 5, 2, 14, '='], ['rect', 19, 10, 16, 2, '='],
+    ...organicOps({
+      interior: { x0: 1, y0: 1, x1: 34, y1: 18 },
+      entities: LEXHOLD_ENTITIES,
+      paths: [
+        { points: [[17, 18], [18, 15], [16, 12], [17, 9], [17, 6]], width: 1 },
+        { points: [[3, 7], [5, 5], [8, 6], [12, 5], [17, 6], [23, 5], [27, 6], [30, 5], [32, 7]], width: 1 },
+        { points: [[18, 11], [21, 12], [26, 12], [30, 10], [34, 10]], width: 1 },
+      ],
+      groves: [
+        { center: [8, 12], radius: 2, seed: 11 }, { center: [23, 16], radius: 2, seed: 12 },
+        { center: [12, 16], radius: 1.5, seed: 13 }, { center: [27, 1], radius: 1.3, seed: 14 },
+      ],
+      treeChar: 'T',
+    }),
+    // Ụ tường lồi vào trong để thành không vuông vức.
+    ['rect', 1, 4, 1, 3, '#'], ['rect', 9, 18, 4, 1, '#'], ['rect', 23, 18, 3, 1, '#'], ['rect', 34, 4, 1, 3, '#'], ['rect', 34, 15, 1, 3, '#'],
     ['rect', 17, 19, 2, 2, '='], ['rect', 35, 10, 1, 2, 'R'],
     ['rect', 4, 3, 3, 2, 'b'], ['rect', 11, 3, 3, 2, 'b'], ['rect', 22, 3, 3, 2, 'b'], ['rect', 29, 3, 3, 2, 'b'],
-    ['at', 'S', [[15, 7], [20, 7]]], ['at', 'U', [[11, 11]]],
+    ['at', 'S', [[14, 8], [21, 8]]], ['at', 'U', [[11, 11]]],
     ['at', 'o', [[1, 1], [34, 1], [9, 9], [26, 14], [9, 15]]],
-    ['rect', 5, 9, 3, 2, ','], ['rect', 23, 13, 3, 2, ','], ['rect', 28, 1, 3, 1, ','],
-    ['at', 'r', [[12, 13], [21, 16], [30, 12], [2, 2], [14, 17]]],
-    ['at', 'T', [[2, 8], [32, 7], [13, 1], [23, 1]]], ['at', 's', [[16, 9]]], ['at', 'q', [[3, 10], [24, 8]]],
-    house(1, 14, HOUSE_ORANGE), house(5, 16, HOUSE_GREY), house(27, 15, HOUSE_ORANGE), house(30, 15, HOUSE_GREY),
+    ['rect', 5, 9, 3, 2, ','], ['rect', 23, 13, 2, 2, ','], ['rect', 19, 1, 3, 1, ','],
+    ['at', 'r', [[12, 13], [21, 16], [30, 11], [2, 2], [14, 17]]],
+    ['at', 's', [[16, 9]]], ['at', 'q', [[3, 10], [24, 8]]],
+    house(2, 12, HOUSE_ORANGE), house(5, 15, HOUSE_GREY), house(26, 15, HOUSE_ORANGE), house(30, 13, HOUSE_GREY),
     ['stamp', 0, 0, TOWER, true], ['stamp', 33, 0, TOWER, true], ['stamp', 17, 0, GATE_CLOSED, true],
-    openGate(17, 21),
+    // Vòm cổng nam đứng trong hành lang (đi xuyên được), cánh cổng mở nằm trên ô portal.
+    ['stamp', 17, 20, GATE_ARCH, false], openGate(17, 21),
   ],
-  entities: [
-    spawn([16, 10], 'start'), spawn([17, 17], 'from-fields'),
-    npc([15, 9], 'keeper'),
-    building([4, 3], 'forge'), building([11, 3], 'arcane-tower'), building([22, 3], 'tailor'), building([29, 3], 'library'),
-    // Trận hướng dẫn chắn kín hành lang cổng nam, nằm trước cổng: không đánh xong thì không ra được cánh đồng.
-    battle([17, 19], [64, 64], 'tutorial'),
-    portal([17, 21], GATE_H, 'Misty_Fields', 'from-lexhold'),
-    // Rừng Tro thuộc chương sau, cố ý chưa có level; client tự chặn cổng tới khi đủ mốc từ.
-    portal([35, 10], GATE_V, 'Ash_Forest', 'from-lexhold'),
-    ...torches([[16, 18], [19, 18], [8, 6], [27, 6], [33, 9], [33, 12]]),
-  ],
+  entities: LEXHOLD_ENTITIES,
 };
 
-/** Cánh đồng: hàng cây chắn ngang, đường đất đi qua khe có trận ch1-field, nghĩa trang rào gỗ, trại nông. */
+/** Cánh đồng: dải rừng răng cưa chắn ngang, đường đất uốn qua khe có trận ch1-field, nghĩa trang rào gỗ, trại nông. */
+const MISTY_FIELDS_ENTITIES = [
+  spawn([21, 2], 'from-lexhold'), spawn([40, 11], 'from-village'),
+  portal([21, 0], GATE_H, 'Lexhold', 'from-fields'),
+  portal([43, 11], GATE_V, 'Misty_Village', 'from-fields'),
+  // Khe giữa dải rừng là lối duy nhất sang phía đông; trận phủ kín khe.
+  battle([30, 9], [64, 192], 'ch1-field'),
+  battle([2, 17], [128, 128], 'ch1-field-roam'),
+  ...torches([[20, 2], [23, 2], [41, 10], [41, 13], [29, 10], [32, 13]]),
+];
 const MISTY_FIELDS = {
   identifier: 'Misty_Fields', iid: 'c1a7e000-0b5d-4e1f-9a01-000000000002', theme: THEME.fields,
   width: 44, height: LEVEL_HEIGHT, worldX: -256, worldY: 768,
   ops: [
     ['rect', 0, 0, 44, 24, '#'], ['rect', 1, 1, 42, 22, '.'], forestBand(44, 24),
+    ...organicOps({
+      interior: { x0: 1, y0: 1, x1: 42, y1: 22 },
+      entities: MISTY_FIELDS_ENTITIES,
+      paths: [{ points: [[21, 1], [20, 4], [22, 7], [21, 10], [25, 12], [29, 11], [33, 11], [37, 12], [42, 11]], width: 1 }],
+      groves: [
+        { center: [29, 4], radius: 2.2, seed: 22 }, { center: [32, 6], radius: 1.6, seed: 23 },
+        { center: [29, 19], radius: 2.2, seed: 24 }, { center: [32, 17], radius: 1.6, seed: 25 },
+        { center: [15, 5], radius: 2, seed: 26 }, { center: [10, 17], radius: 2, seed: 27 },
+        { center: [25, 18], radius: 2, seed: 28 }, { center: [38, 5], radius: 2.2, seed: 29 },
+        { center: [17, 15], radius: 1.5, seed: 30 },
+      ],
+      ragged: { depth: 2, seed: 21 },
+    }),
+    // Lõi dải rừng: hai cột kín để khe trận là lối duy nhất; cụm cây quanh lõi làm mép răng cưa.
+    ['rect', 30, 1, 2, 8, 'Y'], ['rect', 30, 15, 2, 8, 'Y'],
     ['rect', 21, 0, 2, 1, 'R'], ['rect', 43, 11, 1, 2, 'R'],
-    ['rect', 21, 1, 2, 11, '='], ['rect', 21, 11, 22, 2, '='],
-    ['rect', 30, 1, 2, 8, 'T'], ['rect', 30, 15, 2, 8, 'T'],
     ['rect', 3, 4, 10, 7, '_'], ['rect', 3, 3, 10, 1, 'I'], ['rect', 3, 11, 8, 1, 'I'],
-    ['at', 'g', [[4, 5], [6, 5], [8, 5], [10, 5], [4, 8], [6, 8], [8, 8], [10, 8]]],
-    ['at', 'T', [[15, 4], [16, 15], [25, 5], [26, 18], [37, 4], [38, 19], [8, 16], [13, 20], [35, 7]]],
-    ['rect', 14, 8, 1, 3, 'W'], ['rect', 24, 16, 3, 1, 'W'], ['at', 'W', [[36, 15], [40, 6]]],
+    ['at', 'g', [[4, 5], [7, 5], [10, 6], [5, 7], [8, 8], [11, 9], [4, 9], [7, 10]]],
+    ['at', 'W', [[14, 8], [15, 10], [24, 16], [26, 15], [36, 15], [40, 6]]],
     ['rect', 5, 14, 3, 2, ','], ['rect', 34, 17, 3, 2, ','],
-    ['at', 'x', [[17, 13], [27, 7], [39, 16]]], ['at', 'r', [[18, 6], [33, 9], [11, 18]]],
+    ['at', 'x', [[17, 13], [27, 7], [39, 16]]], ['at', 'r', [[18, 6], [34, 9], [11, 14]]],
     ['at', 't', [[18, 9]]], ['at', 'v', [[37, 21]]],
     house(33, 19, HOUSE_ORANGE),
   ],
-  entities: [
-    spawn([21, 2], 'from-lexhold'), spawn([40, 11], 'from-village'),
-    portal([21, 0], GATE_H, 'Lexhold', 'from-fields'),
-    portal([43, 11], GATE_V, 'Misty_Village', 'from-fields'),
-    // Khe giữa hàng cây là lối duy nhất sang phía đông; trận phủ kín khe.
-    battle([30, 9], [64, 192], 'ch1-field'),
-    battle([2, 17], [128, 128], 'ch1-field-roam'),
-    ...torches([[20, 2], [23, 2], [41, 10], [41, 13], [29, 10], [32, 13]]),
-  ],
+  entities: MISTY_FIELDS_ENTITIES,
 };
 
-/** Làng: nhà nguyện phía bắc, nhà dân hai bên đường, lò rèn phía đông nam, lối xuống hầm trùm phía nam. */
+/** Làng: nhà nguyện phía bắc, nhà dân rải lệch quanh đường uốn, lò rèn phía đông nam, lối xuống hầm trùm phía nam. */
+const CHAPEL_X = 14;
+const MISTY_VILLAGE_ENTITIES = [
+  spawn([2, 11], 'from-fields'), spawn([20, 8], 'from-chapel'), spawn([19, 20], 'from-lair'),
+  npc([5, 9], 'hollow-villager'),
+  npc([33, 14], 'smith'),
+  // Cánh cửa nhà nguyện đứng trước nửa trái cổng; hero đi qua nửa phải để vào.
+  npc([19, 6], 'chapel-door'),
+  portal([19, 5], GATE_H, 'Misty_Chapel', 'from-village'),
+  portal([19, 23], GATE_H, 'Scarecrow_Lair', 'from-village'),
+  portal([0, 11], GATE_V, 'Misty_Fields', 'from-village'),
+  ...torches([[18, 6], [21, 6], [2, 10], [2, 13], [18, 22], [21, 22], [35, 13]]),
+];
 const MISTY_VILLAGE = {
   identifier: 'Misty_Village', iid: 'c1a7e000-0b5d-4e1f-9a01-000000000003', theme: THEME.village,
   width: 40, height: LEVEL_HEIGHT, worldX: 1216, worldY: 768,
   ops: [
     ['rect', 0, 0, 40, 24, '#'], ['rect', 1, 1, 38, 22, '.'], forestBand(40, 24),
+    ...organicOps({
+      interior: { x0: 1, y0: 1, x1: 38, y1: 22 },
+      entities: MISTY_VILLAGE_ENTITIES,
+      paths: [
+        { points: [[1, 11], [6, 12], [11, 10], [16, 11], [20, 12], [25, 13], [30, 11], [35, 12], [38, 11]], width: 1 },
+        { points: [[19, 6], [20, 9], [18, 13], [19, 17], [20, 20], [19, 22]], width: 1 },
+      ],
+      groves: [
+        { center: [12, 16], radius: 2, seed: 41 }, { center: [11, 5], radius: 1.5, seed: 42 },
+        { center: [33, 9], radius: 1.8, seed: 43 }, { center: [14, 20], radius: 1.8, seed: 44 },
+      ],
+      ragged: { depth: 2, seed: 31 },
+    }),
     ['rect', 0, 11, 1, 2, 'R'], ['rect', 19, 23, 2, 1, 'R'],
-    ['rect', 1, 11, 38, 2, '='], ['rect', 19, 6, 2, 17, '='],
-    ...chapelFront(14, 1, 12, 5), openGate(19, 5),
-    house(3, 3, HOUSE_ORANGE), house(7, 3, HOUSE_GREY), house(30, 3, HOUSE_GREY), house(34, 3, HOUSE_ORANGE),
-    house(3, 16, HOUSE_GREY), house(7, 16, HOUSE_ORANGE), house(30, 16, HOUSE_ORANGE), house(34, 16, HOUSE_GREY),
+    // Cửa nhà nguyện nằm sẵn trong ảnh mặt tiền; ô portal ngay dưới là lối đất.
+    chapelFront(CHAPEL_X, 1), ['rect', CHAPEL_X + CHAPEL_GATE_COLUMN, 5, 2, 1, '='],
+    house(3, 4, HOUSE_ORANGE), house(8, 2, HOUSE_GREY), house(28, 6, HOUSE_GREY), house(33, 2, HOUSE_ORANGE),
+    house(3, 16, HOUSE_GREY), house(9, 14, HOUSE_ORANGE), house(27, 16, HOUSE_ORANGE), house(34, 17, HOUSE_GREY),
     ['at', 'F', [[31, 14], [32, 14]]], ['at', 'U', [[25, 8]]],
-    ['at', 'g', [[24, 17], [26, 17], [24, 19], [26, 19], [28, 20]]],
-    ['rect', 11, 7, 1, 3, 'W'], ['at', 'W', [[37, 9], [12, 19]]],
+    ['at', 'g', [[23, 17], [25, 18], [24, 20], [26, 20], [22, 19]]],
+    ['at', 'W', [[11, 7], [12, 8], [37, 9], [12, 19]]],
     ['rect', 8, 8, 3, 2, ','], ['rect', 22, 14, 3, 2, ','],
     ['at', 'r', [[13, 15], [36, 20], [27, 9]]], ['at', 'x', [[25, 21]]], ['at', 'q', [[29, 14]]], ['at', 's', [[2, 9]]],
   ],
-  entities: [
-    spawn([2, 11], 'from-fields'), spawn([20, 8], 'from-chapel'), spawn([19, 20], 'from-lair'),
-    npc([5, 9], 'hollow-villager'),
-    npc([33, 14], 'smith'),
-    // Cánh cửa nhà nguyện đứng trước nửa trái cổng; hero đi qua nửa phải để vào.
-    npc([19, 6], 'chapel-door'),
-    portal([19, 5], GATE_H, 'Misty_Chapel', 'from-village'),
-    portal([19, 23], GATE_H, 'Scarecrow_Lair', 'from-village'),
-    portal([0, 11], GATE_V, 'Misty_Fields', 'from-village'),
-    ...torches([[18, 6], [21, 6], [2, 10], [2, 13], [18, 22], [21, 22], [35, 13]]),
-  ],
+  entities: MISTY_VILLAGE_ENTITIES,
 };
 
 /** Nhà nguyện đá: gian giữa lát đá tới bàn thờ, hàng ghế hai bên, 3 mảnh Thánh Ngôn trong rương ở các góc. */

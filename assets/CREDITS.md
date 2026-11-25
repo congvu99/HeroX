@@ -55,11 +55,11 @@ Trang nguồn: https://kenney.nl/assets
 
 | File | Nội dung | Tác giả | License | Chỉnh sửa |
 |---|---|---|---|---|
-| `tilesets/chapter-1.png` | Atlas tile chương 1 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
-| `tilesets/chapter-2.png` | Atlas tile chương 2 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-2.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
-| `tilesets/chapter-3.png` | Atlas tile chương 3 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-3.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
-| `tilesets/chapter-4.png` | Atlas tile chương 4 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-4.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
-| `tilesets/chapter-5.png` | Atlas tile chương 5 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-5.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px) |
+| `tilesets/chapter-1.png` | Atlas tile chương 1 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px) |
+| `tilesets/chapter-2.png` | Atlas tile chương 2 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-2.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px) |
+| `tilesets/chapter-3.png` | Atlas tile chương 3 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-3.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px) |
+| `tilesets/chapter-4.png` | Atlas tile chương 4 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-4.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px) |
+| `tilesets/chapter-5.png` | Atlas tile chương 5 (ghép) | Kenney (www.kenney.nl) | CC0 1.0 | ghép bằng client/scripts/generate-chapter-5.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px) |
 
 ## HeroX, vẽ bằng script
 
@@ -133,6 +133,16 @@ Trang nguồn: https://www.pixellab.ai/
 | `sprites/npc/crypt-warden.png` | Chân dung/NPC crypt-warden (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
 | `sprites/npc/forest-warden.png` | Chân dung/NPC forest-warden (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
 | `sprites/npc/gate-seraph.png` | Chân dung/NPC gate-seraph (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
+| `tiles/pixellab/castle-gate.png` | Cổng thành bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64, cắt ô 32 px thay ô Kenney cùng tên |
+| `tiles/pixellab/castle-tower.png` | Tháp thành bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 96x96, cắt ô 32 px thay ô Kenney cùng tên |
+| `tiles/pixellab/castle-wall-tileset.png` | Tileset tường thành - cỏ bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | tileset Wang 16 ô 32 px, ghép sheet 4 cột + bảng góc .json |
+| `tiles/pixellab/chapel-front.png` | Mặt tiền nhà nguyện bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 384x128, cắt ô 32 px thay ô Kenney cùng tên |
+| `tiles/pixellab/grass-path-tileset.png` | Tileset cỏ - đường đất bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | tileset Wang 16 ô 32 px, ghép sheet 4 cột + bảng góc .json |
+| `tiles/pixellab/house-grey.png` | Nhà đá mái xám bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 96x96, cắt ô 32 px thay ô Kenney cùng tên |
+| `tiles/pixellab/house-orange.png` | Nhà mái cam bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 96x96, cắt ô 32 px thay ô Kenney cùng tên |
+| `tiles/pixellab/tree-autumn.png` | Cây lá thu bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 32x32, cắt ô 32 px thay ô Kenney cùng tên |
+| `tiles/pixellab/tree-cone-autumn.png` | Cây thông lá thu bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 32x32, cắt ô 32 px thay ô Kenney cùng tên |
+| `tiles/pixellab/tree-pine.png` | Cây thông bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 32x32, cắt ô 32 px thay ô Kenney cùng tên |
 
 ## Universal LPC Spritesheet Character Generator
 
@@ -193,5 +203,15 @@ Trang nguồn: https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Ch
 | `sprites/npc/crypt-warden.png` | portrait-crypt-warden | 64x64 | 4 | still | 2026-11-23 |
 | `sprites/npc/forest-warden.png` | portrait-forest-warden | 64x64 | 4 | still | 2026-11-23 |
 | `sprites/npc/gate-seraph.png` | portrait-gate-seraph | 64x64 | 4 | still | 2026-11-23 |
+| `tiles/pixellab/castle-gate.png` | castle-gate | 64x64 | 4 | still | 2026-11-25 |
+| `tiles/pixellab/castle-tower.png` | castle-tower | 96x96 | 4 | still | 2026-11-25 |
+| `tiles/pixellab/castle-wall-tileset.png` | castle-wall-tileset | 128x128 | 4 | still | 2026-11-25 |
+| `tiles/pixellab/chapel-front.png` | chapel-front | 384x128 | 4 | still | 2026-11-25 |
+| `tiles/pixellab/grass-path-tileset.png` | grass-path-tileset | 128x128 | 4 | still | 2026-11-25 |
+| `tiles/pixellab/house-grey.png` | house-grey | 96x96 | 4 | still | 2026-11-25 |
+| `tiles/pixellab/house-orange.png` | house-orange | 96x96 | 4 | still | 2026-11-25 |
+| `tiles/pixellab/tree-autumn.png` | tree-autumn | 32x32 | 4 | still | 2026-11-25 |
+| `tiles/pixellab/tree-cone-autumn.png` | tree-cone-autumn | 32x32 | 4 | still | 2026-11-25 |
+| `tiles/pixellab/tree-pine.png` | tree-pine | 32x32 | 4 | still | 2026-11-25 |
 
 Prompt, seed và ảnh tham chiếu để tạo lại: `tools/pixellab/art-recipes.json`.

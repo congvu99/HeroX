@@ -672,6 +672,166 @@
       ],
       "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
       "createdAt": "2026-11-23"
+    },
+    {
+      "id": "castle-gate",
+      "path": "tiles/pixellab/castle-gate.png",
+      "prompt": "medieval castle gatehouse arch seen from the front, grey cut-stone arch with keystone on the top half, open heavy wooden doors with iron bands on the bottom half revealing a warm lit passage, filling the whole frame edge to edge, high fantasy medieval, detailed shading, rich stone and wood textures, top-down 3/4 pixel art, front facade facing the viewer, clean readable silhouette, transparent background",
+      "seed": 74141,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "castle-tower",
+      "path": "tiles/pixellab/castle-tower.png",
+      "prompt": "squat round medieval castle tower seen from the front, grey cut-stone masonry, crenellated battlement top, one narrow arrow slit window, mossy stone base, filling the whole frame edge to edge, high fantasy medieval, detailed shading, rich stone and wood textures, top-down 3/4 pixel art, front facade facing the viewer, clean readable silhouette, transparent background",
+      "seed": 74140,
+      "size": {
+        "width": 96,
+        "height": 96
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "castle-wall-tileset",
+      "path": "tiles/pixellab/castle-wall-tileset.png",
+      "prompt": "lower: lush fantasy meadow grass, rich deep green | upper: top of a thick medieval castle rampart, weathered grey stone walkway with crenellated battlements, mossy cracks",
+      "seed": 74131,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "chapel-front",
+      "path": "tiles/pixellab/chapel-front.png",
+      "prompt": "wide medieval stone chapel facade seen from the front, grey slate roof across the top half with a small bell gable in the center, grey stone wall on the bottom half with tall arched stained glass windows evenly spaced, large arched wooden double door exactly in the bottom center, filling the whole frame edge to edge, high fantasy medieval, detailed shading, rich stone and wood textures, top-down 3/4 pixel art, front facade facing the viewer, clean readable silhouette, transparent background",
+      "seed": 74142,
+      "size": {
+        "width": 384,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "grass-path-tileset",
+      "path": "tiles/pixellab/grass-path-tileset.png",
+      "prompt": "lower: lush fantasy meadow grass, rich deep green with subtle darker tufts and tiny wildflowers, detailed texture | upper: worn earthen dirt road with small pebbles and wheel ruts, warm brown, detailed texture",
+      "seed": 74130,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "house-grey",
+      "path": "tiles/pixellab/house-grey.png",
+      "prompt": "small medieval stone house, grey slate roof with one small dormer window, roof covers the top two thirds, grey stone front wall along the bottom with a wooden door in the center and one window on each side, filling the whole frame edge to edge, high fantasy medieval, detailed shading, rich stone and wood textures, top-down 3/4 pixel art, front facade facing the viewer, clean readable silhouette, transparent background",
+      "seed": 74111,
+      "size": {
+        "width": 96,
+        "height": 96
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "house-orange",
+      "path": "tiles/pixellab/house-orange.png",
+      "prompt": "small medieval village cottage, orange clay tile roof with one small dormer window, roof covers the top two thirds, timber and plaster front wall along the bottom with a wooden door in the center and one window on each side, filling the whole frame edge to edge, high fantasy medieval, detailed shading, rich stone and wood textures, top-down 3/4 pixel art, front facade facing the viewer, clean readable silhouette, transparent background",
+      "seed": 74110,
+      "size": {
+        "width": 96,
+        "height": 96
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "tree-autumn",
+      "path": "tiles/pixellab/tree-autumn.png",
+      "prompt": "single small round autumn tree, golden orange leafy canopy, short brown trunk, filling the whole frame edge to edge, high fantasy medieval, detailed shading, rich stone and wood textures, top-down 3/4 pixel art, front facade facing the viewer, clean readable silhouette, transparent background",
+      "seed": 74121,
+      "size": {
+        "width": 32,
+        "height": 32
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "tree-cone-autumn",
+      "path": "tiles/pixellab/tree-cone-autumn.png",
+      "prompt": "single small conical fir tree with orange autumn needles, short brown trunk, filling the whole frame edge to edge, high fantasy medieval, detailed shading, rich stone and wood textures, top-down 3/4 pixel art, front facade facing the viewer, clean readable silhouette, transparent background",
+      "seed": 74122,
+      "size": {
+        "width": 32,
+        "height": 32
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "tree-pine",
+      "path": "tiles/pixellab/tree-pine.png",
+      "prompt": "single small round green oak tree, lush leafy canopy, short brown trunk, filling the whole frame edge to edge, high fantasy medieval, detailed shading, rich stone and wood textures, top-down 3/4 pixel art, front facade facing the viewer, clean readable silhouette, transparent background",
+      "seed": 74120,
+      "size": {
+        "width": 32,
+        "height": 32
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
     }
   ]
 }

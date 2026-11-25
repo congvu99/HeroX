@@ -5,6 +5,8 @@ import { createImage, blit, readPng } from '../../../tools/lib/png.mjs';
 import { crop, hasTransparency, scaleNearest } from '../../../tools/lib/image-ops.mjs';
 import { GRID } from '../../../tools/lib/ldtk-project.mjs';
 import { ASSETS_DIR } from '../../../tools/lib/credits-store.mjs';
+import { loadOverrideTiles, loadWangTiles } from './pixellab-tile-overrides.mjs';
+import { chapelFrontKenneyTiles } from './chapel-front.mjs';
 
 const SOURCE_TILE_PX = 16;
 const SCALE = GRID / SOURCE_TILE_PX;
@@ -112,6 +114,10 @@ export const KENNEY_TILES = {
   anvil: ['dungeon', 74],
   crate: ['dungeon', 63],
   skull_pile: ['dungeon', 124],
+  // Ô giữa tháp tên riêng (stone_slab còn là sàn nhà nguyện) để ảnh tháp PixelLab không đè lên sàn.
+  tower_mid: ['town', 109],
+  // Mặt tiền nhà nguyện 12×4 ô, mỗi ô tên riêng (cắt liền một ảnh PixelLab, chưa có ảnh thì ghép Kenney như cũ).
+  ...chapelFrontKenneyTiles(WINDOW_GLOW),
 };
 
 function loadSheet(relPath) {
@@ -130,17 +136,22 @@ function cropTile(sheet, index) {
  * Dựng atlas: `indexByName` cho map và sân trận, `objectTiles` là ô nền trong suốt (vẽ ở layer Decor, chồng lên sàn),
  * `glow` là vùng sáng theo tên tile.
  */
-export function buildKenneyAtlas() {
+export function buildKenneyAtlas(overrides = loadOverrideTiles(), extraTiles = loadWangTiles()) {
   const sheets = Object.fromEntries(Object.entries(KENNEY_SHEETS).map(([key, relPath]) => [key, loadSheet(relPath)]));
-  const names = Object.keys(KENNEY_TILES);
+  // Ô thêm (tileset PixelLab) nằm sau toàn bộ ô Kenney để chỉ số ô cũ trong file .ldtkl không đổi.
+  const names = [...Object.keys(KENNEY_TILES), ...extraTiles.keys()];
   const rows = Math.ceil(names.length / ATLAS_COLUMNS);
   const image = createImage(ATLAS_COLUMNS * GRID, rows * GRID);
   if (image.width > ATLAS_MAX_PX || image.height > ATLAS_MAX_PX) throw new Error(`Atlas ${image.width}x${image.height} vượt ${ATLAS_MAX_PX}`);
   const objectTiles = new Set();
   const glow = {};
   names.forEach((name, index) => {
-    const [sheetKey, sheetIndex, glowRect] = KENNEY_TILES[name];
-    const tile = cropTile(sheets[sheetKey], sheetIndex);
+    const extra = extraTiles.get(name);
+    const [sheetKey, sheetIndex, kenneyGlow] = KENNEY_TILES[name] ?? [];
+    const override = overrides.get(name);
+    const tile = extra ?? override?.image ?? cropTile(sheets[sheetKey], sheetIndex);
+    // Ô đã thay ảnh chỉ dùng vùng sáng đo trên ảnh mới; vùng sáng Kenney lệch chỗ cửa sổ.
+    const glowRect = override ? override.glow : kenneyGlow;
     blit(image, tile, (index % ATLAS_COLUMNS) * GRID, Math.floor(index / ATLAS_COLUMNS) * GRID);
     if (hasTransparency(tile)) objectTiles.add(index);
     if (glowRect) glow[name] = glowRect;
