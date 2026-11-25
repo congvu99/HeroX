@@ -55,6 +55,7 @@ export type {
   MissReason,
   PromptState,
   StepResult,
+  WordResult,
 } from './combat/battle-state.js';
 export type {
   BattleInput,
@@ -124,8 +125,11 @@ export {
   RECENT_PROMPT_MEMORY,
   selectBattleWords,
   TUTORIAL_WORD_IDS,
+  WORD_MIX_QUOTAS,
 } from './combat/word-pool.js';
-export type { PromptContext } from './combat/word-pool.js';
+export type { PromptContext, WordMix } from './combat/word-pool.js';
+export { WORD_TIERS } from './combat/word-tier.js';
+export type { WordTier } from './combat/word-tier.js';
 export { WORD_CHAINS } from './data/word-chains.js';
 export type { WordChain } from './data/word-chains.js';
 export {

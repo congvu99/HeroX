@@ -22,6 +22,8 @@ export interface Encounter {
   readonly enemies: readonly EnemyTemplate[];
   readonly promptTimeMs: number;
   readonly allowElite: boolean;
+  /** Hạn ngạch nhóm từ khi dựng bộ trận (word-pool.ts `WORD_MIX_QUOTAS`); thiếu = `field`. Trùm nặng nhóm "khó" hơn. */
+  readonly wordMix?: 'field' | 'boss';
   /** Trận cuối chương 5: chỉ rút từ đã thuộc (ivl ≥ 21). Người chơi chưa thuộc đủ thì không mở được (gate theo mastered ≥ 200). */
   readonly masteredOnly?: boolean;
 }
@@ -70,19 +72,19 @@ export const ENCOUNTERS: readonly Encounter[] = [
   { id: FIELD_ROAM_ENCOUNTER_ID, enemies: [imp, skeleton], promptTimeMs: DEFAULT_PROMPT_TIME_MS, allowElite: true },
   { id: SMITHY_ENCOUNTER_ID, enemies: [ghoul, skeleton, ghoul], promptTimeMs: DEFAULT_PROMPT_TIME_MS, allowElite: true },
   // Trùm cho thêm thời gian vì pha 2 buộc người chơi giữ combo.
-  { id: SCARECROW_BOSS_ENCOUNTER_ID, enemies: [imp, scarecrowDemon], promptTimeMs: 12_000, allowElite: false },
+  { id: SCARECROW_BOSS_ENCOUNTER_ID, enemies: [imp, scarecrowDemon], promptTimeMs: 12_000, allowElite: false, wordMix: 'boss' },
   // Chương 2: Rừng Tro.
   { id: CH2_FIELD_ENCOUNTER_ID, enemies: [ashWolf, ashSprite, ashWolf], promptTimeMs: DEFAULT_PROMPT_TIME_MS, allowElite: true },
-  { id: CH2_BOSS_ENCOUNTER_ID, enemies: [ashSprite, ashStag], promptTimeMs: 12_000, allowElite: false },
+  { id: CH2_BOSS_ENCOUNTER_ID, enemies: [ashSprite, ashStag], promptTimeMs: 12_000, allowElite: false, wordMix: 'boss' },
   // Chương 3: Hầm Mộ Thánh.
   { id: CH3_FIELD_ENCOUNTER_ID, enemies: [redCleric, boneKnight, redCleric], promptTimeMs: DEFAULT_PROMPT_TIME_MS, allowElite: true },
-  { id: CH3_BOSS_ENCOUNTER_ID, enemies: [boneKnight, namelessBishop], promptTimeMs: 12_000, allowElite: false },
+  { id: CH3_BOSS_ENCOUNTER_ID, enemies: [boneKnight, namelessBishop], promptTimeMs: 12_000, allowElite: false, wordMix: 'boss' },
   // Chương 4: Vực Lửa.
   { id: CH4_FIELD_ENCOUNTER_ID, enemies: [fireImp, lavaHound, fireImp], promptTimeMs: DEFAULT_PROMPT_TIME_MS, allowElite: true },
-  { id: CH4_BOSS_ENCOUNTER_ID, enemies: [lavaHound, antonymDemon], promptTimeMs: 12_000, allowElite: false },
+  { id: CH4_BOSS_ENCOUNTER_ID, enemies: [lavaHound, antonymDemon], promptTimeMs: 12_000, allowElite: false, wordMix: 'boss' },
   // Chương 5: Thiên Cung Vỡ. Trận cuối theo thiết kế chỉ dùng từ đã thuộc (cơ chế engine, không gắn được vào dữ liệu trận).
   { id: CH5_FIELD_ENCOUNTER_ID, enemies: [muteCherub, brokenSeraph, muteCherub], promptTimeMs: DEFAULT_PROMPT_TIME_MS, allowElite: true },
-  { id: CH5_BOSS_ENCOUNTER_ID, enemies: [brokenSeraph, fallenAngel], promptTimeMs: 14_000, allowElite: false, masteredOnly: true },
+  { id: CH5_BOSS_ENCOUNTER_ID, enemies: [brokenSeraph, fallenAngel], promptTimeMs: 14_000, allowElite: false, wordMix: 'boss', masteredOnly: true },
 ];
 
 export function findEncounter(id: string): Encounter | undefined {

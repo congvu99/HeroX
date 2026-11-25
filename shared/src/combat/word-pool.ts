@@ -3,6 +3,7 @@ import { normalizeAnswer } from './answer-matching.js';
 import type { BattleWord } from './battle-types.js';
 import { nextChainWord, type ComboState } from './combo-chain.js';
 import type { SeededRandom } from './seeded-random.js';
+import { WORD_TIERS, type WordTier } from './word-tier.js';
 
 /** Dưới số từ đã học này, người chơi vào trận hướng dẫn với bộ từ cố định của chương 1. */
 export const MIN_LEARNED_WORDS_FOR_BATTLE = 8;
@@ -22,8 +23,22 @@ export const BATTLE_POOL_SIZE = 40;
 /** Không ra lại một từ trong số đề gần nhất này. */
 export const RECENT_PROMPT_MEMORY = 3;
 
-const MAX_WEAK_WORDS_IN_POOL = 12;
-const MAX_CHAINS_IN_POOL = 6;
+/** Cách trộn bộ từ theo loại trận: hạn ngạch phần trăm mỗi nhóm SRS, cộng lại đúng 100. */
+export type WordMix = 'field' | 'boss';
+
+/**
+ * Hạn ngạch nhóm cho bộ từ mỗi trận (phần trăm số slot còn lại sau khi đã thêm vòng từ).
+ * - field (trận thường): trải đều, nghiêng về từ mới + đến hạn để người chơi mở rộng và ôn kịp lịch.
+ * - boss (trận trùm): nặng nhóm "khó" + "đến hạn" vì trùm là bài kiểm tra chỗ hay sai.
+ */
+export const WORD_MIX_QUOTAS: Record<WordMix, Record<WordTier, number>> = {
+  field: { new: 30, due: 25, hard: 25, familiar: 15, mastered: 5 },
+  boss: { hard: 40, due: 25, new: 15, familiar: 15, mastered: 5 },
+};
+
+/** Thứ tự dồn slot thừa khi một nhóm thiếu từ: ưu tiên ôn (đến hạn, khó) trước mở rộng. */
+const SPILL_ORDER: readonly WordTier[] = ['due', 'hard', 'new', 'familiar', 'mastered'];
+
 // Từ yếu và từ vừa sai trong trận ra đề nhiều gấp 3 để người chơi ôn đúng chỗ hổng.
 const WEAK_WORD_WEIGHT = 3;
 const NORMAL_WORD_WEIGHT = 1;
@@ -41,32 +56,72 @@ export function availableChains(words: readonly BattleWord[], chains: readonly W
   return chains.filter((chain) => chain.words.every((word) => known.has(word)));
 }
 
+/** Chia `total` slot theo phần trăm `quotas`, dùng largest-remainder để tổng khớp đúng `total`. */
+function allocateQuota(quotas: Record<WordTier, number>, total: number): Record<WordTier, number> {
+  const exact = WORD_TIERS.map((tier) => ({ tier, value: (total * (quotas[tier] ?? 0)) / 100 }));
+  const allocation = Object.fromEntries(exact.map(({ tier, value }) => [tier, Math.floor(value)])) as Record<WordTier, number>;
+  let assigned = WORD_TIERS.reduce((sum, tier) => sum + allocation[tier], 0);
+  // Phần dư lớn nhất nhận slot lẻ còn lại, để tổng đúng `total`.
+  const byRemainder = [...exact].sort((a, b) => b.value - Math.floor(b.value) - (a.value - Math.floor(a.value)));
+  for (const { tier } of byRemainder) {
+    if (assigned >= total) break;
+    allocation[tier] += 1;
+    assigned += 1;
+  }
+  return allocation;
+}
+
 /**
- * Chọn tối đa `limit` từ cho trận: từ trong vòng từ, rồi từ yếu (theo thứ tự ưu tiên của `candidates`),
- * rồi trọn bộ từ của vài chuỗi cụm (để có combo kết liễu), cuối cùng bù ngẫu nhiên.
+ * Chọn tối đa `limit` từ cho trận theo hạn ngạch nhóm. Thuần, không cần rng (`buckets` đã được sắp thứ tự ưu tiên).
+ * Trước hết thêm từ vòng từ (luôn có mặt), rồi chia số slot còn lại theo `WORD_MIX_QUOTAS[mix]`, lấy từ đầu mỗi nhóm;
+ * slot thừa do nhóm thiếu từ dồn theo `SPILL_ORDER`. Từ chuỗi cụm chỉ vào bộ nếu tự nó thuộc một nhóm — không kéo thêm.
  */
 export function selectBattleWords(
-  candidates: readonly BattleWord[],
+  buckets: Record<WordTier, readonly BattleWord[]>,
+  mix: WordMix,
   loadout: readonly string[],
-  chains: readonly WordChain[],
-  rng: SeededRandom,
   limit: number = BATTLE_POOL_SIZE,
 ): BattleWord[] {
-  const byId = new Map(candidates.map((word) => [word.id, word]));
-  const byKey = new Map(candidates.map((word) => [wordKey(word), word]));
+  const byId = new Map(WORD_TIERS.flatMap((tier) => buckets[tier].map((word) => [word.id, word] as const)));
   const selected = new Map<string, BattleWord>();
-  const add = (word: BattleWord | undefined): void => {
-    if (word && selected.size < limit) selected.set(word.id, word);
+  const cursors = Object.fromEntries(WORD_TIERS.map((tier) => [tier, 0])) as Record<WordTier, number>;
+  const add = (word: BattleWord | undefined): boolean => {
+    if (word === undefined || selected.has(word.id) || selected.size >= limit) return false;
+    selected.set(word.id, word);
+    return true;
   };
 
+  // Vòng từ luôn vào bộ trước (người chơi tự chọn các từ này để lên combo).
   for (const id of loadout) add(byId.get(id));
-  candidates.filter((word) => word.weak).slice(0, MAX_WEAK_WORDS_IN_POOL).forEach(add);
-  const chainCandidates = rng.shuffle(availableChains(candidates, chains)).slice(0, MAX_CHAINS_IN_POOL);
-  for (const chain of chainCandidates) {
-    const missing = chain.words.filter((word) => !selected.has(byKey.get(word)?.id ?? ''));
-    if (selected.size + missing.length <= limit) missing.forEach((word) => add(byKey.get(word)));
+
+  // Lấy từ tiếp theo chưa chọn của một nhóm; `null` khi nhóm đã cạn.
+  const takeFrom = (tier: WordTier): BattleWord | null => {
+    const bucket = buckets[tier];
+    while (cursors[tier] < bucket.length) {
+      const word = bucket[cursors[tier]] as BattleWord;
+      cursors[tier] += 1;
+      if (!selected.has(word.id)) return word;
+    }
+    return null;
+  };
+
+  const remaining = Math.max(0, limit - selected.size);
+  const quota = allocateQuota(WORD_MIX_QUOTAS[mix], remaining);
+  // Vòng từ có thể đã chiếm chỗ của một nhóm; đếm phần còn thiếu để dồn cho đủ.
+  for (const tier of WORD_TIERS) {
+    for (let taken = 0; taken < quota[tier]; taken += 1) {
+      if (!add(takeFrom(tier) ?? undefined)) break;
+    }
   }
-  rng.shuffle(candidates.filter((word) => !selected.has(word.id))).forEach(add);
+  // Slot còn trống (nhóm thiếu từ) dồn theo thứ tự ưu tiên ôn.
+  let progressed = true;
+  while (selected.size < limit && progressed) {
+    progressed = false;
+    for (const tier of SPILL_ORDER) {
+      if (selected.size >= limit) break;
+      if (add(takeFrom(tier) ?? undefined)) progressed = true;
+    }
+  }
   return [...selected.values()];
 }
 

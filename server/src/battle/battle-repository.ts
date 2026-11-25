@@ -1,5 +1,12 @@
-import { BASE_SKILL_TIERS, type BattleSetup } from '@herox/shared';
+import { BASE_SKILL_TIERS, type BattleSetup, type WordResult } from '@herox/shared';
 import type { Database } from '../db/pool.js';
+
+/** Lịch sử gặp một từ trong HeroX, đọc khi dựng trận sau. */
+export interface WordExposure {
+  /** Chuỗi trả lời đúng liên tiếp tới lần gặp gần nhất. */
+  readonly correctStreak: number;
+  readonly lastSeenAtMs: number;
+}
 
 export interface StoredBattle {
   readonly setup: BattleSetup;
@@ -14,6 +21,8 @@ export interface BattleSettlement {
   /** Vàng cộng cho nhân vật (0 khi thua hoặc rời trận). */
   readonly goldEarned: number;
   readonly misses: ReadonlyMap<string, number>;
+  /** Kết quả gặp từng từ trong trận, ghi vào `herox.word_exposures`. */
+  readonly wordResults: ReadonlyMap<string, WordResult>;
   readonly settledAtMs: number;
   /** Trận vừa thắng: ghi vào lịch sử thắng để mở mốc truyện; `null` khi thua hoặc rời trận. */
   readonly wonEncounterId: string | null;
@@ -21,10 +30,12 @@ export interface BattleSettlement {
 
 export interface BattleStore {
   readWordMisses(userId: number): Promise<Map<string, number>>;
+  /** Lịch sử gặp từ trong HeroX theo id từ (`herox.word_exposures`). */
+  readWordExposures(userId: number): Promise<Map<string, WordExposure>>;
   /** Lưu trận mới và bỏ mọi trận trước đó của người chơi: mỗi người chỉ có một trận mở. */
   createBattle(userId: number, battleId: string, setup: BattleSetup, startedAtMs: number): Promise<void>;
   findBattle(userId: number, battleId: string): Promise<StoredBattle | null>;
-  /** Ghi thưởng và từ sai trong một transaction; `false` khi trận đã được chốt trước đó. */
+  /** Ghi thưởng, từ sai và lịch sử gặp từ trong một transaction; `false` khi trận đã được chốt trước đó. */
   settleBattle(settlement: BattleSettlement): Promise<boolean>;
 }
 
@@ -45,6 +56,15 @@ export class PgBattleRepository implements BattleStore {
       [userId],
     );
     return new Map(result.rows.map((row) => [row.word_id, row.misses]));
+  }
+
+  async readWordExposures(userId: number): Promise<Map<string, WordExposure>> {
+    const result = await this.db.query<{ word_id: string; correct_streak: number; last_seen_at_ms: number }>(
+      `SELECT word_id, correct_streak, (extract(epoch FROM last_seen_at) * 1000)::float8 AS last_seen_at_ms
+       FROM herox.word_exposures WHERE user_id = $1`,
+      [userId],
+    );
+    return new Map(result.rows.map((row) => [row.word_id, { correctStreak: row.correct_streak, lastSeenAtMs: row.last_seen_at_ms }]));
   }
 
   createBattle(userId: number, battleId: string, setup: BattleSetup, startedAtMs: number): Promise<void> {
@@ -97,6 +117,36 @@ export class PgBattleRepository implements BattleStore {
            ON CONFLICT (user_id, word_id) DO UPDATE
            SET misses = herox.word_misses.misses + EXCLUDED.misses, last_miss_at = EXCLUDED.last_miss_at`,
           [settlement.userId, [...settlement.misses.keys()], [...settlement.misses.values()], new Date(settlement.settledAtMs)],
+        );
+      }
+      if (settlement.wordResults.size > 0) {
+        const wordIds = [...settlement.wordResults.keys()];
+        const results = [...settlement.wordResults.values()];
+        // Ghép `missed` qua CTE `incoming` để nhánh cập nhật phân biệt: từ sai → chuỗi đúng đặt lại bằng
+        // `trailingCorrect` cuối trận (0 nếu lần cuối vẫn sai); từ không sai → cộng dồn `trailingCorrect` vào chuỗi cũ.
+        await tx.query(
+          `WITH incoming AS (
+             SELECT word_id, prompted, trailing_correct, missed
+             FROM unnest($2::text[], $3::int[], $4::int[], $5::bool[]) AS t (word_id, prompted, trailing_correct, missed)
+           )
+           INSERT INTO herox.word_exposures (user_id, word_id, seen_count, correct_streak, last_seen_at)
+           SELECT $1, incoming.word_id, incoming.prompted, incoming.trailing_correct, $6 FROM incoming
+           ON CONFLICT (user_id, word_id) DO UPDATE
+           SET seen_count = herox.word_exposures.seen_count + EXCLUDED.seen_count,
+               correct_streak = CASE
+                 WHEN (SELECT missed FROM incoming WHERE incoming.word_id = EXCLUDED.word_id)
+                 THEN EXCLUDED.correct_streak
+                 ELSE herox.word_exposures.correct_streak + EXCLUDED.correct_streak
+               END,
+               last_seen_at = EXCLUDED.last_seen_at`,
+          [
+            settlement.userId,
+            wordIds,
+            results.map((result) => result.prompted),
+            results.map((result) => result.trailingCorrect),
+            results.map((result) => result.missed),
+            new Date(settlement.settledAtMs),
+          ],
         );
       }
       if (settlement.wonEncounterId !== null) {

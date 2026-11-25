@@ -80,8 +80,23 @@ export interface BattleState {
   readonly combo: ComboState;
   /** Số lần sai theo id từ, gửi về server cuối trận để ghi `word_misses`. */
   readonly misses: ReadonlyMap<string, number>;
+  /**
+   * Kết quả theo id từ trong trận, gửi về server cuối trận để ghi `herox.word_exposures`.
+   * Trạng thái suy ra từ các bước, không ảnh hưởng việc chọn đề nên không đổi kết quả replay.
+   */
+  readonly wordResults: ReadonlyMap<string, WordResult>;
   readonly goldEarned: number;
   readonly outcome: BattleOutcome;
+}
+
+/** Kết quả gặp một từ trong một trận. */
+export interface WordResult {
+  /** Số lần từ này được ra đề. */
+  readonly prompted: number;
+  /** Số lần trả lời đúng liên tiếp tính tới cuối trận (reset về 0 khi sai). */
+  readonly trailingCorrect: number;
+  /** Có ít nhất một lần sai/hết giờ với từ này trong trận. */
+  readonly missed: boolean;
 }
 
 export type MissReason = 'wrong' | 'timeout';
@@ -167,6 +182,7 @@ class BattleDraft {
   private retryWordIds: readonly string[];
   private combo: ComboState;
   private misses: ReadonlyMap<string, number>;
+  private wordResults: ReadonlyMap<string, WordResult>;
   private goldEarned: number;
   private outcome: BattleOutcome;
 
@@ -180,6 +196,7 @@ class BattleDraft {
     this.retryWordIds = base.retryWordIds;
     this.combo = base.combo;
     this.misses = base.misses;
+    this.wordResults = base.wordResults;
     this.goldEarned = base.goldEarned;
     this.outcome = base.outcome;
   }
@@ -201,6 +218,7 @@ class BattleDraft {
       retryWordIds: this.retryWordIds,
       combo: this.combo,
       misses: this.misses,
+      wordResults: this.wordResults,
       goldEarned: this.goldEarned,
       outcome: this.outcome,
     };
@@ -286,12 +304,14 @@ class BattleDraft {
     const deadlineMs = this.elapsedMs + this.setup.promptTimeMs;
     this.prompt = { wordId: word.id, options, shownAtMs: this.elapsedMs, deadlineMs };
     this.recentWordIds = [...this.recentWordIds, word.id].slice(-RECENT_PROMPT_MEMORY);
+    this.bumpWordResult(word.id, (prev) => ({ ...prev, prompted: prev.prompted + 1 }));
     this.events.push({ type: 'prompt', wordId: word.id, options, deadlineMs });
   }
 
   private cast(word: BattleWord, accuracy: CastAccuracy): void {
     const enemy = this.enemy;
     if (enemy === null) return;
+    this.bumpWordResult(word.id, (prev) => ({ ...prev, trailingCorrect: prev.trailingCorrect + 1 }));
     const skill = skillKindForPartOfSpeech(word.pos);
     const combo = extendCombo(this.combo, { word: normalizeAnswer(word.word), pos: word.pos }, this.elapsedMs, this.base.index.chains);
     this.combo = combo.combo;
@@ -393,6 +413,7 @@ class BattleDraft {
     const misses = new Map(this.misses);
     misses.set(word.id, (misses.get(word.id) ?? 0) + 1);
     this.misses = misses;
+    this.bumpWordResult(word.id, (prev) => ({ ...prev, missed: true, trailingCorrect: 0 }));
     if (!this.retryWordIds.includes(word.id)) this.retryWordIds = [...this.retryWordIds, word.id];
     this.events.push({ type: 'miss', wordId: word.id, reason });
     this.breakCombo();
@@ -403,6 +424,13 @@ class BattleDraft {
   private breakCombo(): void {
     if (this.combo.count >= MIN_VISIBLE_COMBO) this.events.push({ type: 'comboBreak', count: this.combo.count });
     this.combo = EMPTY_COMBO;
+  }
+
+  /** Cập nhật kết quả gặp một từ (sao chép map để không đổi trạng thái cũ). */
+  private bumpWordResult(wordId: string, update: (prev: WordResult) => WordResult): void {
+    const results = new Map(this.wordResults);
+    results.set(wordId, update(results.get(wordId) ?? { prompted: 0, trailingCorrect: 0, missed: false }));
+    this.wordResults = results;
   }
 
   private enemyAttack(): void {
@@ -444,6 +472,7 @@ export function createBattle(setup: BattleSetup, chains: readonly WordChain[] = 
     retryWordIds: [],
     combo: EMPTY_COMBO,
     misses: new Map(),
+    wordResults: new Map(),
     goldEarned: 0,
     outcome: 'ongoing',
   };

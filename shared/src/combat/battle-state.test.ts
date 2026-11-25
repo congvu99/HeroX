@@ -178,6 +178,34 @@ describe('missing a word', () => {
   });
 });
 
+describe('word results', () => {
+  const word = battleWord('strike', 'verb');
+
+  it('counts a prompt shown and a correct answer as a trailing correct', () => {
+    const played = play(singleWordBattle(word), { kind: 'type', text: 'strike' }, ONE_SECOND);
+    const result = played.state.wordResults.get(word.id);
+    // Đề đầu + đề sau khi đánh trúng (quái 10_000 máu vẫn sống) = 2 lần hiện; 1 lần đúng.
+    expect(result?.prompted).toBe(2);
+    expect(result?.trailingCorrect).toBe(1);
+    expect(result?.missed).toBe(false);
+  });
+
+  it('marks missed and resets the trailing correct on a wrong answer', () => {
+    let played = play(singleWordBattle(word), { kind: 'type', text: 'strike' }, ONE_SECOND);
+    played = play(played, wrongAnswer(), ONE_SECOND);
+    const result = played.state.wordResults.get(word.id);
+    expect(result?.missed).toBe(true);
+    expect(result?.trailingCorrect).toBe(0);
+  });
+
+  it('resets the trailing correct on a timeout', () => {
+    let played = play(singleWordBattle(word), { kind: 'type', text: 'strike' }, ONE_SECOND);
+    played = play(played, null, 20_000);
+    expect(played.state.wordResults.get(word.id)?.missed).toBe(true);
+    expect(played.state.wordResults.get(word.id)?.trailingCorrect).toBe(0);
+  });
+});
+
 describe('combos', () => {
   const verbs = [battleWord('strike', 'verb'), battleWord('fight', 'verb'), battleWord('protect', 'verb'), battleWord('climb', 'verb')];
 

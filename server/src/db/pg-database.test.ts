@@ -50,7 +50,13 @@ describe('PgDatabase over the Postgres wire protocol', () => {
   });
 
   it('runs the real migrations through pg', async () => {
-    await expect(runMigrations(database, await loadMigrations())).resolves.toEqual(['001-herox-schema.sql', '002-battles.sql', '003-citadel.sql', '004-story.sql']);
+    await expect(runMigrations(database, await loadMigrations())).resolves.toEqual([
+      '001-herox-schema.sql',
+      '002-battles.sql',
+      '003-citadel.sql',
+      '004-story.sql',
+      '005-word-exposures.sql',
+    ]);
     await expect(runMigrations(database, await loadMigrations())).resolves.toEqual([]);
   });
 

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { battleWord, TEST_CHAIN, TEST_WORDS } from '../../test/battle-fixtures.js';
+import type { BattleWord } from './battle-types.js';
 import { EMPTY_COMBO, extendCombo } from './combo-chain.js';
 import { SeededRandom } from './seeded-random.js';
-import { availableChains, pickPromptWord, RECENT_PROMPT_MEMORY, selectBattleWords, type PromptContext } from './word-pool.js';
+import { availableChains, pickPromptWord, RECENT_PROMPT_MEMORY, selectBattleWords, WORD_MIX_QUOTAS, type PromptContext } from './word-pool.js';
+import { WORD_TIERS, type WordTier } from './word-tier.js';
 
 const context = (overrides: Partial<PromptContext> = {}): PromptContext => ({
   words: TEST_WORDS,
@@ -13,6 +15,27 @@ const context = (overrides: Partial<PromptContext> = {}): PromptContext => ({
   ...overrides,
 });
 
+function emptyBuckets(): Record<WordTier, BattleWord[]> {
+  const buckets = {} as Record<WordTier, BattleWord[]>;
+  for (const tier of WORD_TIERS) buckets[tier] = [];
+  return buckets;
+}
+
+/** Bộ nhóm với `count` từ mỗi nhóm, id có tiền tố nhóm để nhận ra nguồn. */
+function bucketsOf(count: Record<WordTier, number>): Record<WordTier, BattleWord[]> {
+  const buckets = emptyBuckets();
+  for (const tier of WORD_TIERS) {
+    buckets[tier] = Array.from({ length: count[tier] ?? 0 }, (_, index) => battleWord(`${tier}${index}`, 'noun'));
+  }
+  return buckets;
+}
+
+function tierCounts(words: readonly BattleWord[]): Record<WordTier, number> {
+  const counts = {} as Record<WordTier, number>;
+  for (const tier of WORD_TIERS) counts[tier] = words.filter((word) => word.id.startsWith(`w-${tier}`)).length;
+  return counts;
+}
+
 describe('availableChains', () => {
   it('keeps only chains whose words are all in the pool', () => {
     const partial = { id: 'go-out', words: ['go', 'out'] };
@@ -21,41 +44,47 @@ describe('availableChains', () => {
 });
 
 describe('selectBattleWords', () => {
-  const many = Array.from({ length: 100 }, (_, index) => battleWord(`word${index}`, 'noun', { weak: index >= 90 }));
+  // Thừa từ mọi nhóm để hạn ngạch luôn lấy đủ.
+  const plentiful = bucketsOf({ new: 30, due: 30, hard: 30, familiar: 30, mastered: 30 });
 
   it('returns at most the limit, without duplicates', () => {
-    const selected = selectBattleWords(many, [], [], new SeededRandom(1), 40);
+    const selected = selectBattleWords(plentiful, 'field', [], 40);
     expect(selected).toHaveLength(40);
     expect(new Set(selected.map((word) => word.id)).size).toBe(40);
   });
 
-  it('puts loadout words first, then weak words', () => {
-    const selected = selectBattleWords(many, ['w-word5', 'w-unknown', 'w-word7'], [], new SeededRandom(1), 20);
-    expect(selected.slice(0, 2).map((word) => word.id)).toEqual(['w-word5', 'w-word7']);
-    expect(selected.slice(2, 12).every((word) => word.weak)).toBe(true);
+  it('matches the field quota within ±1 when every tier has enough words', () => {
+    const selected = selectBattleWords(plentiful, 'field', [], 40);
+    const counts = tierCounts(selected);
+    for (const tier of WORD_TIERS) {
+      const expected = Math.round((40 * WORD_MIX_QUOTAS.field[tier]) / 100);
+      expect(Math.abs(counts[tier] - expected)).toBeLessThanOrEqual(1);
+    }
   });
 
-  it('includes every word of a learned chain so combos are reachable', () => {
-    const candidates = [...many, ...TEST_WORDS];
-    const selected = selectBattleWords(candidates, [], [TEST_CHAIN], new SeededRandom(3), 15);
-    const words = selected.map((word) => word.word);
-    expect(words).toEqual(expect.arrayContaining(['run', 'away', 'quickly']));
+  it('weights the boss quota toward hard words', () => {
+    const selected = selectBattleWords(plentiful, 'boss', [], 40);
+    const counts = tierCounts(selected);
+    expect(counts.hard).toBeGreaterThan(counts.new);
+    expect(counts.hard).toBeGreaterThan(counts.mastered);
   });
 
-  it('skips a chain that no longer fits', () => {
-    const selected = selectBattleWords([...many, ...TEST_WORDS], [], [TEST_CHAIN], new SeededRandom(3), 11);
-    expect(selected).toHaveLength(11);
-    expect(selected.map((word) => word.word)).not.toContain('quickly');
+  it('puts loadout words first even when outside the quota', () => {
+    const selected = selectBattleWords(plentiful, 'field', ['w-mastered0', 'w-unknown', 'w-mastered1'], 40);
+    expect(selected.slice(0, 2).map((word) => word.id)).toEqual(['w-mastered0', 'w-mastered1']);
   });
 
-  it('returns everything when there are fewer candidates than the limit', () => {
-    expect(selectBattleWords(TEST_WORDS, [], [], new SeededRandom(1))).toHaveLength(TEST_WORDS.length);
+  it('spills unfilled slots to other tiers, keeping the pool full', () => {
+    // Chỉ có từ nhóm "new"; mọi slot của nhóm khác dồn hết sang new.
+    const onlyNew = bucketsOf({ new: 40, due: 0, hard: 0, familiar: 0, mastered: 0 });
+    const selected = selectBattleWords(onlyNew, 'field', [], 40);
+    expect(selected).toHaveLength(40);
+    expect(selected.every((word) => word.id.startsWith('w-new'))).toBe(true);
   });
 
-  it('is deterministic for the same seed', () => {
-    const first = selectBattleWords(many, [], [], new SeededRandom(5), 30).map((word) => word.id);
-    const second = selectBattleWords(many, [], [], new SeededRandom(5), 30).map((word) => word.id);
-    expect(first).toEqual(second);
+  it('returns everything when there are fewer words than the limit', () => {
+    const few = bucketsOf({ new: 3, due: 2, hard: 2, familiar: 1, mastered: 1 });
+    expect(selectBattleWords(few, 'field', [], 40)).toHaveLength(9);
   });
 });
 

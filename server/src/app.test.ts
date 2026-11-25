@@ -45,6 +45,7 @@ describe('buildApp with services', () => {
     heroes: { findHero: () => Promise.resolve(null), createHero: () => Promise.resolve(null) },
     battles: {
       readWordMisses: () => Promise.reject(UNAVAILABLE),
+      readWordExposures: () => Promise.reject(UNAVAILABLE),
       createBattle: () => Promise.reject(UNAVAILABLE),
       findBattle: () => Promise.reject(UNAVAILABLE),
       settleBattle: () => Promise.reject(UNAVAILABLE),

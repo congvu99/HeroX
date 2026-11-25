@@ -35,7 +35,7 @@ const SUPPORTED_PROGRESS_VERSION = 1;
 const DAY_MS = 86_400_000;
 const MINUTE_MS = 60_000;
 // "Đã thuộc" = khoảng cách ôn từ 21 ngày trở lên (eng/js/srs-scheduler.js deckSummary).
-const MASTERED_INTERVAL_DAYS = 21;
+export const MASTERED_INTERVAL_DAYS = 21;
 // Tỉ lệ nhớ 30 ngày tính trên lượt ôn có tuổi ≤ 30 ngày (eng/js/stats-dashboard.js computeStats).
 const RETENTION_WINDOW_MS = 30 * DAY_MS;
 const FORGOT_GRADE = 0;
@@ -53,6 +53,10 @@ interface SrsRecord {
   readonly ivl: number;
   readonly ef: number;
   readonly lapses: number;
+  /** Mốc ôn tiếp theo (ms); dùng để xếp nhóm "đến hạn". */
+  readonly due: number;
+  /** Số lượt ôn thành công liên tiếp (eng/js/srs-scheduler.js); từ còn non khi `reps` nhỏ. */
+  readonly reps: number;
   readonly last: number;
   readonly mt: number;
   readonly gradeTimes: readonly GradeEntry[];
@@ -92,6 +96,8 @@ function readSrsRecord(value: unknown): SrsRecord | null {
     ivl: readNumber(value.ivl),
     ef: readNumber(value.ef),
     lapses: Math.max(0, readNumber(value.lapses)),
+    due: readNumber(value.due),
+    reps: Math.max(0, readNumber(value.reps)),
     last: readNumber(value.last),
     mt: readNumber(value.mt),
     gradeTimes: readGradeEntries(value.hist),
@@ -230,12 +236,29 @@ function assertSupportedVersion(payload: JsonObject): void {
   }
 }
 
-/** Một từ đã học kèm mức nhớ, dùng để chọn từ cho trận. */
+/** Một từ đã học kèm dữ liệu SRS, dùng để xếp nhóm và chọn từ cho trận. */
 export interface LearnedWordProgress {
   readonly word: DeckWord;
   readonly mastered: boolean;
   /** Số lần quên ở LingoBrain. */
   readonly lapses: number;
+  /** Trạng thái SRS: `new` | `learning` | `review` | `relearn`. */
+  readonly state: string;
+  /** Khoảng cách ôn hiện tại (ngày). */
+  readonly ivl: number;
+  /** Hệ số dễ (ease factor) SM-2; thấp = hay sai. */
+  readonly ef: number;
+  /** Mốc ôn tiếp theo (ms). */
+  readonly due: number;
+  /** Số lượt ôn thành công liên tiếp. */
+  readonly reps: number;
+  /** Điểm lượt chấm muộn nhất trong `hist` (0 quên · 1 khó · 2 nhớ · 3 dễ), `null` khi chưa có lượt nào. */
+  readonly lastGrade: number | null;
+}
+
+/** Điểm của lượt chấm muộn nhất theo thời gian; `null` khi lịch sử rỗng. */
+function latestGrade(gradeTimes: readonly GradeEntry[]): number | null {
+  return gradeTimes.reduce<GradeEntry | null>((latest, entry) => (latest === null || entry.time >= latest.time ? entry : latest), null)?.grade ?? null;
 }
 
 /**
@@ -250,6 +273,12 @@ export function listLearnedWords(progressData: unknown, deckWords: readonly Deck
     word,
     mastered: record.ivl >= MASTERED_INTERVAL_DAYS,
     lapses: record.lapses,
+    state: record.state,
+    ivl: record.ivl,
+    ef: record.ef,
+    due: record.due,
+    reps: record.reps,
+    lastGrade: latestGrade(record.gradeTimes),
   }));
 }
 

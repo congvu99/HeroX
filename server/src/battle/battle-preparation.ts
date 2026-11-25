@@ -8,15 +8,24 @@ import {
   selectBattleWords,
   TUTORIAL_ENCOUNTER_ID,
   TUTORIAL_WORD_IDS,
-  WORD_CHAINS,
+  WORD_TIERS,
   type BattleSetup,
   type BattleWord,
   type CitadelState,
   type Encounter,
+  type WordMix,
+  type WordTier,
 } from '@herox/shared';
+import type { WordExposure } from './battle-repository.js';
+import { classifyWordTier } from './word-tier-classifier.js';
 import { API_ERROR_CODES, HttpError } from '../http/http-error.js';
 import type { DeckWord, LearnedWordProgress } from '../learning/learning-stats.js';
 import { normalizePartOfSpeech } from '../learning/part-of-speech.js';
+
+/** Số lần trả lời đúng liên tiếp trong HeroX đủ để một từ hết bị coi là "hay sai". */
+export const WEAK_CLEAR_STREAK = 2;
+/** Từ gặp trong khoảng này (12 giờ) coi là "vừa gặp": xếp sau để giãn lịch ra đề. */
+export const EXPOSURE_COOLDOWN_MS = 12 * 60 * 60_000;
 
 export interface BattlePreparationInput {
   readonly encounter: Encounter;
@@ -24,14 +33,30 @@ export interface BattlePreparationInput {
   readonly deckWords: readonly DeckWord[];
   /** Số lần gõ sai trong HeroX theo id từ (`herox.word_misses`). */
   readonly wordMisses: ReadonlyMap<string, number>;
+  /** Lịch sử gặp từ trong HeroX theo id từ (`herox.word_exposures`). */
+  readonly exposures: ReadonlyMap<string, WordExposure>;
   /** Vòng từ, bậc chiêu và trang bị đang mặc ở thành trì. */
   readonly citadel: Pick<CitadelState, 'loadout' | 'skillTiers' | 'inventory'>;
   readonly seed: number;
+  /** Mốc "bây giờ" (ms) để xếp nhóm "đến hạn" và tính thời gian nghỉ của từ vừa gặp. */
+  readonly now: number;
 }
 
 export interface PreparedBattle {
   readonly setup: BattleSetup;
   readonly tutorial: boolean;
+}
+
+/** Một ứng viên đã xếp nhóm, kèm các khoá dùng để sắp thứ tự ưu tiên trong nhóm. */
+interface TierCandidate {
+  readonly word: BattleWord;
+  readonly tier: WordTier;
+  /** Đã gặp gần đây (trong EXPOSURE_COOLDOWN_MS): xếp sau. */
+  readonly recentlySeen: boolean;
+  /** Gặp lần cuối cách đây bao lâu (ms); dùng để xếp từ lâu chưa gặp lên trước. */
+  readonly sinceLastSeenMs: number;
+  /** Mức ưu tiên ôn trong nhóm (lớn hơn = lên trước): nhóm khó dùng độ yếu, nhóm đến hạn dùng độ quá hạn. */
+  readonly tierPriority: number;
 }
 
 function toBattleWord(word: DeckWord, mastered: boolean, weak: boolean): BattleWord {
@@ -46,23 +71,74 @@ function toBattleWord(word: DeckWord, mastered: boolean, weak: boolean): BattleW
   };
 }
 
-/**
- * Từ đã học, từ yếu đứng trước (hay quên ở LingoBrain + hay sai trong HeroX nhiều nhất trước).
- * Trận `masteredOnly` (trận cuối chương 5) chỉ lấy từ đã thuộc; nếu người chơi chưa có từ đã thuộc
- * nào thì lùi về toàn bộ từ đã học để vẫn dựng được trận (gate mastered ≥ 200 thường đã chặn trước đó).
- */
-function learnedCandidates(input: BattlePreparationInput, masteredOnly: boolean): BattleWord[] {
-  const source = masteredOnly ? input.learnedWords.filter((learned) => learned.mastered) : input.learnedWords;
-  const pool = masteredOnly && source.length === 0 ? input.learnedWords : source;
-  const scored = pool.map((learned) => {
-    const weakness = learned.lapses + (input.wordMisses.get(learned.word.id) ?? 0);
-    return { weakness, word: toBattleWord(learned.word, learned.mastered, weakness > 0) };
-  });
-  // sort ổn định: cùng mức yếu thì giữ thứ tự bộ từ.
-  return scored.sort((a, b) => b.weakness - a.weakness).map(({ word }) => word);
+function emptyBuckets(): Record<WordTier, BattleWord[]> {
+  const buckets = {} as Record<WordTier, BattleWord[]>;
+  for (const tier of WORD_TIERS) buckets[tier] = [];
+  return buckets;
 }
 
-function tutorialCandidates(deckWords: readonly DeckWord[]): BattleWord[] {
+/** Mức ưu tiên ôn trong nhóm: nhóm "khó" theo độ yếu, nhóm "đến hạn" theo độ quá hạn, còn lại 0. */
+function tierPriorityOf(tier: WordTier, learned: LearnedWordProgress, weakness: number, now: number): number {
+  if (tier === 'hard') return weakness;
+  if (tier === 'due') return Math.max(0, now - learned.due);
+  return 0;
+}
+
+/** Xếp mỗi từ đã học vào một nhóm; nguồn `masteredOnly` lọc trước (xem `learnedSource`). */
+function classifyCandidates(input: BattlePreparationInput, source: readonly LearnedWordProgress[]): TierCandidate[] {
+  return source.map((learned) => {
+    const missesInHerox = input.wordMisses.get(learned.word.id) ?? 0;
+    const exposure = input.exposures.get(learned.word.id);
+    const correctStreak = exposure?.correctStreak ?? 0;
+    // Hay sai trong HeroX: có gõ sai và chưa gỡ bằng đủ số lần đúng liên tiếp.
+    const missedInHerox = missesInHerox > 0 && correctStreak < WEAK_CLEAR_STREAK;
+    const tier = classifyWordTier(learned, missedInHerox, input.now);
+    const weakness = learned.lapses + missesInHerox;
+    const sinceLastSeenMs = exposure === undefined ? Number.POSITIVE_INFINITY : input.now - exposure.lastSeenAtMs;
+    return {
+      word: toBattleWord(learned.word, learned.mastered, tier === 'hard'),
+      tier,
+      recentlySeen: sinceLastSeenMs < EXPOSURE_COOLDOWN_MS,
+      sinceLastSeenMs,
+      tierPriority: tierPriorityOf(tier, learned, weakness, input.now),
+    };
+  });
+}
+
+/**
+ * Xếp thứ tự ưu tiên trong một nhóm (tất định theo seed): từ lâu chưa gặp lên trước,
+ * trong đó theo mức ưu tiên ôn của nhóm; từ vừa gặp xuống sau, gặp lâu nhất trước.
+ * `rng.shuffle` trộn trước để các từ cùng khoá không luôn ra theo một thứ tự cố định giữa các trận.
+ */
+function orderWithinTier(candidates: readonly TierCandidate[], rng: SeededRandom): BattleWord[] {
+  return rng
+    .shuffle(candidates)
+    .sort((a, b) => {
+      if (a.recentlySeen !== b.recentlySeen) return a.recentlySeen ? 1 : -1;
+      if (a.recentlySeen) return b.sinceLastSeenMs - a.sinceLastSeenMs; // vừa gặp: gặp lâu nhất trước
+      return b.tierPriority - a.tierPriority; // chưa gặp gần đây: ưu tiên ôn cao hơn trước
+    })
+    .map((candidate) => candidate.word);
+}
+
+/** Nguồn từ đã học sau khi lọc theo `masteredOnly`; lùi về toàn bộ khi chưa có từ đã thuộc nào. */
+function learnedSource(input: BattlePreparationInput): readonly LearnedWordProgress[] {
+  if (input.encounter.masteredOnly !== true) return input.learnedWords;
+  const mastered = input.learnedWords.filter((learned) => learned.mastered);
+  return mastered.length > 0 ? mastered : input.learnedWords;
+}
+
+/** Dựng các nhóm từ đã sắp thứ tự cho `selectBattleWords`. */
+function buildBuckets(input: BattlePreparationInput, rng: SeededRandom): Record<WordTier, BattleWord[]> {
+  const candidates = classifyCandidates(input, learnedSource(input));
+  const byTier = emptyBuckets();
+  const grouped = new Map<WordTier, TierCandidate[]>(WORD_TIERS.map((tier) => [tier, []]));
+  for (const candidate of candidates) grouped.get(candidate.tier)?.push(candidate);
+  for (const tier of WORD_TIERS) byTier[tier] = orderWithinTier(grouped.get(tier) ?? [], rng);
+  return byTier;
+}
+
+function tutorialBuckets(deckWords: readonly DeckWord[]): Record<WordTier, BattleWord[]> {
   const byId = new Map(deckWords.map((word) => [word.id, word]));
   const words = TUTORIAL_WORD_IDS.flatMap((id) => {
     const word = byId.get(id);
@@ -72,7 +148,10 @@ function tutorialCandidates(deckWords: readonly DeckWord[]): BattleWord[] {
   if (words.length === 0) {
     throw new HttpError(503, 'Bộ từ LingoBrain chưa sẵn sàng, thử lại sau', API_ERROR_CODES.deckNotReady);
   }
-  return words;
+  // Trận hướng dẫn: 8 từ cố định dồn vào một nhóm để giữ nguyên bộ từ như trước.
+  const buckets = emptyBuckets();
+  buckets.new = words;
+  return buckets;
 }
 
 /**
@@ -82,11 +161,13 @@ function tutorialCandidates(deckWords: readonly DeckWord[]): BattleWord[] {
 export function prepareBattle(input: BattlePreparationInput): PreparedBattle {
   const tutorial = input.learnedWords.length < MIN_LEARNED_WORDS_FOR_BATTLE;
   const encounter = tutorial ? (findEncounter(TUTORIAL_ENCOUNTER_ID) ?? input.encounter) : input.encounter;
-  const candidates = tutorial ? tutorialCandidates(input.deckWords) : learnedCandidates(input, input.encounter.masteredOnly ?? false);
-  const level = heroLevelForLearned(input.learnedWords.length);
   const seed = input.seed >>> 0;
+  const rng = new SeededRandom(seed);
+  const buckets = tutorial ? tutorialBuckets(input.deckWords) : buildBuckets(input, rng);
+  const mix: WordMix = encounter.wordMix ?? 'field';
+  const level = heroLevelForLearned(input.learnedWords.length);
   const { loadout, skillTiers, inventory } = input.citadel;
-  const words = selectBattleWords(candidates, loadout, WORD_CHAINS, new SeededRandom(seed));
+  const words = selectBattleWords(buckets, mix, loadout);
   const poolIds = new Set(words.map((word) => word.id));
   return {
     tutorial,

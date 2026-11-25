@@ -106,11 +106,12 @@ export function registerBattleRoutes(scope: FastifyInstance, services: BattleRou
   scope.post(apiPath('battles'), async (request, reply): Promise<StartBattleResponse> => {
     const user = await authorize(request);
     const encounter = parseEncounter(request.body);
-    const [progressData, deckWords, citadel, wordMisses, story] = await Promise.all([
+    const [progressData, deckWords, citadel, wordMisses, wordExposures, story] = await Promise.all([
       services.learning.readProgressData(user.userId),
       services.learning.readDeckWords(),
       services.citadel.readCitadel(user.userId),
       services.battles.readWordMisses(user.userId),
+      services.battles.readWordExposures(user.userId),
       services.citadel.readStory(user.userId),
     ]);
     if (citadel === null) throw new HttpError(409, 'Cần tạo nhân vật trước khi vào trận', API_ERROR_CODES.heroMissing);
@@ -120,8 +121,10 @@ export function registerBattleRoutes(scope: FastifyInstance, services: BattleRou
       learnedWords: listLearnedWords(progressData, deckWords),
       deckWords,
       wordMisses,
+      exposures: wordExposures,
       citadel,
       seed: newBattleSeed(),
+      now: now(),
     });
 
     // Chặn vào trận truyện khi chưa đủ mốc (tránh gọi thẳng API lách khoá rồi dùng chiến thắng đó ghi mốc).
@@ -178,6 +181,7 @@ export function registerBattleRoutes(scope: FastifyInstance, services: BattleRou
         battleId,
         goldEarned,
         misses: state.misses,
+        wordResults: state.wordResults,
         settledAtMs: now(),
         wonEncounterId: outcome === 'victory' ? battle.setup.encounterId : null,
       });
