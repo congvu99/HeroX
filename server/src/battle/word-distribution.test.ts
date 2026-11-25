@@ -47,6 +47,7 @@ function learnedFor(id: string, word: string, index: number): LearnedWordProgres
     due: START_MS + 30 * DAY_MS,
     reps: 5,
     lastGrade: 2,
+    firstStudiedAt: null,
   };
   switch (index % 5) {
     case 0: // new

@@ -3,7 +3,14 @@ import { BASE_SKILL_TIERS, findEncounter, FIELD_ENCOUNTER_ID, SCARECROW_BOSS_ENC
 import { HttpError } from '../http/http-error.js';
 import type { DeckWord, LearnedWordProgress } from '../learning/learning-stats.js';
 import type { WordExposure } from './battle-repository.js';
-import { EXPOSURE_COOLDOWN_MS, prepareBattle, WEAK_CLEAR_STREAK, type BattlePreparationInput } from './battle-preparation.js';
+import {
+  EXPOSURE_COOLDOWN_MS,
+  FRESH_STUDY_WINDOW_MS,
+  prepareBattle,
+  STALE_EXPOSURE_MS,
+  WEAK_CLEAR_STREAK,
+  type BattlePreparationInput,
+} from './battle-preparation.js';
 
 const field = findEncounter(FIELD_ENCOUNTER_ID) as Encounter;
 const boss = findEncounter(SCARECROW_BOSS_ENCOUNTER_ID) as Encounter;
@@ -30,6 +37,7 @@ function learned(words: readonly DeckWord[], overrides: Partial<Omit<LearnedWord
     due: NOW + 5 * DAY_MS,
     reps: 5,
     lastGrade: 2,
+    firstStudiedAt: null,
     ...overrides,
   }));
 }
@@ -98,6 +106,49 @@ describe('prepareBattle', () => {
     const { setup } = prepareBattle(input({ learnedWords, deckWords: [...dueWords, ...filler], exposures }));
     const ids = setup.words.map((word) => word.id);
     expect(ids.indexOf('word1')).toBeLessThan(ids.indexOf('word0'));
+  });
+
+  it('flags words first studied within the fresh window and puts them in a crowded pool', () => {
+    // 60 từ quen chiếm hết 40 slot; 3 từ vừa học hôm nay vẫn phải vào trận, từ học lâu rồi thì không bị cờ.
+    const crowd = Array.from({ length: 60 }, (_, index) => deckWord(`crowd${index}`));
+    const freshWords = [deckWord('fresh0'), deckWord('fresh1'), deckWord('fresh2')];
+    const learnedWords = [
+      ...learned(crowd, { firstStudiedAt: NOW - FRESH_STUDY_WINDOW_MS - DAY_MS }),
+      ...learned(freshWords, { firstStudiedAt: NOW - DAY_MS / 2 }),
+    ];
+    const { setup } = prepareBattle(input({ learnedWords, deckWords: [...crowd, ...freshWords] }));
+    const byId = new Map(setup.words.map((word) => [word.id, word]));
+    for (const id of ['fresh0', 'fresh1', 'fresh2']) expect(byId.get(id)?.fresh).toBe(true);
+    expect(setup.words.filter((word) => word.fresh)).toHaveLength(3);
+  });
+
+  it('orders the new tier by most recent study first', () => {
+    // 30 từ mới học cách 10 ngày, 1 từ mới học hôm qua: hạn ngạch nhóm mới chỉ lấy vài từ, từ hôm qua phải có mặt.
+    const older = Array.from({ length: 60 }, (_, index) => deckWord(`old${index}`));
+    const latest = [deckWord('latest')];
+    const asNew = { state: 'learning', reps: 1 } as const;
+    const learnedWords = [
+      ...learned(older, { ...asNew, firstStudiedAt: NOW - 10 * DAY_MS }),
+      ...learned(latest, { ...asNew, firstStudiedAt: NOW - 5 * DAY_MS }),
+    ];
+    const { setup } = prepareBattle(input({ learnedWords, deckWords: [...older, ...latest] }));
+    // Cả hai ngoài cửa sổ "vừa học" nên chỉ thứ tự trong nhóm mới quyết định; từ học gần nhất đứng đầu bộ.
+    expect(setup.words[0]?.id).toBe('latest');
+  });
+
+  it('flags words unseen in HeroX for a long time (or never) as stale and puts them first in their tier', () => {
+    const exposures = new Map<string, WordExposure>([
+      ['word0', { correctStreak: 3, lastSeenAtMs: NOW - STALE_EXPOSURE_MS - DAY_MS }],
+      ['word1', { correctStreak: 3, lastSeenAtMs: NOW - 2 * DAY_MS }],
+    ]);
+    const { setup } = prepareBattle(input({ exposures }));
+    const byId = new Map(setup.words.map((word) => [word.id, word]));
+    expect(byId.get('word0')?.stale).toBe(true);
+    expect(byId.get('word1')?.stale).toBe(false);
+    // Chưa gặp lần nào cũng là lâu chưa gặp.
+    expect(byId.get('word2')?.stale).toBe(true);
+    const ids = setup.words.map((word) => word.id);
+    expect(ids.indexOf('word0')).toBeLessThan(ids.indexOf('word1'));
   });
 
   it('is deterministic for the same seed and varies with the seed', () => {

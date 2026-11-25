@@ -254,6 +254,16 @@ export interface LearnedWordProgress {
   readonly reps: number;
   /** Điểm lượt chấm muộn nhất trong `hist` (0 quên · 1 khó · 2 nhớ · 3 dễ), `null` khi chưa có lượt nào. */
   readonly lastGrade: number | null;
+  /**
+   * Mốc lượt chấm sớm nhất còn lưu (ms) ≈ lúc học từ ở LingoBrain; `null` khi chưa có lượt nào.
+   * Server LingoBrain chỉ giữ 20 lượt gần nhất nên với từ ôn rất nhiều lần, mốc này muộn hơn ngày học thật.
+   */
+  readonly firstStudiedAt: number | null;
+}
+
+/** Mốc lượt chấm sớm nhất; `null` khi lịch sử rỗng. */
+function earliestGradeTime(gradeTimes: readonly GradeEntry[]): number | null {
+  return gradeTimes.reduce<number | null>((earliest, entry) => (earliest === null || entry.time < earliest ? entry.time : earliest), null);
 }
 
 /** Điểm của lượt chấm muộn nhất theo thời gian; `null` khi lịch sử rỗng. */
@@ -279,6 +289,7 @@ export function listLearnedWords(progressData: unknown, deckWords: readonly Deck
     due: record.due,
     reps: record.reps,
     lastGrade: latestGrade(record.gradeTimes),
+    firstStudiedAt: earliestGradeTime(record.gradeTimes),
   }));
 }
 

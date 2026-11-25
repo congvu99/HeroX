@@ -3,7 +3,15 @@ import { battleWord, TEST_CHAIN, TEST_WORDS } from '../../test/battle-fixtures.j
 import type { BattleWord } from './battle-types.js';
 import { EMPTY_COMBO, extendCombo } from './combo-chain.js';
 import { SeededRandom } from './seeded-random.js';
-import { availableChains, pickPromptWord, RECENT_PROMPT_MEMORY, selectBattleWords, WORD_MIX_QUOTAS, type PromptContext } from './word-pool.js';
+import {
+  availableChains,
+  FRESH_POOL_SHARE_PERCENT,
+  pickPromptWord,
+  RECENT_PROMPT_MEMORY,
+  selectBattleWords,
+  WORD_MIX_QUOTAS,
+  type PromptContext,
+} from './word-pool.js';
 import { WORD_TIERS, type WordTier } from './word-tier.js';
 
 const context = (overrides: Partial<PromptContext> = {}): PromptContext => ({
@@ -82,6 +90,18 @@ describe('selectBattleWords', () => {
     expect(selected.every((word) => word.id.startsWith('w-new'))).toBe(true);
   });
 
+  it('puts freshly studied words in first, capped so review tiers keep their share', () => {
+    // 30 từ vừa học nằm ở nhóm "quen" (hạn ngạch chỉ 15%); được chiếm đúng tối đa nửa bộ, không hơn.
+    const buckets = bucketsOf({ new: 30, due: 30, hard: 30, familiar: 0, mastered: 30 });
+    buckets.familiar = Array.from({ length: 30 }, (_, index) => battleWord(`fresh${index}`, 'noun', { fresh: true }));
+    const selected = selectBattleWords(buckets, 'field', [], 40);
+    const fromFreshPass = (40 * FRESH_POOL_SHARE_PERCENT) / 100;
+    // Nửa bộ từ vòng ưu tiên, cộng phần hạn ngạch "quen" của nửa còn lại (15% của 20 = 3).
+    expect(selected.filter((word) => word.fresh === true)).toHaveLength(fromFreshPass + 3);
+    expect(selected.slice(0, fromFreshPass).every((word) => word.fresh === true)).toBe(true);
+    expect(selected).toHaveLength(40);
+  });
+
   it('returns everything when there are fewer words than the limit', () => {
     const few = bucketsOf({ new: 3, due: 2, hard: 2, familiar: 1, mastered: 1 });
     expect(selectBattleWords(few, 'field', [], 40)).toHaveLength(9);
@@ -131,6 +151,21 @@ describe('pickPromptWord', () => {
     expect(counts.get('beta') ?? 0).toBeLessThan(600);
     expect(counts.get('alpha') ?? 0).toBeGreaterThan(1_100);
     expect(counts.get('gamma') ?? 0).toBeGreaterThan(1_100);
+  });
+
+  it('shows freshly studied and long-unseen words more often', () => {
+    const words = [battleWord('alpha', 'noun', { fresh: true }), battleWord('beta', 'noun'), battleWord('gamma', 'noun', { stale: true })];
+    const counts = new Map<string, number>();
+    const rng = new SeededRandom(5);
+    for (let round = 0; round < 3_000; round += 1) {
+      const word = pickPromptWord(context({ words }), rng);
+      counts.set(word.word, (counts.get(word.word) ?? 0) + 1);
+    }
+    // Trọng số 3 : 1 : 2 → alpha ≈ 1500, beta ≈ 500, gamma ≈ 1000.
+    expect(counts.get('alpha') ?? 0).toBeGreaterThan(1_300);
+    expect(counts.get('beta') ?? 0).toBeLessThan(650);
+    expect(counts.get('gamma') ?? 0).toBeGreaterThan(850);
+    expect(counts.get('gamma') ?? 0).toBeLessThan(counts.get('alpha') ?? 0);
   });
 
   it('sometimes starts a chain or follows the last part of speech', () => {

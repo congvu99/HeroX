@@ -22,6 +22,7 @@ function progress(overrides: Partial<Omit<LearnedWordProgress, 'word'>> = {}): L
     due: NOW + 5 * DAY_MS,
     reps: 5,
     lastGrade: 2,
+    firstStudiedAt: null,
     ...overrides,
   };
 }
