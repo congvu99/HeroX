@@ -7,7 +7,7 @@ export interface RingOption {
   readonly label: string;
 }
 
-/** Tâm vòng (vị trí hiệp sĩ) theo pixel logic khung 360×780. */
+/** Tâm vòng (thân hiệp sĩ) theo pixel logic khung 360×780. */
 export interface RingCenter {
   readonly x: number;
   readonly y: number;
@@ -15,74 +15,42 @@ export interface RingCenter {
 
 export interface WordRingCallbacks {
   /**
-   * Gọi khi chạm một từ ở bố cục cung: vòng tan bắt đầu (animation đang chạy). Màn trận dừng đồng hồ cho
+   * Gọi khi chạm một từ: vòng tan bắt đầu (animation đang chạy). Màn trận dừng đồng hồ cho
    * "khoảnh khắc" rồi sau RING_DISMISS_MS mới gửi chiêu.
    */
   readonly onDismissStart: (wordId: string) => void;
-  /** Gọi khi chọn một từ ở bố cục lưới dự phòng: màn trận gửi chiêu ngay (không có vòng tan). */
-  readonly onPick: (wordId: string) => void;
 }
 
 /** Thời gian vòng tan trước khi ra chiêu ("khoảnh khắc"); cũng là thời gian màn trận dừng đồng hồ. */
 export const RING_DISMISS_MS = 260;
 
-export type RingLayout = 'arc' | 'grid';
-
-/**
- * Số ký tự nhãn tối đa còn hợp với nút vòng cung; dài hơn thì rớt về lưới 2×3 để đọc trọn chữ
- * (nút cung hẹp hơn nút lưới nên ngưỡng đặt thấp).
- */
-const ARC_MAX_LABEL_LENGTH = 9;
-
-/** Nửa góc mở của cung dưới (độ): 6 nút trải trong cung ±ARC_SPREAD quanh hướng xuống; ≤90° để biên không vượt lên trên ngang tâm. */
-const ARC_SPREAD_DEG = 90;
-/** Bán kính cung (px logic) từ tâm hiệp sĩ tới tâm nút. */
-const ARC_RADIUS = 118;
-
-/**
- * Chọn bố cục theo nhãn dài nhất: cung khi chữ không quá dài, ngược lại rớt về lưới 2×3 để đọc trọn chữ.
- * Hàm thuần để test không cần DOM.
- */
-export function chooseRingLayout(longestLabelLength: number): RingLayout {
-  return longestLabelLength <= ARC_MAX_LABEL_LENGTH ? 'arc' : 'grid';
+/** Cột của nút trong vòng: chẵn bên trái hiệp sĩ, lẻ bên phải (CSS đặt cột theo đúng thứ tự này). */
+export function ringSide(index: number): 'left' | 'right' {
+  return index % 2 === 0 ? 'left' : 'right';
 }
 
 /**
- * Tâm các nút trên cung dưới quanh tâm (px logic): trải đều trong cung hướng xuống (90°) từ -spread tới +spread.
- * Hàm thuần để test vị trí không cần DOM.
- */
-export function arcButtonPoints(center: RingCenter, count: number): { readonly x: number; readonly y: number }[] {
-  const spread = (ARC_SPREAD_DEG * Math.PI) / 180;
-  return Array.from({ length: count }, (_, index) => {
-    const t = count === 1 ? 0.5 : index / (count - 1);
-    const angle = Math.PI / 2 + (t - 0.5) * 2 * spread;
-    return { x: center.x + Math.cos(angle) * ARC_RADIUS, y: center.y + Math.sin(angle) * ARC_RADIUS };
-  });
-}
-
-/**
- * Vòng từ cho cảm ứng: 6 nút DOM mang `data-word-id`. Hai bố cục:
- * - **Cung dưới** (mặc định): nút trải thành cung phía dưới và hai bên hiệp sĩ, bao quanh nhân vật.
- *   Chạm một từ thì các từ khác bắn ra, từ chọn loé sáng, cả vòng tan (~260ms) rồi mới ra chiêu.
- * - **Lưới 2×3** (dự phòng): từ quá dài để nút cung đọc trọn; chạm là chọn luôn (giữ cách cũ, dễ đọc chữ dài).
- * Nút cao ≥ 44 px (khuyến nghị của Apple cho ngón tay) do CSS `battle-ring-option` đặt.
+ * Vòng từ cho cảm ứng: 6 nút DOM mang `data-word-id`, chia hai cột 3 nút ôm hai bên hiệp sĩ.
+ * Xếp bằng CSS grid (cột giữa chừa cho hiệp sĩ) nên nhãn dài chỉ xuống dòng, không bao giờ đè nút khác,
+ * và mọi đề dùng cùng một bố cục. Từ bung ra từ hiệp sĩ; chạm một từ thì từ chọn loé, từ khác bắn ra
+ * hai bên, cả vòng tan (~260ms) rồi mới ra chiêu. Nút cao ≥ 44 px (khuyến nghị cho ngón tay) do CSS đặt.
  */
 export class WordRing {
   readonly element: HTMLElement;
   private readonly buttons: HTMLButtonElement[];
   private enabled = true;
-  private layout: 'arc' | 'grid' = 'arc';
   private dismissing = false;
 
   constructor(
     private readonly callbacks: WordRingCallbacks,
-    private readonly center: RingCenter = { x: LOGICAL_WIDTH / 2, y: LOGICAL_HEIGHT / 2 },
+    center: RingCenter = { x: LOGICAL_WIDTH / 2, y: LOGICAL_HEIGHT / 2 },
   ) {
     this.buttons = Array.from({ length: RING_SIZE }, (_, index) => this.createButton(index));
     this.element = createElement('div', { className: 'battle-ring' }, this.buttons);
     this.element.setAttribute('role', 'group');
     this.element.setAttribute('aria-label', 'Vòng từ');
-    this.applyLayout();
+    // Toạ độ logic → % khung (như chữ nổi của HUD); CSS dịch -50% để tâm khối trùng thân hiệp sĩ.
+    this.element.style.top = `${(center.y / LOGICAL_HEIGHT) * 100}%`;
   }
 
   setOptions(options: readonly RingOption[]): void {
@@ -99,7 +67,7 @@ export class WordRing {
       if (option === undefined) delete button.dataset['wordId'];
       else button.dataset['wordId'] = option.wordId;
     });
-    this.chooseLayout(options);
+    this.replayEnter();
   }
 
   setVisible(visible: boolean): void {
@@ -114,45 +82,19 @@ export class WordRing {
     if (!this.dismissing) for (const button of this.buttons) button.disabled = !enabled;
   }
 
-  private chooseLayout(options: readonly RingOption[]): void {
-    const longest = options.reduce((max, option) => Math.max(max, option.label.length), 0);
-    const next = chooseRingLayout(longest);
-    if (next === this.layout) return;
-    this.layout = next;
-    this.applyLayout();
-  }
-
-  private applyLayout(): void {
-    const arc = this.layout === 'arc';
-    this.element.classList.toggle('is-arc', arc);
-    this.element.classList.toggle('is-grid', !arc);
-    if (arc) this.positionArc();
-    else this.clearArcPosition();
-  }
-
-  /** Đặt từng nút theo cung dưới quanh tâm hiệp sĩ; toạ độ logic → % khung (như chữ nổi của HUD). */
-  private positionArc(): void {
-    const points = arcButtonPoints(this.center, this.buttons.length);
-    this.buttons.forEach((button, index) => {
-      const point = points[index];
-      if (point === undefined) return;
-      button.style.left = `${(point.x / LOGICAL_WIDTH) * 100}%`;
-      button.style.top = `${(point.y / LOGICAL_HEIGHT) * 100}%`;
-    });
-  }
-
-  private clearArcPosition(): void {
-    for (const button of this.buttons) {
-      button.style.left = '';
-      button.style.top = '';
-    }
+  /** Chạy lại animation bung ra cho đề mới: gỡ class, ép reflow, gắn lại (cách chuẩn để restart CSS animation). */
+  private replayEnter(): void {
+    this.element.classList.remove('is-entering');
+    void this.element.offsetWidth;
+    this.element.classList.add('is-entering');
   }
 
   private createButton(index: number): HTMLButtonElement {
-    const button = createElement('button', { className: 'battle-ring-option' });
+    const button = createElement('button', { className: `battle-ring-option is-${ringSide(index)}` });
     button.type = 'button';
     button.hidden = true;
-    button.style.setProperty('--i', String(index));
+    // Thứ tự hàng để bung lần lượt từ trên xuống.
+    button.style.setProperty('--row', String(Math.floor(index / 2)));
     // `pointerdown` thay vì `click`: chạm là bắt đầu "khoảnh khắc" ngay, không chờ nhấc ngón như click trên iOS.
     button.addEventListener('pointerdown', (event) => {
       event.preventDefault();
@@ -168,11 +110,6 @@ export class WordRing {
   private pick(button: HTMLButtonElement): void {
     const wordId = button.dataset['wordId'];
     if (!this.enabled || this.dismissing || wordId === undefined) return;
-    if (this.layout === 'grid') {
-      // Lưới dự phòng: chọn luôn, không có vòng tan (giữ cách cũ cho từ dài).
-      this.callbacks.onPick(wordId);
-      return;
-    }
     this.startDismiss(button, wordId);
   }
 

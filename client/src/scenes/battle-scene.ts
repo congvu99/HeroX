@@ -75,8 +75,8 @@ const FX_UNDER_DEPTH = 5;
 const FX_UNDER_OFFSET_Y = -24;
 /** Kiếm khí (hiệu ứng `front`) nhích lên trên thân, về phía quái ở trên, để không đè lên mặt sprite. */
 const FX_FRONT_OFFSET_Y = -70;
-/** Tâm cung vòng từ: đặt ở thân hiệp sĩ (trên chân một chút) để cung trải xuống và sang hai bên quanh nhân vật. */
-const RING_CENTER_OFFSET_Y = -36;
+/** Tâm vòng từ: giữa thân hiệp sĩ (sprite cao ~128 px) để hai cột từ ôm ngang người nhân vật. */
+const RING_CENTER_OFFSET_Y = -60;
 const RING_CENTER = { x: HERO_FEET.x, y: HERO_FEET.y + RING_CENTER_OFFSET_Y } as const;
 /** Sân trận mờ dần vào sau màn tối của chuyển cảnh trên bản đồ. */
 const INTRO_FADE_MS = 450;
@@ -210,10 +210,8 @@ export class BattleScene extends Phaser.Scene {
     this.hud = new BattleHud(parent, this.game.canvas, me?.hero?.name ?? DEV_HERO_NAME);
     this.ring = new WordRing(
       {
-        // Cung: chạm bắt đầu vòng tan; dừng đồng hồ cho "khoảnh khắc", hết thời gian mới gửi chiêu.
+        // Chạm bắt đầu vòng tan; dừng đồng hồ cho "khoảnh khắc", hết thời gian mới gửi chiêu.
         onDismissStart: (wordId) => this.holdThenCast({ kind: 'ring', wordId }),
-        // Lưới dự phòng: chọn luôn, gửi chiêu ngay.
-        onPick: (wordId) => this.submit({ kind: 'ring', wordId }),
       },
       RING_CENTER,
     );
@@ -271,8 +269,8 @@ export class BattleScene extends Phaser.Scene {
     const typing = this.inputMode === 'typing';
     this.ring.setVisible(!typing && !this.ended);
     this.typing.setVisible(typing && !this.ended);
-    // Vòng từ: đề lên đỉnh khung để cung bao quanh hiệp sĩ không che đề. Kiểu gõ: đề ở đáy, ngay trên ô gõ.
-    this.hud.setPromptPlacement(typing ? 'dock' : 'top');
+    // Vòng từ: đề dưới vòng, trên hàng nút phụ (không che quái). Kiểu gõ: đề ở đáy, ngay trên ô gõ.
+    this.hud.setPromptPlacement(typing ? 'dock' : 'ring');
     this.modeButton.textContent = INPUT_MODE_LABELS[this.inputMode];
     if (typing && !this.ended) this.typing.focus();
     else this.typing.blur();
