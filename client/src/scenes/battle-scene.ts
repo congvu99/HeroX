@@ -55,6 +55,8 @@ interface OnlineBattle {
 
 /** Hiệu ứng chiêu đặt ngang thân nhân vật (chân ở `HERO_FEET`/`ENEMY_FEET`, thân cao khoảng 90 px sau khi phóng). */
 const FX_BODY_OFFSET_Y = -44;
+/** Hiệu ứng trúng đòn đặt thấp ở thân (bụng/hông) để không vắt ngang mặt quái, hiệp sĩ. */
+const FX_HIT_OFFSET_Y = -24;
 /**
  * Chữ nổi: trên đầu quái (khoảng trống dưới thẻ máu); dưới chân hiệp sĩ, vì trên đầu hiệp sĩ là thẻ combo và
  * đường bay của chiêu.
@@ -62,10 +64,10 @@ const FX_BODY_OFFSET_Y = -44;
 const FLOAT_OFFSET_Y: Readonly<Record<CueTarget, number>> = { enemy: -110, hero: 34 };
 const FX_DEPTH = 20;
 /**
- * Cạnh dài nhất tối đa của hiệu ứng (pixel logic) theo nhân vật, so với hiệp sĩ 128 px và quái 128–192 px trên sân
- * rộng 360 px: chiêu bậc cao to hơn nhân vật nhưng không tràn sân, không che kín đối thủ.
+ * Cạnh dài nhất tối đa của hiệu ứng (pixel logic) theo nhân vật, so với hiệp sĩ 128 px và quái 128–192 px:
+ * chỉ nhỉnh hơn nhân vật một chút để thấy rõ đòn trúng mà không che kín người.
  */
-const FX_MAX_SIZE: Readonly<Record<CueTarget, number>> = { hero: 240, enemy: 280 };
+const FX_MAX_SIZE: Readonly<Record<CueTarget, number>> = { hero: 160, enemy: 180 };
 /**
  * Hào quang/khiên/tụ phép của hiệp sĩ vẽ DƯỚI sprite (actor ở depth 10) để nhân vật đứng trong vầng sáng,
  * không bị hiệu ứng che mặt. Đặt ở chân, cộng sáng (ADD) nên vầng sáng loang quanh người.
@@ -75,8 +77,8 @@ const FX_UNDER_DEPTH = 5;
 const FX_UNDER_OFFSET_Y = -24;
 /** Kiếm khí (hiệu ứng `front`) nhích lên trên thân, về phía quái ở trên, để không đè lên mặt sprite. */
 const FX_FRONT_OFFSET_Y = -70;
-/** Tâm vòng từ: giữa thân hiệp sĩ (sprite cao ~128 px) để hai cột từ ôm ngang người nhân vật. */
-const RING_CENTER_OFFSET_Y = -60;
+/** Tâm vòng từ: dưới chân hiệp sĩ để khối từ không che nhân vật và gần thẻ đề, ngón cái dễ với. */
+const RING_CENTER_OFFSET_Y = 80;
 const RING_CENTER = { x: HERO_FEET.x, y: HERO_FEET.y + RING_CENTER_OFFSET_Y } as const;
 /** Sân trận mờ dần vào sau màn tối của chuyển cảnh trên bản đồ. */
 const INTRO_FADE_MS = 450;
@@ -434,14 +436,14 @@ export class BattleScene extends Phaser.Scene {
    * Chỗ và độ sâu phát hiệu ứng theo `anchor` (xem `FxAnchor` ở battle-cues):
    * - `under`: dưới sprite (depth < actor) để nhân vật đứng trong vầng sáng.
    * - `front`: trước thân, nhích về phía đối thủ, vẽ trên sprite — cho kiếm khí hướng lên quái.
-   * - `body`/bỏ trống: ngang thân như cũ (hiệu ứng ở quái).
+   * - `body`/bỏ trống: thấp ở thân (hiệu ứng trúng đòn), không vắt ngang mặt.
    */
   private placeFx(target: CueTarget, anchor?: FxAnchor): { x: number; y: number; depth: number } {
     const feet = this.feetOf(target);
     if (anchor === 'under') return { x: feet.x, y: feet.y + FX_UNDER_OFFSET_Y, depth: FX_UNDER_DEPTH };
     // Sân xếp dọc (quái ở trên, hiệp sĩ ở dưới, cùng cột X): "phía trước, hướng lên quái" là nhích lên trên thân.
     if (anchor === 'front') return { x: feet.x, y: feet.y + FX_FRONT_OFFSET_Y, depth: FX_DEPTH };
-    return { x: feet.x, y: feet.y + FX_BODY_OFFSET_Y, depth: FX_DEPTH };
+    return { x: feet.x, y: feet.y + FX_HIT_OFFSET_Y, depth: FX_DEPTH };
   }
 
   /** Cue có `delayMs` chờ trên đồng hồ scene (dừng theo scene, tự huỷ khi rời trận). */
