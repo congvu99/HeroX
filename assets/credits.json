@@ -1,5 +1,86 @@
 [
   {
+    "path": "backgrounds/battle-arena.png",
+    "title": "Nền sân trận chung (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô"
+  },
+  {
+    "path": "backgrounds/battle-ash-forest.png",
+    "title": "Nền sân trận rừng tro (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô"
+  },
+  {
+    "path": "backgrounds/battle-broken-heaven.png",
+    "title": "Nền sân trận đền mặt trăng (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô"
+  },
+  {
+    "path": "backgrounds/battle-catacomb.png",
+    "title": "Nền sân trận hầm mộ thánh (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô"
+  },
+  {
+    "path": "backgrounds/battle-fields.png",
+    "title": "Nền sân trận đồng hoang (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô"
+  },
+  {
+    "path": "backgrounds/battle-hellmaw.png",
+    "title": "Nền sân trận vực thẳm địa ngục (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô"
+  },
+  {
+    "path": "backgrounds/battle-lair.png",
+    "title": "Nền sân trận hang trùm (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô"
+  },
+  {
+    "path": "backgrounds/battle-village.png",
+    "title": "Nền sân trận làng bỏ hoang (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô"
+  },
+  {
+    "path": "sprites/hero/hero_battle_back.png",
+    "title": "Hero Hiệp sĩ Thánh Ngôn - dáng lưng trong trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh hướng bắc 128, đặt khung 128 chân chạm đáy; chuyển động làm bằng tween"
+  },
+  {
     "path": "sprites/hero/hero_hurt.png",
     "title": "Hero Hiệp sĩ Thánh Ngôn tạm: hurt (6x1 ô 192)",
     "source": "Universal LPC Spritesheet Character Generator",
@@ -79,6 +160,150 @@
     "authors": "HeroX qua PixelLab",
     "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
     "modified": "sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/antonym-demon.png",
+    "title": "Quái antonym-demon - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/ash-sprite.png",
+    "title": "Quái ash-sprite - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/ash-stag.png",
+    "title": "Quái ash-stag - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/ash-wolf.png",
+    "title": "Quái ash-wolf - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/bone-knight.png",
+    "title": "Quái bone-knight - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/broken-seraph.png",
+    "title": "Quái broken-seraph - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/fallen-angel.png",
+    "title": "Quái fallen-angel - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/fire-imp.png",
+    "title": "Quái fire-imp - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/ghoul.png",
+    "title": "Quái ghoul - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/imp.png",
+    "title": "Quái imp - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/lava-hound.png",
+    "title": "Quái lava-hound - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/mute-cherub.png",
+    "title": "Quái mute-cherub - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/nameless-bishop.png",
+    "title": "Quái nameless-bishop - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/red-cleric.png",
+    "title": "Quái red-cleric - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/scarecrow-demon.png",
+    "title": "Quái scarecrow-demon - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
+  },
+  {
+    "path": "sprites/monsters/battle/skeleton.png",
+    "title": "Quái skeleton - bản trận (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY"
   },
   {
     "path": "sprites/monsters/bone-knight.png",

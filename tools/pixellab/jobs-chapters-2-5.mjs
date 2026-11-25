@@ -1,6 +1,6 @@
 // Asset PixelLab cho chương 2–5 (quái/trùm + NPC thoại). Tách khỏi jobs.mjs để dễ theo dõi.
 // Trùm (boss: true) đồng thời là chân dung thoại (dialog-runner trỏ về cùng PNG sprites/monsters/*).
-import { monster, portrait } from './job-factory.mjs';
+import { battleMonster, monster, portrait } from './job-factory.mjs';
 
 // Chương 2 — Rừng Tro: xám tro, cây cháy.
 const CHAPTER_2 = [
@@ -38,4 +38,22 @@ const CHAPTER_2_5_NPCS = [
   portrait('gate-seraph', 'gate-seraph', 'radiant guardian seraph, folded wings, gleaming gate keys', 52001),
 ];
 
-export const CHAPTER_2_5_JOBS = [...CHAPTER_2, ...CHAPTER_3, ...CHAPTER_4, ...CHAPTER_5, ...CHAPTER_2_5_NPCS];
+const CHAPTER_2_5_MONSTERS = [...CHAPTER_2, ...CHAPTER_3, ...CHAPTER_4, ...CHAPTER_5];
+
+// Bản trận sinh lại với prompt/seed riêng khi bản gốc hỏng: ra tượng bán thân/quả trứng trên bệ, bóng đen không chi tiết,
+// em bé cười lệch tông dark fantasy, hoặc hình người không mặc gì (game học từ: luôn mặc giáp/áo).
+const BATTLE_OVERRIDES = {
+  'antonym-demon': { promptPrefix: 'full body standing figure, legs visible, no pedestal', seed: 41013 },
+  'fire-imp': { promptPrefix: 'full body standing small humanoid creature, arms and legs visible, no pedestal', seed: 41011 },
+  'mute-cherub': { promptPrefix: 'eerie creepy dark fantasy creature, pallid grey skin, mouth stitched shut, no smile', seed: 51011 },
+  'broken-seraph': {
+    promptPrefix: 'genderless angelic knight in ivory plate armor and long grey robes, fully clothed, faceless helm, fully shaded, not a silhouette',
+    seed: 51013,
+  },
+};
+
+export const CHAPTER_2_5_JOBS = [
+  ...CHAPTER_2_5_MONSTERS,
+  ...CHAPTER_2_5_NPCS,
+  ...CHAPTER_2_5_MONSTERS.map((job) => battleMonster(job, BATTLE_OVERRIDES[job.id])),
+];

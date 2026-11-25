@@ -4,7 +4,7 @@
  */
 const ASSET_ROOT_PREFIX = /^(?:\.\.\/)+assets\//;
 
-const globbedUrls = import.meta.glob<string>('../../../assets/{maps,tilesets}/**/*.{ldtk,ldtkl,png}', {
+const globbedUrls = import.meta.glob<string>('../../../assets/{maps,tilesets,backgrounds}/**/*.{ldtk,ldtkl,png}', {
   query: '?url',
   import: 'default',
   eager: true,

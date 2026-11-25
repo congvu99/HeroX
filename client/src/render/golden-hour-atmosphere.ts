@@ -136,7 +136,10 @@ export class GoldenHourAtmosphere implements SceneAtmosphere {
   }
 
   private removeShadow(): void {
-    this.shadow?.destroy();
+    // Khoá texture chung toàn game theo preset: sân trận cùng preset với bản đồ (vd `sunny`) không được gỡ
+    // texture bóng của bản đồ đang tạm dừng, nên chỉ gỡ khi chính instance này đã dựng bóng.
+    if (this.shadow === null) return;
+    this.shadow.destroy();
     this.shadow = null;
     if (this.scene.textures.exists(this.shadowKey)) this.scene.textures.remove(this.shadowKey);
   }

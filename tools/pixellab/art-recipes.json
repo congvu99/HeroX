@@ -2,6 +2,150 @@
   "version": 1,
   "assets": [
     {
+      "id": "battle-backdrop",
+      "path": "backgrounds/battle-arena.png",
+      "prompt": "top-down 3/4 battle arena, bright sacred temple courtyard, pale sunlit stone floor, marble pillars along the sides, holy god rays and glowing sunlight from above, ethereal dreamy haze, lush green vines and small trees, soft magical glow, no characters, pixel art",
+      "seed": 73512,
+      "size": {
+        "width": 192,
+        "height": 352
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "battle-backdrop-ash-forest",
+      "path": "backgrounds/battle-ash-forest.png",
+      "prompt": "top-down 3/4 battle arena, empty burned ash forest clearing, wide grey ash-covered ground, charred black tree trunks along the sides, smouldering embers, falling ash like snow, hazy orange glow through smoke, mystical atmosphere, no characters, pixel art",
+      "seed": 73571,
+      "size": {
+        "width": 192,
+        "height": 352
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "battle-backdrop-broken-heaven",
+      "path": "backgrounds/battle-broken-heaven.png",
+      "prompt": "top-down 3/4 battle arena, moonlit celestial temple courtyard at night, pale silver marble floor with glowing moon sigil runes, crescent moon and stars above, ethereal blue mist, luminous white flowers and silver trees, soft magical glow, no characters, pixel art",
+      "seed": 73520,
+      "size": {
+        "width": 192,
+        "height": 352
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "battle-backdrop-catacomb",
+      "path": "backgrounds/battle-catacomb.png",
+      "prompt": "top-down 3/4 battle arena, ancient holy catacomb hall, worn stone tile floor with faded sacred mosaic, stone sarcophagi and skull-lined niches along the walls, candles and dim censers, pale green spectral mist, faint holy light, mystical atmosphere, no characters, pixel art",
+      "seed": 73580,
+      "size": {
+        "width": 192,
+        "height": 352
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "battle-backdrop-fields",
+      "path": "backgrounds/battle-fields.png",
+      "prompt": "top-down 3/4 battle arena, misty moorland clearing at dusk, worn dirt path over wild grass, old standing stones and a broken wooden fence, scattered wildflowers, drifting fog and fireflies, soft golden twilight glow, mystical atmosphere, no characters, pixel art",
+      "seed": 73540,
+      "size": {
+        "width": 192,
+        "height": 352
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "battle-backdrop-hellmaw",
+      "path": "backgrounds/battle-hellmaw.png",
+      "prompt": "top-down 3/4 battle arena, cracked obsidian platform floating over a bottomless hellish abyss, glowing lava fissures in the floor, rivers of fire far below the edges, floating embers, crimson and violet infernal glow, mystical atmosphere, no characters, pixel art",
+      "seed": 73530,
+      "size": {
+        "width": 192,
+        "height": 352
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "battle-backdrop-lair",
+      "path": "backgrounds/battle-lair.png",
+      "prompt": "top-down 3/4 battle arena, dark ritual cavern lair, rough stone floor with a glowing red summoning circle, bones and rusted cages along the walls, flickering braziers, hanging chains, ominous crimson and purple glow, mystical atmosphere, no characters, pixel art",
+      "seed": 73560,
+      "size": {
+        "width": 192,
+        "height": 352
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "battle-backdrop-village",
+      "path": "backgrounds/battle-village.png",
+      "prompt": "top-down 3/4 battle arena, abandoned medieval village square at dusk, cracked cobblestone floor, timber houses with dim lantern-lit windows along the sides, old stone well, hanging banners, drifting mist, warm lantern glow, mystical atmosphere, no characters, pixel art",
+      "seed": 73550,
+      "size": {
+        "width": 192,
+        "height": 352
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "hero-back",
+      "path": "sprites/hero/hero_battle_back.png",
+      "prompt": "back view of a crusader holy knight seen from behind, silver plate armor, closed great helm, long flowing red cape with white cross, large red cross kite shield on left arm, longsword raised in right hand glowing with faint holy light, heroic stance, tall proportions, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 73430,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
       "id": "antonym-demon",
       "path": "sprites/monsters/antonym-demon.png",
       "prompt": "towering two-faced demon lord boss, opposing masks, horned crown, cracked lava body, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
@@ -64,6 +208,262 @@
       ],
       "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
       "createdAt": "2026-11-23"
+    },
+    {
+      "id": "antonym-demon-battle",
+      "path": "sprites/monsters/battle/antonym-demon.png",
+      "prompt": "full body standing figure, legs visible, no pedestal, towering two-faced demon lord boss, opposing masks, horned crown, cracked lava body, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 41013,
+      "size": {
+        "width": 192,
+        "height": 192
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "ash-sprite-battle",
+      "path": "sprites/monsters/battle/ash-sprite.png",
+      "prompt": "floating ember sprite, swirling ash wisp, faint glow, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 21002,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "ash-stag-battle",
+      "path": "sprites/monsters/battle/ash-stag.png",
+      "prompt": "towering demonic stag boss, charred antlers, burning sockets, ash-cloaked body, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 21003,
+      "size": {
+        "width": 192,
+        "height": 192
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "ash-wolf-battle",
+      "path": "sprites/monsters/battle/ash-wolf.png",
+      "prompt": "gaunt ash-grey wolf, ember eyes, singed fur, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 21001,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "bone-knight-battle",
+      "path": "sprites/monsters/battle/bone-knight.png",
+      "prompt": "armored skeletal knight, dented plate, broken greatsword, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 31002,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "broken-seraph-battle",
+      "path": "sprites/monsters/battle/broken-seraph.png",
+      "prompt": "genderless angelic knight in ivory plate armor and long grey robes, fully clothed, faceless helm, fully shaded, not a silhouette, six-winged seraph with shattered wings, broken halo, trailing feathers, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 51013,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "fallen-angel-battle",
+      "path": "sprites/monsters/battle/fallen-angel.png",
+      "prompt": "towering fallen archangel boss, blackened wings, cracked halo, greatsword of light, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 51003,
+      "size": {
+        "width": 192,
+        "height": 192
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "fire-imp-battle",
+      "path": "sprites/monsters/battle/fire-imp.png",
+      "prompt": "full body standing small humanoid creature, arms and legs visible, no pedestal, small molten imp, cracked obsidian skin, glowing fissures, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 41011,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "ghoul-battle",
+      "path": "sprites/monsters/battle/ghoul.png",
+      "prompt": "rotting ghoul, hunched, long claws, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 11003,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "imp-battle",
+      "path": "sprites/monsters/battle/imp.png",
+      "prompt": "fully shaded ash-grey skin with visible details, not a silhouette, small horned imp demon, clawed, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 11011,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "lava-hound-battle",
+      "path": "sprites/monsters/battle/lava-hound.png",
+      "prompt": "hulking magma hound, hardened lava hide, ember maw, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 41002,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "mute-cherub-battle",
+      "path": "sprites/monsters/battle/mute-cherub.png",
+      "prompt": "eerie creepy dark fantasy creature, pallid grey skin, mouth stitched shut, no smile, small wingless cherub with a sewn-shut mouth, cracked halo, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 51011,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "nameless-bishop-battle",
+      "path": "sprites/monsters/battle/nameless-bishop.png",
+      "prompt": "towering faceless bishop boss, tall mitre, flowing vestments, crozier staff, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 31003,
+      "size": {
+        "width": 192,
+        "height": 192
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "red-cleric-battle",
+      "path": "sprites/monsters/battle/red-cleric.png",
+      "prompt": "hollow cleric in tattered ceremonial robes, carrying a dim censer, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 31001,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "scarecrow-demon-battle",
+      "path": "sprites/monsters/battle/scarecrow-demon.png",
+      "prompt": "towering scarecrow demon boss, burlap head, crow wings, scythe, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 11004,
+      "size": {
+        "width": 192,
+        "height": 192
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
+    },
+    {
+      "id": "skeleton-battle",
+      "path": "sprites/monsters/battle/skeleton.png",
+      "prompt": "skeletal warrior with rusty sword and shield, color-neutral palette, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 11002,
+      "size": {
+        "width": 128,
+        "height": 128
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-25"
     },
     {
       "id": "bone-knight",

@@ -3,6 +3,7 @@
 import { decodePng } from '../lib/png.mjs';
 
 const BASE_URL = 'https://api.pixellab.ai/v1';
+const BASE_URL_V2 = 'https://api.pixellab.ai/v2';
 const REQUEST_TIMEOUT_MS = 120_000;
 
 /** Lấy khoá API; ném lỗi rõ nếu thiếu để người chạy biết đặt env. */
@@ -41,20 +42,39 @@ async function postJson(path, body) {
   }
 }
 
-/** Số dư tài khoản (USD). Dùng để báo cáo, không chặn vì tài khoản có thể chạy bằng quota generations. */
-export async function getBalance() {
+async function getJson(url, label) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await fetch(`${BASE_URL}/balance`, {
+    const res = await fetch(url, {
       headers: { Authorization: `Bearer ${requireApiKey()}` },
       signal: controller.signal,
     });
-    if (!res.ok) throw new PixelLabApiError(`GET /balance → HTTP ${res.status}`, res.status);
+    if (!res.ok) throw new PixelLabApiError(`GET ${label} → HTTP ${res.status}`, res.status);
     return await res.json();
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Số dư tài khoản (USD). Dùng để báo cáo, không chặn vì tài khoản có thể chạy bằng quota generations. */
+export async function getBalance() {
+  return getJson(`${BASE_URL}/balance`, '/balance');
+}
+
+/**
+ * Trạng thái gói (v2): tiền và quota generations còn lại. Trả về
+ * { credits: { type, usd }, subscription: { type, status, plan, generations, total } }.
+ * Dùng để báo số lượt sinh còn lại và chặn chạy quá ngân sách.
+ */
+export async function getSubscriptionBalance() {
+  return getJson(`${BASE_URL_V2}/balance`, '/v2/balance');
+}
+
+/** Số lượt sinh (generations) còn lại theo gói, hoặc null nếu v2 không trả về con số. */
+export function remainingGenerations(v2Balance) {
+  const value = v2Balance?.subscription?.generations;
+  return typeof value === 'number' ? value : null;
 }
 
 function decodeResponseImage(json, label) {

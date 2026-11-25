@@ -1,10 +1,13 @@
 // Sinh asset game bằng PixelLab theo job khai báo trong jobs.mjs, ghép vào đúng khung/sheet mà
 // client mong đợi, rồi cập nhật assets/credits.json và tools/pixellab/art-recipes.json.
 //
-// Chạy:  node tools/pixellab/generate.mjs [--force] [--dry] [jobId ...]
-//   --force  sinh lại cả asset đã có file PNG (mặc định bỏ qua để tiết kiệm generations và cho resume)
-//   --dry    chỉ liệt kê job sẽ chạy, không gọi API
-//   jobId    chỉ chạy các job có id khớp (mặc định: tất cả)
+// Chạy:  node tools/pixellab/generate.mjs [--force] [--dry] [--max-generations=N] [jobId ...]
+//   --force             sinh lại cả asset đã có file PNG (mặc định bỏ qua để tiết kiệm generations và cho resume)
+//   --dry               chỉ liệt kê job sẽ chạy, không gọi API
+//   --max-generations=N trần số lượt sinh cho lần chạy này; dừng êm trước job sẽ vượt trần
+//   jobId               chỉ chạy các job có id khớp (mặc định: tất cả)
+//
+// Trần thực tế = min(--max-generations, số lượt gói còn lại đọc từ /v2/balance).
 //
 // Hết quota generations: dừng êm, giữ nguyên asset đã sinh, in phần còn thiếu để bổ sung sau.
 // Không ghi khoá API ra file/log. Khoá đọc từ env PIXELLAB_API_KEY.
@@ -13,7 +16,15 @@ import { dirname, join } from 'node:path';
 import { encodePng, writePng, createImage, blit } from '../lib/png.mjs';
 import { fitBottomCenter } from '../lib/image-ops.mjs';
 import { REPO_ROOT, ASSETS_DIR, upsertCredits } from '../lib/credits-store.mjs';
-import { generateImage, rotateImage, animateWithText, getBalance, PixelLabApiError } from './api-client.mjs';
+import {
+  generateImage,
+  rotateImage,
+  animateWithText,
+  getBalance,
+  getSubscriptionBalance,
+  remainingGenerations,
+  PixelLabApiError,
+} from './api-client.mjs';
 import { ASSET_JOBS } from './jobs.mjs';
 
 const RECIPES_PATH = join(REPO_ROOT, 'tools', 'pixellab', 'art-recipes.json');
@@ -27,9 +38,16 @@ const FACING_TO_PL_DIRECTION = { up: 'north', left: 'west', down: 'south', right
 const SHEET_ROW_ORDER = ['up', 'left', 'down', 'right'];
 
 function parseArgs(argv) {
-  const flags = new Set(argv.filter((arg) => arg.startsWith('--')));
+  const flags = new Set(argv.filter((arg) => arg.startsWith('--') && !arg.includes('=')));
+  const maxArg = argv.find((arg) => arg.startsWith('--max-generations='));
   const ids = argv.filter((arg) => !arg.startsWith('--'));
-  return { force: flags.has('--force'), dry: flags.has('--dry'), ids };
+  const max = maxArg ? Number(maxArg.split('=')[1]) : null;
+  return {
+    force: flags.has('--force'),
+    dry: flags.has('--dry'),
+    ids,
+    maxGenerations: Number.isFinite(max) && max > 0 ? max : null,
+  };
 }
 
 function readRecipes() {
@@ -169,6 +187,35 @@ async function runHeroSheetJob(job, usage) {
   }
 }
 
+/**
+ * Hero chỉ-trận: sinh 1 base hướng bắc (hero nhìn lên phía quái), rồi animate từng động tác trên
+ * hàng UP. Không xoay, không walk — né lỗi hướng lưng/trái và tiết kiệm lượt. Mỗi động tác xem được
+ * ngay sau khi ghi để quyết có chạy tiếp hay không (lỗi animate đã biết, thử 2026-11-20).
+ */
+async function runHeroBattleJob(job, usage, budget) {
+  const base = await generateImage({
+    description: job.prompt,
+    width: job.size.width,
+    height: job.size.height,
+    view: 'high top-down',
+    direction: 'north',
+    seed: job.seed,
+    negative: job.negative,
+  });
+  usage.generations += 1;
+  const dirs = { up: base };
+  for (const move of job.battleMoves) {
+    // Dừng giữa chừng khi tới trần: giữ base + các động tác đã ghi, phần còn lại bổ sung lần sau.
+    if (budget !== null && usage.generations + 1 > budget) {
+      usage.stoppedByQuota = true;
+      return;
+    }
+    const sheet = await buildHeroBattleMove(job, dirs, move);
+    usage.generations += 1;
+    writeSheet(move, sheet, job, [move.action], usage);
+  }
+}
+
 function writeSheet(target, sheet, job, animations, usage) {
   const fsPath = assetFsPath(target.path);
   ensureDir(fsPath);
@@ -201,6 +248,7 @@ async function runSingleJob(job, usage) {
     direction: job.direction ?? 'south',
     seed: job.seed,
     negative: job.negative,
+    noBackground: job.noBackground,
   });
   usage.generations += 1;
   const framed = job.frameSize ? frameSprite(image, job.frameSize) : image;
@@ -222,17 +270,33 @@ async function runSingleJob(job, usage) {
   usage.written.push(job.path);
 }
 
-/** File đích đã có chưa (để resume/bỏ qua). Hero-sheet coi là có khi tất cả sheet con tồn tại. */
+/** Các path đích của một job (hero-sheet: walk + battle; hero-battle: battle; còn lại: 1 path). */
+function jobOutputPaths(job) {
+  if (job.kind === 'hero-sheet') return [job.walk, ...job.battleMoves].map((t) => t.path);
+  if (job.kind === 'hero-battle') return job.battleMoves.map((t) => t.path);
+  return [job.path];
+}
+
+/** File đích đã có chưa (để resume/bỏ qua). Hero coi là có khi tất cả sheet con tồn tại. */
 function jobOutputsExist(job) {
-  if (job.kind === 'hero-sheet') {
-    const targets = [job.walk, ...job.battleMoves];
-    return targets.every((t) => existsSync(assetFsPath(t.path)));
-  }
-  return existsSync(assetFsPath(job.path));
+  return jobOutputPaths(job).every((p) => existsSync(assetFsPath(p)));
+}
+
+/** Ước lượng số lượt sinh (generations) một job tiêu tốn, để chặn ngân sách trước khi chạy. */
+function jobGenerationCost(job) {
+  if (job.kind === 'hero-sheet') return 4 + SHEET_ROW_ORDER.length + job.battleMoves.length;
+  if (job.kind === 'hero-battle') return 1 + job.battleMoves.length;
+  return 1;
+}
+
+/** Số nhỏ nhất trong các giá trị khác null; null nếu tất cả đều null. */
+function minDefined(...values) {
+  const defined = values.filter((v) => v !== null && v !== undefined);
+  return defined.length ? Math.min(...defined) : null;
 }
 
 async function main() {
-  const { force, dry, ids } = parseArgs(process.argv.slice(2));
+  const { force, dry, ids, maxGenerations } = parseArgs(process.argv.slice(2));
   const jobs = ASSET_JOBS.filter((job) => ids.length === 0 || ids.includes(job.id));
   const usage = { generations: 0, written: [], skipped: [], stoppedByQuota: false };
 
@@ -248,15 +312,35 @@ async function main() {
   } catch (error) {
     console.error(`Không đọc được balance: ${error.message}`);
   }
+  // Số lượt sinh còn lại theo gói (v2) để chặn chạy quá ngân sách. Đọc được thì dùng làm trần.
+  let remainingQuota = null;
+  try {
+    const v2 = await getSubscriptionBalance();
+    remainingQuota = remainingGenerations(v2);
+    console.log(`Lượt sinh còn lại (gói): ${remainingQuota ?? 'không rõ'}; ${JSON.stringify(v2.subscription)}`);
+  } catch (error) {
+    console.error(`Không đọc được số lượt gói (v2): ${error.message}`);
+  }
 
   for (const job of jobs) {
     if (!force && jobOutputsExist(job)) {
       usage.skipped.push(job.id);
       continue;
     }
+    // Chặn trước khi chạy. hero-battle tự dừng giữa các động tác nên chỉ cần tối thiểu 2 lượt
+    // (base + 1 động tác); job khác cần đủ cost cả job.
+    const cost = jobGenerationCost(job);
+    const budget = minDefined(maxGenerations, remainingQuota);
+    const minCost = job.kind === 'hero-battle' ? 2 : cost;
+    if (budget !== null && usage.generations + minCost > budget) {
+      console.error(`DỪNG ngân sách trước job ${job.id}: cần ${minCost}, đã dùng ${usage.generations}, trần ${budget}.`);
+      usage.stoppedByQuota = true;
+      break;
+    }
     try {
-      console.log(`→ ${job.id} (${job.kind})…`);
+      console.log(`→ ${job.id} (${job.kind}, ~${cost} lượt)…`);
       if (job.kind === 'hero-sheet') await runHeroSheetJob(job, usage);
+      else if (job.kind === 'hero-battle') await runHeroBattleJob(job, usage, budget);
       else await runSingleJob(job, usage);
     } catch (error) {
       if (error instanceof PixelLabApiError && QUOTA_STATUSES.has(error.status)) {
@@ -271,10 +355,9 @@ async function main() {
   console.log(`\nĐã sinh ${usage.written.length} file, ${usage.generations} generations. Bỏ qua ${usage.skipped.length} job đã có.`);
   if (usage.stoppedByQuota) {
     const done = new Set([...usage.written]);
-    const remaining = jobs.filter((job) => {
-      const paths = job.kind === 'hero-sheet' ? [job.walk, ...job.battleMoves].map((t) => t.path) : [job.path];
-      return paths.some((p) => !done.has(p) && !existsSync(assetFsPath(p)));
-    });
+    const remaining = jobs.filter((job) =>
+      jobOutputPaths(job).some((p) => !done.has(p) && !existsSync(assetFsPath(p))),
+    );
     console.log(`CÒN THIẾU (bổ sung sau): ${remaining.map((j) => j.id).join(', ')}`);
     process.exitCode = 3; // mã riêng cho "hết quota", để orchestrator phân biệt
   }

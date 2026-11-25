@@ -29,9 +29,10 @@ import { FxPlayer, queueFxAssets } from '../fx/fx-player';
 import { BattleProjectiles } from '../render/battle-projectile';
 import { isTouchPrimaryDevice } from '../input/input-controller';
 import type { QualityController } from '../platform/quality-settings';
-import { BattleActors, ENEMY_FEET, HERO_FEET, queueMonsterSprites, type ActorPoint } from '../render/battle-actors';
+import { BattleActors, ENEMY_FEET, HERO_FEET, queueBattleMonsterSprites, queueMonsterSprites, type ActorPoint } from '../render/battle-actors';
 import { BattleArena, queueArenaTiles } from '../render/battle-arena';
 import { queueHeroBattleSheets } from '../render/hero-battle-animations';
+import { queueHeroBattleBack } from '../render/hero-battle-back';
 import { queueHeroSheet } from '../render/hero-sprite';
 import type { QuestTracker } from '../story/quest-tracker';
 import { journalFailureMessage, SESSION_EXPIRED_MESSAGE, type StoryJournal } from '../story/story-journal';
@@ -120,7 +121,9 @@ export class BattleScene extends Phaser.Scene {
     queueFxAssets(this);
     queueHeroSheet(this);
     queueHeroBattleSheets(this);
+    queueHeroBattleBack(this);
     queueMonsterSprites(this);
+    queueBattleMonsterSprites(this);
     queueArenaTiles(this);
   }
 

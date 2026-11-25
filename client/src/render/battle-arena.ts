@@ -1,7 +1,15 @@
 import Phaser from 'phaser';
-import { ARENA_CELL_PX, ARENA_ORIGIN, ARENA_TILE_SCALE, arenaCellCenter, type ArenaLayout } from '../battle/battle-arena-layout';
+import {
+  ARENA_CELL_PX,
+  ARENA_ORIGIN,
+  ARENA_THEMES,
+  ARENA_TILE_SCALE,
+  arenaCellCenter,
+  type ArenaLayout,
+  type ArenaThemeId,
+} from '../battle/battle-arena-layout';
 import { TILE_SIZE } from '../config/display';
-import { mapAssetUrl } from '../maps/map-asset-urls';
+import { hasMapAsset, mapAssetUrl } from '../maps/map-asset-urls';
 import { CHAPTER_1_TILE_INDEX } from './chapter-1-tile-data';
 import { GoldenHourAtmosphere } from './golden-hour-atmosphere';
 import { lightingForArena } from './lighting-presets';
@@ -9,6 +17,25 @@ import type { LightSource } from './scene-atmosphere';
 
 const ATLAS_PATH = 'tilesets/chapter-1.png';
 const ATLAS_TEXTURE_KEY = 'battle-arena-tiles';
+/**
+ * Nền sân trận (PixelLab): ưu tiên nền riêng của theme (`battle-<theme>`), rồi nền chung (`battle-arena`).
+ * Không có nền nào thì vẽ lưới tile như cũ.
+ */
+const SHARED_BACKDROP = 'battle-arena';
+const BACKDROP_KEY_PREFIX = 'battle-backdrop:';
+
+function backdropPath(name: string): string {
+  return `backgrounds/${name}.png`;
+}
+
+function backdropTextureKey(name: string): string {
+  return `${BACKDROP_KEY_PREFIX}${name}`;
+}
+
+/** Tên các nền có trong bản build: nền theme trước, nền chung cuối. */
+const BACKDROP_NAMES: readonly string[] = [...ARENA_THEMES.map((theme) => `battle-${theme}`), SHARED_BACKDROP].filter(
+  (name) => hasMapAsset(backdropPath(name)),
+);
 const EMBER_TEXTURE_KEY = 'battle-arena-ember';
 const EMBER_SIZE = 2;
 const EMBER_COLOR = 0xffa040;
@@ -20,10 +47,21 @@ const EMBER_LIFESPAN_MS = 1800;
 const EMBER_FREQUENCY_MS = 60;
 const EMBER_RISE = { min: -40, max: -14 } as const;
 
-/** Xếp atlas tile chương 1 vào hàng đợi tải (gọi ở `preload`). */
+/** Xếp atlas tile chương 1 và nền sân (nếu có) vào hàng đợi tải (gọi ở `preload`). */
 export function queueArenaTiles(scene: Phaser.Scene): void {
-  if (scene.textures.exists(ATLAS_TEXTURE_KEY)) return;
-  scene.load.spritesheet(ATLAS_TEXTURE_KEY, mapAssetUrl(ATLAS_PATH), { frameWidth: TILE_SIZE, frameHeight: TILE_SIZE });
+  if (!scene.textures.exists(ATLAS_TEXTURE_KEY)) {
+    scene.load.spritesheet(ATLAS_TEXTURE_KEY, mapAssetUrl(ATLAS_PATH), { frameWidth: TILE_SIZE, frameHeight: TILE_SIZE });
+  }
+  // Nền là tuỳ chọn: chỉ tải file có trong bản build (vài ảnh nhỏ, tải hết để khỏi phụ thuộc trận nào).
+  for (const name of BACKDROP_NAMES) {
+    const key = backdropTextureKey(name);
+    if (!scene.textures.exists(key)) scene.load.image(key, mapAssetUrl(backdropPath(name)));
+  }
+}
+
+/** Khoá texture nền dùng cho theme: nền riêng nếu đã tải, rồi nền chung; `undefined` khi không có. */
+function backdropFor(scene: Phaser.Scene, theme: ArenaThemeId): string | undefined {
+  return [`battle-${theme}`, SHARED_BACKDROP].map(backdropTextureKey).find((key) => scene.textures.exists(key));
 }
 
 export interface BattleArenaOptions {
@@ -40,13 +78,25 @@ export class BattleArena {
   readonly atmosphere: GoldenHourAtmosphere;
 
   constructor(scene: Phaser.Scene, layout: ArenaLayout, options: BattleArenaOptions) {
-    if (scene.textures.exists(ATLAS_TEXTURE_KEY)) this.paintTiles(scene, layout);
+    // Có nền thì vẽ nền (một ảnh phủ cả sân); thiếu thì vẽ lưới tile như cũ.
+    const backdrop = backdropFor(scene, layout.theme);
+    if (backdrop !== undefined) this.paintBackdrop(scene, backdrop);
+    else if (scene.textures.exists(ATLAS_TEXTURE_KEY)) this.paintTiles(scene, layout);
     this.atmosphere = new GoldenHourAtmosphere(scene, { enabled: options.lightingEnabled, preset: lightingForArena(layout.theme) });
     for (const light of layout.lights) {
       this.atmosphere.addLight(arenaCellCenter(light.column, light.row), light.radius, light.flicker);
     }
     for (const light of options.actorLights) this.atmosphere.addLight(light.source, light.radius);
     if (layout.embers && options.lightingEnabled) this.addEmbers(scene, layout);
+  }
+
+  /** Vẽ nền chung: ảnh 192x352 phóng theo ARENA_TILE_SCALE, gốc trên-trái tại ARENA_ORIGIN, dưới nhân vật. */
+  private paintBackdrop(scene: Phaser.Scene, textureKey: string): void {
+    scene.add
+      .image(ARENA_ORIGIN.x, ARENA_ORIGIN.y, textureKey)
+      .setOrigin(0, 0)
+      .setScale(ARENA_TILE_SCALE)
+      .setDepth(GROUND_DEPTH);
   }
 
   private paintTiles(scene: Phaser.Scene, layout: ArenaLayout): void {

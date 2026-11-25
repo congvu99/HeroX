@@ -3,6 +3,8 @@ import { ARENA_ORIGIN } from '../battle/battle-arena-layout';
 import type { ActorAction, HeroMove } from '../battle/battle-cues';
 import { LOGICAL_WIDTH } from '../config/display';
 import { heroBattleAnimationKey, prepareHeroBattleAnimations, type HeroBattleMove } from './hero-battle-animations';
+import { ENEMY_DISSOLVE_MS, EnemyBattleEffects, type EnemyRank } from './enemy-battle-effects';
+import { HeroBackEffects, heroBattleBackTexture } from './hero-battle-back';
 import { prepareHeroLook } from './hero-sprite';
 import { TEXTURE_KEYS } from './placeholder-textures';
 import { spriteAssetUrl } from './sprite-asset-urls';
@@ -18,9 +20,13 @@ export interface ActorPoint {
 export const HERO_FEET: ActorPoint = { x: LOGICAL_WIDTH / 2, y: ARENA_ORIGIN.y + 388 };
 export const ENEMY_FEET: ActorPoint = { x: LOGICAL_WIDTH / 2, y: ARENA_ORIGIN.y + 168 };
 
-/** Sprite 64 px phóng số nguyên ×2 để pixel đều; trùm 128 px phóng ×1.5 cho khỏi tràn sân. */
+/**
+ * Sprite 64 px phóng số nguyên ×2 để pixel đều; trùm 128 px phóng ×1.5 cho khỏi tràn sân.
+ * Bản trận riêng (quái 128, trùm 192) vẽ 1:1, cùng mật độ pixel với hiệp sĩ dáng lưng.
+ */
 const ACTOR_SCALE = 2;
 const BOSS_SCALE = 1.5;
+const BATTLE_SPRITE_SCALE = 1;
 const ACTOR_DEPTH = 10;
 const SHADOW = { width: 64, height: 14, color: 0x000000, alpha: 0.45 } as const;
 
@@ -65,12 +71,18 @@ const TIMING = {
   enemyLungeMs: 260,
   dashMs: 110,
   blinkHiddenMs: 260,
-  bobMs: 900,
 } as const;
 // Khung dọc: hiệp sĩ ở dưới, quái ở trên. strikeLunge/enemyLunge là khoảng lao dọc; dash là khoảng hiệp sĩ né lùi xuống.
-const DISTANCE = { strikeLunge: 120, knockback: 12, enemyLunge: 90, dash: 34, bob: 3 } as const;
+const DISTANCE = { strikeLunge: 120, knockback: 12, enemyLunge: 90, dash: 34 } as const;
 
 const MONSTER_KEY_PREFIX = 'monster:';
+/** Bản quái vẽ riêng cho trận; bản đồ thế giới vẫn dùng sprite 64 px ở `sprites/monsters/`. */
+const BATTLE_MONSTER_KEY_PREFIX = 'monster-battle:';
+const BATTLE_MONSTER_DIR = 'sprites/monsters/battle';
+
+function battleMonsterTextureKey(file: string): string {
+  return `${BATTLE_MONSTER_KEY_PREFIX}${file}`;
+}
 
 function monsterTextureKey(file: string): string {
   return `${MONSTER_KEY_PREFIX}${file}`;
@@ -104,6 +116,32 @@ export function queueMonsterSprites(scene: Phaser.Scene): void {
   }
 }
 
+/** Xếp bản quái vẽ riêng cho trận vào hàng đợi tải (chỉ cảnh trận gọi); thiếu file thì trận dùng sprite bản đồ. */
+export function queueBattleMonsterSprites(scene: Phaser.Scene): void {
+  for (const file of new Set(Object.values(MONSTER_SPRITES))) {
+    const key = battleMonsterTextureKey(file);
+    const url = spriteAssetUrl(`${BATTLE_MONSTER_DIR}/${file}.png`);
+    if (url !== undefined && !scene.textures.exists(key)) scene.load.image(key, url);
+  }
+}
+
+/** Hình quái trong trận: bản trận 1:1 nếu có, rồi sprite bản đồ phóng to, rồi hình tạm. */
+function enemyLook(scene: Phaser.Scene, kind: string, boss: boolean): { texture: string; scale: number } {
+  const file = MONSTER_SPRITES[kind];
+  if (file !== undefined) {
+    const battleKey = battleMonsterTextureKey(file);
+    if (scene.textures.exists(battleKey)) return { texture: battleKey, scale: BATTLE_SPRITE_SCALE };
+    const mapKey = monsterTextureKey(file);
+    if (scene.textures.exists(mapKey)) return { texture: mapKey, scale: boss ? BOSS_SCALE : ACTOR_SCALE };
+  }
+  return { texture: TEXTURE_KEYS.enemy, scale: boss ? BOSS_SCALE : ACTOR_SCALE };
+}
+
+function enemyRank(elite: boolean, boss: boolean): EnemyRank {
+  if (boss) return 'boss';
+  return elite ? 'elite' : 'normal';
+}
+
 type EnemyTint = 'none' | 'elite' | 'shield';
 const TINT_COLORS: Readonly<Record<Exclude<EnemyTint, 'none'>, number>> = { elite: ELITE_TINT, shield: FIRE_SHIELD_TINT };
 
@@ -117,15 +155,27 @@ export class BattleActors {
   private readonly enemyRoot: Phaser.GameObjects.Container;
   private readonly enemy: Phaser.GameObjects.Sprite;
   private readonly heroMoves: ReadonlySet<HeroBattleMove>;
+  /** Có khi dùng ảnh hiệp sĩ dáng lưng: động tác diễn bằng tween thay cho sheet LPC. */
+  private readonly heroBack: HeroBackEffects | undefined;
+  private readonly enemyEffects: EnemyBattleEffects;
   private enemyTint: EnemyTint = 'none';
 
   constructor(private readonly scene: Phaser.Scene) {
-    const look = prepareHeroLook(scene);
-    this.heroMoves = prepareHeroBattleAnimations(scene);
-    this.hero = scene.add.sprite(0, 0, look.textureKey, 'up').setOrigin(0.5, look.feetY / look.frameSize).setScale(ACTOR_SCALE);
+    const backTexture = heroBattleBackTexture(scene);
+    if (backTexture === undefined) {
+      const look = prepareHeroLook(scene);
+      this.heroMoves = prepareHeroBattleAnimations(scene);
+      this.hero = scene.add.sprite(0, 0, look.textureKey, 'up').setOrigin(0.5, look.feetY / look.frameSize).setScale(ACTOR_SCALE);
+    } else {
+      // Ảnh 128 px chân chạm đáy, vẽ 1:1 (cao tương đương LPC 64 px phóng x2).
+      this.heroMoves = new Set();
+      this.hero = scene.add.sprite(0, 0, backTexture).setOrigin(0.5, 1);
+    }
     this.heroRoot = scene.add.container(HERO_FEET.x, HERO_FEET.y, [this.shadow(), this.hero]).setDepth(ACTOR_DEPTH);
+    this.heroBack = backTexture === undefined ? undefined : new HeroBackEffects(scene, this.heroRoot, this.hero);
     this.enemy = scene.add.sprite(0, 0, TEXTURE_KEYS.enemy).setOrigin(0.5, 1).setScale(ACTOR_SCALE);
     this.enemyRoot = scene.add.container(ENEMY_FEET.x, ENEMY_FEET.y, [this.shadow(), this.enemy]).setDepth(ACTOR_DEPTH).setAlpha(0);
+    this.enemyEffects = new EnemyBattleEffects(scene, this.enemyRoot, this.enemy);
     this.hero.on(Phaser.Animations.Events.ANIMATION_COMPLETE, this.returnHeroToIdle);
     this.playHero('idle');
   }
@@ -142,15 +192,13 @@ export class BattleActors {
   }
 
   showEnemy(kind: string, elite: boolean, boss: boolean): void {
-    this.scene.tweens.killTweensOf([this.enemyRoot, this.enemy]);
-    const file = MONSTER_SPRITES[kind];
-    const textureKey = file === undefined ? undefined : monsterTextureKey(file);
-    const hasSprite = textureKey !== undefined && this.scene.textures.exists(textureKey);
-    this.enemy.setTexture(hasSprite ? textureKey : TEXTURE_KEYS.enemy).setScale(boss ? BOSS_SCALE : ACTOR_SCALE).setY(0);
+    this.scene.tweens.killTweensOf(this.enemyRoot);
+    const look = enemyLook(this.scene, kind, boss);
+    this.enemy.setTexture(look.texture);
+    this.enemyEffects.show(enemyRank(elite, boss), look.scale);
     this.enemyRoot.setPosition(ENEMY_FEET.x, ENEMY_FEET.y).setAlpha(0);
     this.setEnemyTint(elite ? 'elite' : 'none');
     this.scene.tweens.add({ targets: this.enemyRoot, alpha: 1, duration: TIMING.enemyFadeMs });
-    this.scene.tweens.add({ targets: this.enemy, y: -DISTANCE.bob, duration: TIMING.bobMs, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
   }
 
   /** Màu nền của quái theo trạng thái: tinh anh, khiên lửa, thường. */
@@ -161,9 +209,10 @@ export class BattleActors {
     if (tint !== this.enemyTint) this.setEnemyTint(tint);
   }
 
+  /** Quái tan thành tro; bóng đổ (trong container) mờ cùng lúc. */
   defeatEnemy(): void {
-    this.scene.tweens.killTweensOf(this.enemy);
-    this.scene.tweens.add({ targets: this.enemyRoot, alpha: 0, duration: TIMING.enemyFadeMs / 2 });
+    this.enemyEffects.defeat();
+    this.scene.tweens.add({ targets: this.enemyRoot, alpha: 0, delay: ENEMY_DISSOLVE_MS / 2, duration: ENEMY_DISSOLVE_MS / 2 });
   }
 
   act(target: 'hero' | 'enemy', action: ActorAction): void {
@@ -191,7 +240,8 @@ export class BattleActors {
   fall(): void {
     this.scene.tweens.killTweensOf(this.heroRoot);
     this.heroRoot.setPosition(HERO_FEET.x, HERO_FEET.y);
-    if (this.heroMoves.has('fall')) this.hero.play(heroBattleAnimationKey('fall'));
+    if (this.heroBack !== undefined) this.heroBack.play('fall');
+    else if (this.heroMoves.has('fall')) this.hero.play(heroBattleAnimationKey('fall'));
     else this.hero.setTint(HURT_TINT);
   }
 
@@ -237,6 +287,7 @@ export class BattleActors {
     if (action === 'hurt') {
       this.enemy.setTint(HIT_FLASH_COLOR).setTintMode(Phaser.TintModes.FILL);
       this.scene.time.delayedCall(TIMING.flashMs, () => this.setEnemyTint(this.enemyTint));
+      this.enemyEffects.hurt();
       // Quái trúng đòn: giật lùi lên (ra xa hiệp sĩ).
       this.knockback(this.enemyRoot, -DISTANCE.knockback);
     } else if (action === 'lunge') {
@@ -258,7 +309,8 @@ export class BattleActors {
   }
 
   private playHero(move: HeroBattleMove): void {
-    if (this.heroMoves.has(move)) this.hero.play(heroBattleAnimationKey(move), true);
+    if (this.heroBack !== undefined) this.heroBack.play(move);
+    else if (this.heroMoves.has(move)) this.hero.play(heroBattleAnimationKey(move), true);
   }
 
   /** Chém, niệm xong thì về dáng đứng; ngã gục thì nằm yên. */

@@ -159,7 +159,8 @@ export const ARENA_LIGHTING: Readonly<Record<ArenaThemeId, LightingPresetName>> 
   'ash-forest': 'sunset',
   catacomb: 'moonlight',
   hellmaw: 'infernal',
-  'broken-heaven': 'holy',
+  // Sân trận chương 5 vẽ đền mặt trăng (backgrounds/battle-broken-heaven.png) nên dùng ánh trăng.
+  'broken-heaven': 'moonlight',
 };
 
 /** Level chưa khai báo dùng nắng mặc định để bản đồ mới vẫn có ánh sáng. */

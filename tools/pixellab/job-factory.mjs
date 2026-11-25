@@ -22,7 +22,32 @@ export function monster(id, file, prompt, { frameSize = 64, seed, boss = false }
     directions: 4,
     animations: ['still'],
     reference: STYLE_REF,
+    boss,
     credit: CREDIT(`Quái ${id} (PixelLab)`, `sinh tĩnh, đặt khung ${frameSize} chân chạm đáy; màu trung tính cho MULTIPLY`),
+  };
+}
+
+/** Cỡ bản trận: client vẽ 1:1 cạnh hiệp sĩ dáng lưng 128 px (cao bằng bản đồ phóng x2, trùm x1.5). */
+const BATTLE_MONSTER_SIZE = 128;
+const BATTLE_BOSS_SIZE = 192;
+
+/**
+ * Bản quái vẽ riêng cho trận từ job bản đồ tương ứng: cùng prompt (giữ màu trung tính) và seed, cỡ lớn hơn,
+ * ghi ra `sprites/monsters/battle/` nên không đụng sprite 64 px bản đồ thế giới đang dùng.
+ * `promptPrefix`/`seed` chỉ dùng khi bản trận sinh hỏng với prompt/seed gốc (vd ra tượng bán thân).
+ */
+export function battleMonster(mapJob, { promptPrefix, seed } = {}) {
+  const file = mapJob.path.slice('sprites/monsters/'.length);
+  const size = mapJob.boss ? BATTLE_BOSS_SIZE : BATTLE_MONSTER_SIZE;
+  return {
+    ...mapJob,
+    id: `${mapJob.id}-battle`,
+    path: `sprites/monsters/battle/${file}`,
+    prompt: promptPrefix === undefined ? mapJob.prompt : `${promptPrefix}, ${mapJob.prompt}`,
+    seed: seed ?? mapJob.seed,
+    size: { width: size, height: size },
+    frameSize: size,
+    credit: CREDIT(`Quái ${mapJob.id} - bản trận (PixelLab)`, `sinh tĩnh ${size}, đặt khung ${size} chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY`),
   };
 }
 

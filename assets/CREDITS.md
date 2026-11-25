@@ -91,10 +91,35 @@ Trang nguồn: https://www.pixellab.ai/
 
 | File | Nội dung | Tác giả | License | Chỉnh sửa |
 |---|---|---|---|---|
+| `backgrounds/battle-arena.png` | Nền sân trận chung (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô |
+| `backgrounds/battle-ash-forest.png` | Nền sân trận rừng tro (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô |
+| `backgrounds/battle-broken-heaven.png` | Nền sân trận đền mặt trăng (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô |
+| `backgrounds/battle-catacomb.png` | Nền sân trận hầm mộ thánh (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô |
+| `backgrounds/battle-fields.png` | Nền sân trận đồng hoang (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô |
+| `backgrounds/battle-hellmaw.png` | Nền sân trận vực thẳm địa ngục (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô |
+| `backgrounds/battle-lair.png` | Nền sân trận hang trùm (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô |
+| `backgrounds/battle-village.png` | Nền sân trận làng bỏ hoang (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | ảnh nền tĩnh 192x352, client phóng x2 phủ sân 6x11 ô |
+| `sprites/hero/hero_battle_back.png` | Hero Hiệp sĩ Thánh Ngôn - dáng lưng trong trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh hướng bắc 128, đặt khung 128 chân chạm đáy; chuyển động làm bằng tween |
 | `sprites/monsters/antonym-demon.png` | Quái antonym-demon (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY |
 | `sprites/monsters/ash-sprite.png` | Quái ash-sprite (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
 | `sprites/monsters/ash-stag.png` | Quái ash-stag (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY |
 | `sprites/monsters/ash-wolf.png` | Quái ash-wolf (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/antonym-demon.png` | Quái antonym-demon - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/ash-sprite.png` | Quái ash-sprite - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/ash-stag.png` | Quái ash-stag - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/ash-wolf.png` | Quái ash-wolf - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/bone-knight.png` | Quái bone-knight - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/broken-seraph.png` | Quái broken-seraph - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/fallen-angel.png` | Quái fallen-angel - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/fire-imp.png` | Quái fire-imp - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/ghoul.png` | Quái ghoul - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/imp.png` | Quái imp - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/lava-hound.png` | Quái lava-hound - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/mute-cherub.png` | Quái mute-cherub - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/nameless-bishop.png` | Quái nameless-bishop - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/red-cleric.png` | Quái red-cleric - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/scarecrow-demon.png` | Quái scarecrow-demon - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 192, đặt khung 192 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
+| `sprites/monsters/battle/skeleton.png` | Quái skeleton - bản trận (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 128, đặt khung 128 chân chạm đáy, client vẽ 1:1; màu trung tính cho MULTIPLY |
 | `sprites/monsters/bone-knight.png` | Quái bone-knight (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
 | `sprites/monsters/broken-seraph.png` | Quái broken-seraph (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
 | `sprites/monsters/fallen-angel.png` | Quái fallen-angel (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY |
@@ -126,10 +151,35 @@ Trang nguồn: https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Ch
 
 | File | Mã công thức | Kích thước | Hướng | Hoạt ảnh | Ngày tạo |
 |---|---|---|---|---|---|
+| `backgrounds/battle-arena.png` | battle-backdrop | 192x352 | 4 | still | 2026-11-25 |
+| `backgrounds/battle-ash-forest.png` | battle-backdrop-ash-forest | 192x352 | 4 | still | 2026-11-25 |
+| `backgrounds/battle-broken-heaven.png` | battle-backdrop-broken-heaven | 192x352 | 4 | still | 2026-11-25 |
+| `backgrounds/battle-catacomb.png` | battle-backdrop-catacomb | 192x352 | 4 | still | 2026-11-25 |
+| `backgrounds/battle-fields.png` | battle-backdrop-fields | 192x352 | 4 | still | 2026-11-25 |
+| `backgrounds/battle-hellmaw.png` | battle-backdrop-hellmaw | 192x352 | 4 | still | 2026-11-25 |
+| `backgrounds/battle-lair.png` | battle-backdrop-lair | 192x352 | 4 | still | 2026-11-25 |
+| `backgrounds/battle-village.png` | battle-backdrop-village | 192x352 | 4 | still | 2026-11-25 |
+| `sprites/hero/hero_battle_back.png` | hero-back | 128x128 | 4 | still | 2026-11-25 |
 | `sprites/monsters/antonym-demon.png` | antonym-demon | 128x128 | 4 | still | 2026-11-23 |
 | `sprites/monsters/ash-sprite.png` | ash-sprite | 64x64 | 4 | still | 2026-11-23 |
 | `sprites/monsters/ash-stag.png` | ash-stag | 128x128 | 4 | still | 2026-11-23 |
 | `sprites/monsters/ash-wolf.png` | ash-wolf | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/monsters/battle/antonym-demon.png` | antonym-demon-battle | 192x192 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/ash-sprite.png` | ash-sprite-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/ash-stag.png` | ash-stag-battle | 192x192 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/ash-wolf.png` | ash-wolf-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/bone-knight.png` | bone-knight-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/broken-seraph.png` | broken-seraph-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/fallen-angel.png` | fallen-angel-battle | 192x192 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/fire-imp.png` | fire-imp-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/ghoul.png` | ghoul-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/imp.png` | imp-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/lava-hound.png` | lava-hound-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/mute-cherub.png` | mute-cherub-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/nameless-bishop.png` | nameless-bishop-battle | 192x192 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/red-cleric.png` | red-cleric-battle | 128x128 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/scarecrow-demon.png` | scarecrow-demon-battle | 192x192 | 4 | still | 2026-11-25 |
+| `sprites/monsters/battle/skeleton.png` | skeleton-battle | 128x128 | 4 | still | 2026-11-25 |
 | `sprites/monsters/bone-knight.png` | bone-knight | 64x64 | 4 | still | 2026-11-23 |
 | `sprites/monsters/broken-seraph.png` | broken-seraph | 64x64 | 4 | still | 2026-11-23 |
 | `sprites/monsters/fallen-angel.png` | fallen-angel | 128x128 | 4 | still | 2026-11-23 |
