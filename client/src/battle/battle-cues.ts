@@ -15,9 +15,26 @@ export type FloatTone = 'damage' | 'info' | 'bad';
 /** Động tác nhân vật: hiệp sĩ chém/niệm, quái lao vào, ai trúng đòn thì giật lùi. */
 export type ActorAction = 'strike' | 'cast' | 'lunge' | 'hurt';
 
+/**
+ * Chỗ đặt hiệu ứng pixelfx theo loại chiêu:
+ * - `body` (mặc định): ngang thân nhân vật, vẽ trên sprite — dùng cho hiệu ứng trúng ở quái.
+ * - `under`: dưới/sau sprite hiệp sĩ (hào quang, khiên, tụ phép) để nhân vật đứng trong vầng sáng, không bị che mặt.
+ * - `front`: phía trước hiệp sĩ, hướng lên quái (kiếm khí) — vẫn trên sprite nhưng lệch ra trước.
+ */
+export type FxAnchor = 'body' | 'under' | 'front';
+
 /** Việc màn trận cần làm để thể hiện một sự kiện của `battle-state`; tách khỏi Phaser để test được. */
 export type BattleCue = (
-  | { readonly type: 'fx'; readonly fx: string; readonly target: CueTarget; readonly scale: number }
+  | {
+      readonly type: 'fx';
+      readonly fx: string;
+      readonly target: CueTarget;
+      readonly scale: number;
+      /** Chỗ đặt hiệu ứng; bỏ trống = `body` (hành vi cũ, dùng cho hiệu ứng ở quái). */
+      readonly anchor?: FxAnchor;
+      /** Bật pha trộn cộng sáng (ADD) cho hiệu ứng sáng để hoà vào cảnh thay vì che nhân vật. */
+      readonly add?: boolean;
+    }
   /** Luồng sáng bay từ nhân vật `from` sang đối thủ, để thấy chiêu đi tới đâu trước khi trúng. */
   | { readonly type: 'projectile'; readonly from: CueTarget; readonly tone: ProjectileTone; readonly durationMs: number }
   | { readonly type: 'sound'; readonly sound: BattleSound }
@@ -70,6 +87,18 @@ function heroMoveFor(variant: SkillVariant): HeroMove {
 }
 
 /**
+ * Chỗ đặt hiệu ứng niệm chiêu của hiệp sĩ, để chiêu không đè lên mặt nhân vật:
+ * - attack: kiếm khí ra phía trước, hướng lên quái, cộng sáng.
+ * - empower: vầng phép tụ dưới/sau chân, cộng sáng.
+ * - guard/evade: giữ mặc định (khiên có hiệu ứng riêng; né là thuấn bộ/lướt, không phải vầng sáng).
+ */
+function castFxPlacement(skill: SkillKind): { anchor?: FxAnchor; add?: boolean } {
+  if (skill === 'attack') return { anchor: 'front', add: true };
+  if (skill === 'empower') return { anchor: 'under', add: true };
+  return {};
+}
+
+/**
  * Đổi sự kiện trận thành chuỗi cue hình/tiếng. Nhớ chiêu vừa tung để cú `hit` ngay sau dùng đúng hiệu ứng trúng
  * của chiêu đó (sự kiện `hit` không mang loại chiêu).
  */
@@ -92,7 +121,7 @@ export class BattleCueMapper {
       case 'comboUp':
         this.streak = event.count;
         return [
-          { type: 'fx', fx: SYSTEM_FX.comboUp, target: 'hero', scale: NORMAL_SCALE },
+          { type: 'fx', fx: SYSTEM_FX.comboUp, target: 'hero', scale: NORMAL_SCALE, anchor: 'under', add: true },
           { type: 'floatText', target: 'hero', text: event.chainId === null ? `Combo ×${event.count}` : 'Chuỗi thánh ngôn!', tone: 'info' },
           { type: 'sound', sound: 'combo' },
         ];
@@ -138,15 +167,15 @@ export class BattleCueMapper {
     const variant = escalate(skillVariantFor(skill, this.tiers[skill], mastered), stage);
     this.lastVariant = variant;
     const cues: BattleCue[] = [
-      { type: 'fx', fx: variant.castFx, target: 'hero', scale: variant.fxScale },
+      { type: 'fx', fx: variant.castFx, target: 'hero', scale: variant.fxScale, ...castFxPlacement(skill) },
       { type: 'sound', sound: 'cast' },
     ];
     // Chuỗi dài: hào quang thánh quanh hiệp sĩ trước khi ra chiêu.
-    if (stage >= GRAND_STAGE) cues.unshift({ type: 'fx', fx: SYSTEM_FX.levelUp, target: 'hero', scale: NORMAL_SCALE });
+    if (stage >= GRAND_STAGE) cues.unshift({ type: 'fx', fx: SYSTEM_FX.levelUp, target: 'hero', scale: NORMAL_SCALE, anchor: 'under', add: true });
     if (skill === 'evade') cues.push({ type: 'heroMove', move: heroMoveFor(variant) });
     else cues.push({ type: 'actor', target: 'hero', action: skill === 'attack' ? 'strike' : 'cast' });
     // Khiên hiện dần quanh hiệp sĩ sau động tác niệm.
-    if (skill === 'guard') cues.push({ type: 'fx', fx: variant.impactFx, target: 'hero', scale: variant.fxScale, delayMs: GUARD_FORM_DELAY_MS });
+    if (skill === 'guard') cues.push({ type: 'fx', fx: variant.impactFx, target: 'hero', scale: variant.fxScale, anchor: 'under', add: true, delayMs: GUARD_FORM_DELAY_MS });
     if (skill === 'empower') cues.push({ type: 'projectile', from: 'hero', tone: 'curse', durationMs: SPELL_FLIGHT_MS });
     // Từ đòn thứ 2 của chuỗi, nhát chém phóng thêm kiếm khí sáng bay tới quái.
     if (skill === 'attack' && stage >= RISING_STAGE) cues.push({ type: 'projectile', from: 'hero', tone: 'holy', durationMs: SPELL_FLIGHT_MS });
