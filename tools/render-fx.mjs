@@ -63,13 +63,21 @@ const workDir = mkdtempSync(join(tmpdir(), 'herox-fx-'));
 const previous = readExistingIndex();
 const index = {};
 let totalPixels = 0;
+const failures = [];
 try {
   for (const effect of manifest.effects) {
     if (only.size > 0 && !only.has(effect.name)) {
       if (previous[effect.name] !== undefined) index[effect.name] = previous[effect.name];
       continue;
     }
-    const sheet = renderWithinLimit(effect, workDir);
+    let sheet;
+    try {
+      sheet = renderWithinLimit(effect, workDir);
+    } catch (error) {
+      // Một hiệu ứng hỏng không bỏ phí các hiệu ứng đã render; báo hết ở cuối để sửa manifest.
+      failures.push(`${effect.name}: ${error.message.split('\n')[0]}`);
+      continue;
+    }
     const { meta } = sheet.json;
     meta.image = `${effect.name}.png`;
     copyFileSync(sheet.png, join(OUTPUT_DIR, `${effect.name}.png`));
@@ -87,3 +95,7 @@ writeFileSync(
   `${JSON.stringify({ pixelfxCommit: manifest.pixelfx.commit, effects: index }, null, 2)}\n`,
 );
 process.stdout.write(`Bộ nhớ GPU ước tính cho phần vừa render: ${(totalPixels * 4 / 1024 / 1024).toFixed(1)} MB\n`);
+if (failures.length > 0) {
+  process.stderr.write(`Không render được ${failures.length} hiệu ứng (bỏ khỏi manifest hoặc chỉnh fps):\n${failures.join('\n')}\n`);
+  process.exitCode = 1;
+}

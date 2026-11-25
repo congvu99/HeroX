@@ -122,8 +122,11 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
     khi vào bản đồ nên không đứng hình; bảng "Đang vào trận…" chỉ hiện nếu chờ quá 0,7 s.
 - **Quái lang thang:** Misty_Fields có 7 quái (sau mốc tới làng) đứng nhún, bước quanh chỗ sinh, có quầng sáng nhỏ.
   Chạm vào là vào trận dã ngoại; trận xong con đó tan đi, 30 s sau sinh con mới (`roaming-monsters.ts`).
-  - Chuỗi đúng: từ đòn thứ 2 chiêu mượn hình bậc 2 và chém kèm kiếm khí sáng; từ đòn thứ 4 thêm hào quang và phóng to.
-    Khiên có thêm hình khiên hiện quanh hiệp sĩ. Chỉ đổi hình, không đổi sức mạnh.
+  - Chuỗi đúng: bậc combo càng cao chiêu càng hoành tráng. Bậc 3 hiện tên chiêu; bậc 4 thêm hào quang và rung mạnh;
+    bậc 5 có hitstop. Màu luồng phép theo hệ (`element` trong `assets/fx/fx-manifest.json`). Khiên có thêm hình khiên
+    hiện quanh hiệp sĩ. Bậc combo quyết định chiêu nào được bốc (xem `docs/system-architecture.md`, mục Logic trận).
+  - Trạng thái (đốt, độc, đóng băng, choáng, hút máu, hồi máu, tăng tốc, nguyền) hiện bằng hiệu ứng riêng và chữ nổi
+    tiếng Việt trên quái hoặc hiệp sĩ.
   - Sân căn giữa khung 360×780 (lưới 384 px cắt đều 12 px hai mép); hero, quái cùng tâm ngang với thẻ đề.
   - HUD là DOM/CSS phủ trên canvas (`battle-hud.ts`, `battle-hud.css`): hàng trên là thẻ máu hiệp sĩ và quái,
     không có khung cố định giữa sân. Combo, sát thương, "Sai từ"… là chữ pixel nhỏ (monospace, viền 1 px) bật lên
