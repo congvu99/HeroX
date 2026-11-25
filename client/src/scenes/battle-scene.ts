@@ -13,7 +13,7 @@ import { submitBattleResult, startBattle } from '../api/battle-api';
 import { readEngSessionToken } from '../api/me-api';
 import { BattleSounds } from '../audio/battle-sounds';
 import { arenaThemeFor, buildArenaLayout } from '../battle/battle-arena-layout';
-import { BattleCueMapper, type BattleCue, type CueTarget } from '../battle/battle-cues';
+import { BattleCueMapper, type BattleCue, type CueTarget, type FxAnchor } from '../battle/battle-cues';
 import { BattleSession } from '../battle/battle-session';
 import { devBattleSetup } from '../battle/dev-battle-fixture';
 import { BACKGROUND_COLOR, LOGICAL_WIDTH } from '../config/display';
@@ -38,7 +38,7 @@ import type { QuestTracker } from '../story/quest-tracker';
 import { journalFailureMessage, SESSION_EXPIRED_MESSAGE, type StoryJournal } from '../story/story-journal';
 import { BattleHud, type BattleHudButton } from '../ui/battle-hud';
 import { TypingInput } from '../ui/typing-input';
-import { WordRing } from '../ui/word-ring';
+import { RING_DISMISS_MS, WordRing } from '../ui/word-ring';
 import { REGISTRY_KEYS, SCENE_KEYS } from './scene-keys';
 
 export interface BattleSceneData {
@@ -59,6 +59,18 @@ const FX_BODY_OFFSET_Y = -44;
  */
 const FLOAT_OFFSET_Y: Readonly<Record<CueTarget, number>> = { enemy: -110, hero: 34 };
 const FX_DEPTH = 20;
+/**
+ * Hào quang/khiên/tụ phép của hiệp sĩ vẽ DƯỚI sprite (actor ở depth 10) để nhân vật đứng trong vầng sáng,
+ * không bị hiệu ứng che mặt. Đặt ở chân, cộng sáng (ADD) nên vầng sáng loang quanh người.
+ */
+const FX_UNDER_DEPTH = 5;
+/** Vầng sáng dưới chân nhích lên thân một chút cho ôm lấy người thay vì nằm bệt dưới chân. */
+const FX_UNDER_OFFSET_Y = -24;
+/** Kiếm khí (hiệu ứng `front`) nhích lên trên thân, về phía quái ở trên, để không đè lên mặt sprite. */
+const FX_FRONT_OFFSET_Y = -70;
+/** Tâm cung vòng từ: đặt ở thân hiệp sĩ (trên chân một chút) để cung trải xuống và sang hai bên quanh nhân vật. */
+const RING_CENTER_OFFSET_Y = -36;
+const RING_CENTER = { x: HERO_FEET.x, y: HERO_FEET.y + RING_CENTER_OFFSET_Y } as const;
 /** Sân trận mờ dần vào sau màn tối của chuyển cảnh trên bản đồ. */
 const INTRO_FADE_MS = 450;
 const WAITING_NOTICE_DELAY_MS = 700;
@@ -86,6 +98,8 @@ const INPUT_MODE_LABELS: Readonly<Record<BattleInputMode, string>> = { typing: '
 export class BattleScene extends Phaser.Scene {
   private encounterId = '';
   private showcaseUntilMs = 0;
+  /** Trong lúc vòng từ tan ("khoảnh khắc" trước khi ra chiêu): đồng hồ trận + đề đứng, chưa nhận đáp án mới. */
+  private ringDismissUntilMs = 0;
   private settings!: GameSettings;
   private inputMode: BattleInputMode = 'typing';
   private session: BattleSession | null = null;
@@ -115,6 +129,7 @@ export class BattleScene extends Phaser.Scene {
     this.ended = false;
     this.battleRun += 1;
     this.showcaseUntilMs = 0;
+    this.ringDismissUntilMs = 0;
   }
 
   preload(): void {
@@ -149,9 +164,9 @@ export class BattleScene extends Phaser.Scene {
   override update(_time: number, delta: number): void {
     const session = this.session;
     if (session === null || this.ended) return;
-    // Lúc xem chiêu, đồng hồ trận đứng yên: đề, combo, đòn quái đều chờ. Log chỉ ghi thời gian trận nên server
-    // chạy lại vẫn khớp.
-    const events = session.tick(this.isShowcasing() ? 0 : delta);
+    // Lúc xem chiêu hoặc đang vòng tan, đồng hồ trận đứng yên: đề, combo, đòn quái đều chờ. Log chỉ ghi thời gian
+    // trận nên server chạy lại vẫn khớp.
+    const events = session.tick(this.isClockHeld() ? 0 : delta);
     for (const event of events) this.handleEvent(event);
     if (events.length > 0) this.refreshHud(session);
     this.refreshTimers(session);
@@ -182,7 +197,15 @@ export class BattleScene extends Phaser.Scene {
     const parent = this.game.canvas.parentElement ?? document.body;
     const me = this.registry.get(REGISTRY_KEYS.me) as MeResponse | undefined;
     this.hud = new BattleHud(parent, this.game.canvas, me?.hero?.name ?? DEV_HERO_NAME);
-    this.ring = new WordRing((wordId) => this.submit({ kind: 'ring', wordId }));
+    this.ring = new WordRing(
+      {
+        // Cung: chạm bắt đầu vòng tan; dừng đồng hồ cho "khoảnh khắc", hết thời gian mới gửi chiêu.
+        onDismissStart: (wordId) => this.holdThenCast({ kind: 'ring', wordId }),
+        // Lưới dự phòng: chọn luôn, gửi chiêu ngay.
+        onPick: (wordId) => this.submit({ kind: 'ring', wordId }),
+      },
+      RING_CENTER,
+    );
     this.typing = new TypingInput({
       onSubmit: (text) => {
         // Đề vừa hiện chưa nhận input (luật chống bấm vội của server): giữ nguyên chữ để người chơi Enter lại.
@@ -191,7 +214,8 @@ export class BattleScene extends Phaser.Scene {
         this.typing.clear();
       },
     });
-    this.hud.dockCenter.append(this.typing.element, this.ring.element);
+    this.hud.dockCenter.append(this.typing.element);
+    this.hud.ringLayer.append(this.ring.element);
     this.hud.addDockButton('start', { label: 'Rời trận', onClick: () => void this.flee() });
     this.modeButton = this.hud.addDockButton('start', { label: INPUT_MODE_LABELS[this.inputMode], onClick: () => this.toggleInputMode() });
     this.soundButton = this.hud.addDockButton('end', { label: this.soundLabel(), onClick: () => this.toggleSound() });
@@ -228,6 +252,8 @@ export class BattleScene extends Phaser.Scene {
     const typing = this.inputMode === 'typing';
     this.ring.setVisible(!typing && !this.ended);
     this.typing.setVisible(typing && !this.ended);
+    // Vòng từ: đề lên đỉnh khung để cung bao quanh hiệp sĩ không che đề. Kiểu gõ: đề ở đáy, ngay trên ô gõ.
+    this.hud.setPromptPlacement(typing ? 'dock' : 'top');
     this.modeButton.textContent = INPUT_MODE_LABELS[this.inputMode];
     if (typing && !this.ended) this.typing.focus();
     else this.typing.blur();
@@ -252,6 +278,18 @@ export class BattleScene extends Phaser.Scene {
     if (this.session === null || this.ended || this.isShowcasing()) return;
     this.sounds.unlock();
     this.session.submit(input);
+  }
+
+  /**
+   * "Khoảnh khắc" vòng tan: giữ đồng hồ trận + đề đứng trong lúc vòng từ tan, hết RING_DISMISS_MS mới gửi chiêu.
+   * Dùng đồng hồ scene (`delayedCall`) nên cùng nhịp với `ringDismissUntilMs` và tự huỷ khi rời trận.
+   */
+  private holdThenCast(input: BattleInput): void {
+    this.ringDismissUntilMs = this.time.now + RING_DISMISS_MS;
+    this.time.delayedCall(RING_DISMISS_MS, () => {
+      this.ringDismissUntilMs = 0;
+      this.submit(input);
+    });
   }
 
   private async beginBattle(): Promise<void> {
@@ -337,12 +375,17 @@ export class BattleScene extends Phaser.Scene {
   private refreshTimers(session: BattleSession): void {
     const { prompt, elapsedMs, setup } = session.current;
     this.hud.setPromptTimer(prompt === null ? 0 : (prompt.deadlineMs - elapsedMs) / setup.promptTimeMs);
-    this.ring.setEnabled(!session.isInputLocked && !this.isShowcasing());
+    this.ring.setEnabled(!session.isInputLocked && !this.isClockHeld());
   }
 
   /** Đang dừng nhịp trận để người chơi xem chiêu vừa tung (đồng hồ trận đứng, chưa nhận đáp án mới). */
   private isShowcasing(): boolean {
     return this.time.now < this.showcaseUntilMs;
+  }
+
+  /** Đồng hồ trận đang bị giữ đứng: đang xem chiêu, hoặc đang vòng từ tan trước khi ra chiêu. */
+  private isClockHeld(): boolean {
+    return this.isShowcasing() || this.time.now < this.ringDismissUntilMs;
   }
 
   private feetOf(target: CueTarget): ActorPoint {
@@ -352,6 +395,20 @@ export class BattleScene extends Phaser.Scene {
   private bodyOf(target: CueTarget): ActorPoint {
     const feet = this.feetOf(target);
     return { x: feet.x, y: feet.y + FX_BODY_OFFSET_Y };
+  }
+
+  /**
+   * Chỗ và độ sâu phát hiệu ứng theo `anchor` (xem `FxAnchor` ở battle-cues):
+   * - `under`: dưới sprite (depth < actor) để nhân vật đứng trong vầng sáng.
+   * - `front`: trước thân, nhích về phía đối thủ, vẽ trên sprite — cho kiếm khí hướng lên quái.
+   * - `body`/bỏ trống: ngang thân như cũ (hiệu ứng ở quái).
+   */
+  private placeFx(target: CueTarget, anchor?: FxAnchor): { x: number; y: number; depth: number } {
+    const feet = this.feetOf(target);
+    if (anchor === 'under') return { x: feet.x, y: feet.y + FX_UNDER_OFFSET_Y, depth: FX_UNDER_DEPTH };
+    // Sân xếp dọc (quái ở trên, hiệp sĩ ở dưới, cùng cột X): "phía trước, hướng lên quái" là nhích lên trên thân.
+    if (anchor === 'front') return { x: feet.x, y: feet.y + FX_FRONT_OFFSET_Y, depth: FX_DEPTH };
+    return { x: feet.x, y: feet.y + FX_BODY_OFFSET_Y, depth: FX_DEPTH };
   }
 
   /** Cue có `delayMs` chờ trên đồng hồ scene (dừng theo scene, tự huỷ khi rời trận). */
@@ -364,8 +421,9 @@ export class BattleScene extends Phaser.Scene {
     switch (cue.type) {
       case 'fx': {
         // Hiệu ứng pixelfx vẽ sẵn theo góc nhìn chính diện; giữ nguyên, không xoay theo trục sân.
-        const at = this.bodyOf(cue.target);
-        this.fx.play(cue.fx, at.x, at.y, { scale: cue.scale, depth: FX_DEPTH, timeScale: FX_TIME_SCALE });
+        const placed = this.placeFx(cue.target, cue.anchor);
+        const blendMode = cue.add === true ? Phaser.BlendModes.ADD : Phaser.BlendModes.NORMAL;
+        this.fx.play(cue.fx, placed.x, placed.y, { scale: cue.scale, depth: placed.depth, timeScale: FX_TIME_SCALE, blendMode });
         break;
       }
       case 'projectile': {

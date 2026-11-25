@@ -28,6 +28,8 @@ export interface FxPlayOptions {
   readonly angle?: number;
   /** Tốc độ phát (1 = đúng fps gốc); < 1 phát chậm để người chơi kịp xem. */
   readonly timeScale?: number;
+  /** Chế độ pha trộn. ADD cho hiệu ứng sáng (hào quang, kiếm khí) để hoà vào cảnh thay vì che khuất nhân vật. */
+  readonly blendMode?: Phaser.BlendModes;
 }
 
 /**
@@ -92,6 +94,8 @@ export class FxPlayer {
       .setAngle(options.angle ?? 0)
       .setScale(options.scale ?? 1)
       .setDepth(options.depth ?? 0)
+      // Luôn đặt blend mode: sprite tái dùng từ pool có thể còn ADD của lần phát trước.
+      .setBlendMode(options.blendMode ?? Phaser.BlendModes.NORMAL)
       .setPosition(x, y)
       .setActive(true)
       .setVisible(true);

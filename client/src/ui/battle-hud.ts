@@ -46,8 +46,10 @@ class Meter {
  */
 export class BattleHud {
   readonly root: HTMLElement;
-  /** Dải dưới: chứa ô gõ hoặc vòng từ và các nút phụ. */
+  /** Dải dưới: chứa ô gõ và các nút phụ (và vòng từ ở bố cục lưới dự phòng). */
   readonly dockCenter: HTMLElement;
+  /** Lớp phủ sân để đặt vòng từ cung quanh hiệp sĩ (nút định vị tuyệt đối theo % khung). */
+  readonly ringLayer: HTMLElement;
   private readonly stage: HTMLElement;
   private readonly heroStats: HTMLElement;
   private readonly heroHp = new Meter('is-hp');
@@ -66,6 +68,10 @@ export class BattleHud {
   private readonly centerButtons: HTMLElement;
   private readonly dockStart: HTMLElement;
   private readonly dockEnd: HTMLElement;
+  private readonly dock: HTMLElement;
+  /** Hai chỗ đặt thẻ đề: trong dock đáy (kiểu gõ) và trên đỉnh khung (vòng từ). */
+  private readonly promptSlotDock: HTMLElement;
+  private readonly promptSlotTop: HTMLElement;
   private readonly stopTracking: () => void;
 
   constructor(parent: HTMLElement, canvas: HTMLCanvasElement, heroName: string) {
@@ -114,10 +120,25 @@ export class BattleHud {
     this.dockStart = createElement('div', { className: 'battle-dock-side' });
     this.dockCenter = createElement('div', { className: 'battle-dock-center' });
     this.dockEnd = createElement('div', { className: 'battle-dock-side is-end' });
-    // Đề nằm ngay trên ô gõ / vòng từ, dưới hiệp sĩ: mắt đọc đề rồi chọn chữ mà không phải nhìn lên đầu sân.
-    const dock = createElement('div', { className: 'battle-dock' }, [this.dockStart, this.promptCard, this.dockCenter, this.dockEnd]);
+    // Đề nằm ngay trên ô gõ, dưới hiệp sĩ (kiểu gõ): mắt đọc đề rồi gõ mà không phải nhìn lên đầu sân.
+    // Vòng từ cung bao quanh hiệp sĩ nên đề chuyển lên đỉnh khung (xem setPromptPlacement).
+    this.dock = createElement('div', { className: 'battle-dock' }, [this.dockStart, this.dockCenter, this.dockEnd]);
+    this.promptSlotDock = createElement('div', { className: 'battle-prompt-slot is-dock' }, [this.promptCard]);
+    this.promptSlotTop = createElement('div', { className: 'battle-prompt-slot is-top' });
 
-    this.stage = createElement('div', { className: 'battle-stage' }, [this.floats, top, dock, this.center]);
+    // Lớp vòng từ cung: phủ sân, nút định vị tuyệt đối; dưới `dock`/`center` về thứ tự xếp chồng.
+    this.ringLayer = createElement('div', { className: 'battle-ring-layer' });
+    this.ringLayer.setAttribute('aria-hidden', 'false');
+
+    this.stage = createElement('div', { className: 'battle-stage' }, [
+      this.floats,
+      top,
+      this.promptSlotTop,
+      this.ringLayer,
+      this.promptSlotDock,
+      this.dock,
+      this.center,
+    ]);
     this.root = createElement('div', { className: 'battle-hud' }, [this.stage]);
     parent.appendChild(this.root);
     this.stopTracking = trackCanvasFrame(canvas, parent, this.stage);
@@ -128,6 +149,15 @@ export class BattleHud {
     const element = createButton(button.label, button.onClick, 'battle-button is-small');
     (side === 'start' ? this.dockStart : this.dockEnd).appendChild(element);
     return element;
+  }
+
+  /**
+   * Chỗ đặt thẻ đề: `dock` ngay trên ô gõ ở đáy (kiểu gõ), `top` trên đỉnh khung dưới thẻ máu
+   * (vòng từ, để cung bao quanh hiệp sĩ không che đề).
+   */
+  setPromptPlacement(placement: 'dock' | 'top'): void {
+    const slot = placement === 'top' ? this.promptSlotTop : this.promptSlotDock;
+    if (this.promptCard.parentElement !== slot) slot.appendChild(this.promptCard);
   }
 
   setHero(hp: number, maxHp: number, shield: number): void {
