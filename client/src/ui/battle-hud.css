@@ -160,16 +160,16 @@
   transition: none;
 }
 
-/* Hai chỗ đặt thẻ đề: trên đỉnh khung (vòng từ) và trong dải đáy (kiểu gõ). */
+/* Hai chỗ đặt thẻ đề: trên hàng nút phụ (vòng từ) và trong dải đáy ngay trên ô gõ (kiểu gõ). */
 .battle-prompt-slot {
   position: absolute;
   left: calc(var(--u) * 8);
   right: calc(var(--u) * 8);
 }
 
-/* Đỉnh khung, ngay dưới thẻ máu hiệp sĩ/quái. */
-.battle-prompt-slot.is-top {
-  top: calc(var(--u) * 86);
+/* Vòng từ: dưới vòng, ngay trên hàng nút phụ (kiểu này không có ô gõ) để không che quái trên sân. */
+.battle-prompt-slot.is-ring {
+  bottom: max(calc(var(--u) * 52), calc(var(--u) * 8 + 44px));
 }
 
 /* Trong dải đáy, ngay trên ô gõ. */
@@ -353,52 +353,49 @@
   pointer-events: none;
 }
 
-/* Bố cục cung: nút định vị tuyệt đối quanh hiệp sĩ (left/top do word-ring.ts ghi theo % khung). */
-.battle-ring.is-arc {
-  position: absolute;
-  inset: 0;
-}
-
-.battle-ring.is-arc .battle-ring-option {
-  position: absolute;
-  /* left/top là tâm nút; dịch về tâm. */
-  transform: translate(-50%, -50%);
-  width: max(92px, calc(var(--u) * 92));
-  min-height: 44px;
-  text-align: center;
-}
-
-.battle-ring.is-arc .battle-ring-option:active:not(:disabled) {
-  transform: translate(-50%, -50%) scale(0.95);
-}
-
-/* Bố cục lưới dự phòng (từ dài): khối 2×3 ở đáy sân, chừa trên hàng nút phụ (có thể xuống 2 dòng trên màn hẹp). */
-.battle-ring.is-grid {
+/*
+ * Hai cột 3 từ ôm hai bên hiệp sĩ; cột giữa chừa cho nhân vật. Grid tự giãn theo nhãn nên từ dài chỉ xuống dòng,
+ * không đè nút khác. `top` (thân hiệp sĩ, % khung) do word-ring.ts ghi; dịch -50% để tâm khối trùng thân.
+ */
+.battle-ring {
   position: absolute;
   left: calc(var(--u) * 8);
   right: calc(var(--u) * 8);
-  bottom: calc(var(--u) * 76);
+  transform: translateY(-50%);
   display: grid;
-  /* 2 cột × 3 hàng: nút đủ rộng cho từ dài trên màn 360 px. */
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: calc(var(--u) * 5);
+  grid-template-columns: minmax(0, 1fr) calc(var(--u) * 84) minmax(0, 1fr);
+  row-gap: calc(var(--u) * 8);
+  align-items: stretch;
 }
 
 .battle-ring-option {
   pointer-events: auto;
   min-height: 44px;
-  padding: 0.3em 0.4em;
+  padding: 0.3em 0.5em;
   font-size: max(15px, calc(var(--u) * 15));
   line-height: 1.15;
+  text-align: center;
   color: var(--bone);
-  /* Từ quá dài thì xuống dòng chứ không cắt: người chơi phải đọc được trọn đáp án. */
-  overflow-wrap: anywhere;
+  /* Từ quá dài thì xuống dòng theo khoảng trắng chứ không cắt: người chơi phải đọc được trọn đáp án. */
+  overflow-wrap: break-word;
   background: linear-gradient(180deg, #2a2030f0, #140f18f0);
   border: 1px solid var(--border);
   outline: 1px solid #000;
+  box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 6) #000000aa;
   cursor: pointer;
   touch-action: manipulation;
-  transition: opacity 180ms ease-out, transform 180ms ease-out, border-color 120ms;
+  transition: opacity 180ms ease-out, transform 120ms ease-out, border-color 120ms;
+  /* Hướng bắn ra khi vòng tan / hướng bung vào khi hiện: trái âm, phải dương. */
+  --dir: -1;
+}
+
+.battle-ring-option.is-left {
+  grid-column: 1;
+}
+
+.battle-ring-option.is-right {
+  grid-column: 3;
+  --dir: 1;
 }
 
 .battle-ring-option:hover:not(:disabled),
@@ -406,7 +403,7 @@
   border-color: var(--gold);
 }
 
-.battle-ring.is-grid .battle-ring-option:active:not(:disabled) {
+.battle-ring-option:active:not(:disabled) {
   transform: scale(0.95);
   background: #4a3f78;
 }
@@ -415,7 +412,13 @@
   cursor: default;
 }
 
-/* Vòng tan: từ chọn loé sáng rồi mờ; từ khác bật ra xa tâm rồi mờ. */
+/* Đề mới: từ bung ra từ hiệp sĩ sang hai bên, lần lượt từng hàng. */
+.battle-ring.is-entering .battle-ring-option {
+  animation: battle-ring-enter 220ms ease-out both;
+  animation-delay: calc(var(--row) * 40ms);
+}
+
+/* Vòng tan: từ chọn loé sáng rồi thu lại; từ khác bắn ra hai bên rồi mờ. */
 .battle-ring.is-dismissing .battle-ring-option.is-picked {
   border-color: var(--gold);
   color: var(--holy);
@@ -425,35 +428,46 @@
 }
 
 .battle-ring.is-dismissing .battle-ring-option.is-dismissed {
-  opacity: 0;
   animation: battle-ring-scatter 260ms ease-in forwards;
 }
 
-/* Lưới không có vòng tan (chọn luôn), nhưng giữ quy tắc chung: nút chưa chọn mờ khi disabled ngoài vòng tan. */
+/* Đề chưa mở nhận input (chống bấm vội): mờ để người chơi biết chưa chạm được. */
 .battle-ring:not(.is-dismissing) .battle-ring-option:disabled {
   opacity: 0.5;
 }
 
+@keyframes battle-ring-enter {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--dir) * -1 * var(--u) * 40)) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes battle-ring-pick {
   0% {
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
   45% {
-    transform: translate(-50%, -50%) scale(1.18);
+    transform: scale(1.12);
   }
   100% {
-    transform: translate(-50%, -50%) scale(0.6);
+    transform: scale(0.6);
     opacity: 0;
   }
 }
 
 @keyframes battle-ring-scatter {
-  0% {
+  from {
     opacity: 1;
+    transform: none;
   }
-  100% {
+  to {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.5);
+    transform: translateX(calc(var(--dir) * var(--u) * 48)) scale(0.7);
   }
 }
 
