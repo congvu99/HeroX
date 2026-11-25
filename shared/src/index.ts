@@ -54,6 +54,7 @@ export type {
   HeroBattleState,
   MissReason,
   PromptState,
+  StatusTarget,
   StepResult,
   WordResult,
 } from './combat/battle-state.js';
@@ -115,6 +116,20 @@ export { CHAPTER_5_ENEMIES } from './data/enemies/chapter-5.js';
 export type { Encounter, EnemyTemplate } from './combat/encounters.js';
 export { buildRingOptions, RING_LOADOUT_SLOTS, RING_SIZE } from './combat/ring-options.js';
 export { SeededRandom } from './combat/seeded-random.js';
+export { COMBO_TIERS, comboTierFor, MAX_COMBO_TIER, raiseComboTier } from './combat/combo-tier.js';
+export type { ComboTier } from './combat/combo-tier.js';
+export { buildBattleDeck, DECK_MOVES_PER_GROUP, initialMoveRngState, pickSkillMove, rollMoveStatus, SkillMoveCatalogError } from './combat/skill-move-picker.js';
+export type { StatusRoll } from './combat/skill-move-picker.js';
+export {
+  DAMAGE_OVER_TIME_TURNS,
+  HASTE_COMBO_WINDOW_BONUS_MS,
+  hasteComboWindowBonusMs,
+  STATUS_CHANCE_BY_COMBO_TIER,
+  STATUS_KINDS,
+} from './combat/status-effects.js';
+export type { ActiveStatus, EnemyStatusKind, HeroStatusKind, PreventingStatusKind, StatusKind } from './combat/status-effects.js';
+export { SKILL_ELEMENTS, SKILL_MOVES, skillMoveById, skillMovesFor, STATUS_FX } from './data/skill-moves.js';
+export type { SkillElement, SkillMove } from './data/skill-moves.js';
 export { SKILL_KINDS, skillKindForPartOfSpeech } from './combat/skill-kind.js';
 export type { SkillKind } from './combat/skill-kind.js';
 export {

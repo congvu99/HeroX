@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { fxFrameName, FxIndexFormatError, fxOrigin, parseFxIndex, type FxIndex, type FxInfo } from './fx-index';
+import { fitFxScale, fxFrameName, FxIndexFormatError, fxOrigin, parseFxIndex, type FxIndex, type FxInfo } from './fx-index';
 
 /** Atlas nằm ở `client/public/fx/`, Vite phục vụ dưới base `/herox/`. */
 const FX_BASE_URL = `${import.meta.env.BASE_URL}fx/`;
@@ -30,6 +30,8 @@ export interface FxPlayOptions {
   readonly timeScale?: number;
   /** Chế độ pha trộn. ADD cho hiệu ứng sáng (hào quang, kiếm khí) để hoà vào cảnh thay vì che khuất nhân vật. */
   readonly blendMode?: Phaser.BlendModes;
+  /** Cạnh dài nhất tối đa (pixel logic) sau khi phóng; hiệu ứng khung to được thu lại cho vừa. */
+  readonly maxSize?: number;
 }
 
 /**
@@ -52,6 +54,17 @@ export function queueFxAssets(scene: Phaser.Scene, onlyNames?: readonly string[]
   }
   scene.load.once(`${Phaser.Loader.Events.FILE_KEY_COMPLETE}json-${FX_INDEX_CACHE_KEY}`, queueAtlases);
   scene.load.json(FX_INDEX_CACHE_KEY, `${FX_BASE_URL}fx-index.json`);
+}
+
+/**
+ * Gỡ atlas và animation của các hiệu ứng khỏi bộ nhớ (GPU) khi không còn dùng, ví dụ bộ chiêu riêng của một trận.
+ * Texture và animation dùng chung cả game: chỉ truyền tên mà không scene nào khác còn cần.
+ */
+export function releaseFxAssets(scene: Phaser.Scene, names: readonly string[]): void {
+  for (const name of names) {
+    if (scene.anims.exists(animationKey(name))) scene.anims.remove(animationKey(name));
+    if (scene.textures.exists(textureKey(name))) scene.textures.remove(textureKey(name));
+  }
 }
 
 /** Chỉ mục hỏng hoặc chưa tải được thì trận vẫn chơi được, chỉ mất hiệu ứng. */
@@ -85,6 +98,8 @@ export class FxPlayer {
   play(name: string, x: number, y: number, options: FxPlayOptions = {}): boolean {
     const info = this.index.get(name);
     if (info === undefined || !this.has(name)) return false;
+    // Atlas có thể tải sau khi FxPlayer dựng (bộ chiêu của trận): tạo animation lúc phát lần đầu.
+    this.ensureAnimation(name, info);
     const sprite = this.acquire();
     const origin = fxOrigin(info);
     sprite
@@ -92,7 +107,7 @@ export class FxPlayer {
       .setOrigin(options.flipX === true ? 1 - origin.x : origin.x, origin.y)
       .setFlipX(options.flipX === true)
       .setAngle(options.angle ?? 0)
-      .setScale(options.scale ?? 1)
+      .setScale(fitFxScale(info, options.scale ?? 1, options.maxSize))
       .setDepth(options.depth ?? 0)
       // Luôn đặt blend mode: sprite tái dùng từ pool có thể còn ADD của lần phát trước.
       .setBlendMode(options.blendMode ?? Phaser.BlendModes.NORMAL)

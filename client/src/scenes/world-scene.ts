@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { citadelStageFor, FIELD_ROAM_ENCOUNTER_ID, MOVEMENT_SKILL_IDS, SYSTEM_FX, type BuildingId, type CitadelStage, type MeResponse, type MovementSkillId } from '@herox/shared';
+import { battleBaseFxNames } from '../battle/battle-fx-assets';
 import { FxPlayer, isFxAssetKey, queueFxAssets } from '../fx/fx-player';
 import { InputController } from '../input/input-controller';
 import { facingFromVector, type Facing, type MovementVector } from '../input/movement-vector';
@@ -319,7 +320,8 @@ export class WorldScene extends Phaser.Scene {
    * Lỗi tải ở đây bỏ qua: màn trận tự tải lại hoặc dùng hình tạm.
    */
   private warmBattleAssets(): void {
-    queueFxAssets(this);
+    // Chỉ bộ nền; atlas riêng của bộ chiêu trận do màn trận tải khi đã biết seed.
+    queueFxAssets(this, battleBaseFxNames());
     queueHeroBattleSheets(this);
     queueArenaTiles(this);
     if (this.load.list.size === 0) return;

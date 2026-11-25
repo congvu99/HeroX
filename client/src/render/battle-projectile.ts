@@ -6,7 +6,18 @@ const TEXTURE_KEY = 'battle-projectile-orb';
 const ORB_RADIUS = 7;
 const TRAIL_LIFESPAN_MS = 260;
 const TRAIL_FREQUENCY_MS = 16;
-const TONE_COLORS: Readonly<Record<ProjectileTone, number>> = { holy: 0xfff1c2, curse: 0xb070ff };
+/** Màu luồng bay theo hệ chiêu (tint lên quả cầu trắng, pha cộng sáng). */
+const TONE_COLORS: Readonly<Record<ProjectileTone, number>> = {
+  physical: 0xe6edf5,
+  holy: 0xfff1c2,
+  arcane: 0xff7ad9,
+  shadow: 0xb070ff,
+  fire: 0xff7a2e,
+  ice: 0x9fe8ff,
+  lightning: 0xfff35c,
+  nature: 0x8fe36a,
+  water: 0x4fa8ff,
+};
 
 /** Luồng sáng có đuôi bay thẳng giữa hai nhân vật (khung dọc: dọc theo trục sân, không xoay sprite). */
 export class BattleProjectiles {

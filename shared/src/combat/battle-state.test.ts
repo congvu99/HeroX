@@ -34,7 +34,7 @@ describe('createBattle', () => {
     const { state, events } = start();
     expect(events.map((event) => event.type)).toEqual(['enemySpawn', 'prompt']);
     expect(state.enemy).toMatchObject({ index: 0, hp: 40, maxHp: 40, elite: false });
-    expect(state.hero).toEqual({ hp: 100, maxHp: 100, shield: 0, evadeCharges: 0 });
+    expect(state.hero).toEqual({ hp: 100, maxHp: 100, shield: 0, evadeCharges: 0, statuses: [] });
     expect(state.prompt?.options).toHaveLength(6);
     expect(state.prompt?.options).toContain(state.prompt?.wordId);
     expect(state.prompt?.deadlineMs).toBe(10_000);

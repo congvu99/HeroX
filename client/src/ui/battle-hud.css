@@ -260,6 +260,19 @@
   color: #ff8a80;
 }
 
+.battle-float.is-heal {
+  color: #8dff9a;
+}
+
+/* Tên chiêu: chữ lớn vàng kim, viền đậm hơn, đứng lâu hơn chút để kịp đọc. */
+.battle-float.is-skill {
+  color: #ffd23f;
+  font-size: max(15px, calc(var(--u) * 18));
+  letter-spacing: 0.08em;
+  text-shadow: 2px 0 0 #3a1a00, -2px 0 0 #3a1a00, 0 2px 0 #3a1a00, 0 -2px 0 #3a1a00, 2px 2px 0 #000;
+  animation: battle-float-up 1100ms steps(11, end) forwards;
+}
+
 /* ---------- Dải dưới: nút phụ, ô gõ hoặc vòng từ ---------- */
 
 .battle-dock {

@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { SKILL_CATALOG, SYSTEM_FX } from '@herox/shared';
-import { fxFrameName, FxIndexFormatError, fxOrigin, parseFxIndex } from '../src/fx/fx-index';
+import { SKILL_CATALOG, SKILL_MOVES, STATUS_FX, STATUS_KINDS, SYSTEM_FX } from '@herox/shared';
+import { fitFxScale, fxFrameName, FxIndexFormatError, fxOrigin, parseFxIndex } from '../src/fx/fx-index';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const FX_DIR = join(ROOT, 'client', 'public', 'fx');
@@ -60,11 +60,12 @@ describe('fx manifest', () => {
 
   it('mọi hiệu ứng chiêu và hiệu ứng hệ thống đều có trong manifest', () => {
     const used = new Set<string>(Object.values(SYSTEM_FX));
-    for (const variants of Object.values(SKILL_CATALOG)) {
-      for (const variant of variants) {
-        used.add(variant.castFx);
-        used.add(variant.impactFx);
-      }
+    for (const variant of [...Object.values(SKILL_CATALOG).flat(), ...SKILL_MOVES]) {
+      used.add(variant.castFx);
+      used.add(variant.impactFx);
+    }
+    for (const status of STATUS_KINDS) {
+      used.add(STATUS_FX[status]);
     }
     expect([...used].filter((name) => !names.includes(name))).toEqual([]);
   });
@@ -79,6 +80,14 @@ describe('parseFxIndex', () => {
     const origin = fxOrigin(info);
     expect(origin.x).toBeCloseTo(info.pivot[0] / info.frameSize[0]);
     expect(origin.y).toBeCloseTo(info.pivot[1] / info.frameSize[1]);
+  });
+
+  it('giới hạn cạnh dài nhất của hiệu ứng khung to, giữ nguyên hiệu ứng nhỏ', () => {
+    const big = { source: 'a/b', fps: 10, loop: false, frames: 1, frameSize: [372, 156], pivot: [0, 0] } as const;
+    const small = { ...big, frameSize: [80, 60] } as const;
+    expect(fitFxScale(big, 1.5, 240) * 372).toBeCloseTo(240);
+    expect(fitFxScale(small, 1.5, 240)).toBe(1.5);
+    expect(fitFxScale(big, 1.5)).toBe(1.5);
   });
 
   it('chỉ mục sai định dạng báo lỗi rõ', () => {
