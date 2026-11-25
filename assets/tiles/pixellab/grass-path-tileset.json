@@ -1,0 +1,103 @@
+{
+  "tileSize": 32,
+  "columns": 4,
+  "terrain": "lower",
+  "tiles": [
+    {
+      "NW": "upper",
+      "NE": "upper",
+      "SW": "lower",
+      "SE": "upper"
+    },
+    {
+      "NW": "upper",
+      "NE": "lower",
+      "SW": "upper",
+      "SE": "lower"
+    },
+    {
+      "NW": "lower",
+      "NE": "upper",
+      "SW": "lower",
+      "SE": "lower"
+    },
+    {
+      "NW": "upper",
+      "NE": "upper",
+      "SW": "lower",
+      "SE": "lower"
+    },
+    {
+      "NW": "lower",
+      "NE": "upper",
+      "SW": "upper",
+      "SE": "lower"
+    },
+    {
+      "NW": "upper",
+      "NE": "lower",
+      "SW": "lower",
+      "SE": "lower"
+    },
+    {
+      "NW": "lower",
+      "NE": "lower",
+      "SW": "lower",
+      "SE": "lower"
+    },
+    {
+      "NW": "lower",
+      "NE": "lower",
+      "SW": "lower",
+      "SE": "upper"
+    },
+    {
+      "NW": "upper",
+      "NE": "lower",
+      "SW": "upper",
+      "SE": "upper"
+    },
+    {
+      "NW": "lower",
+      "NE": "lower",
+      "SW": "upper",
+      "SE": "upper"
+    },
+    {
+      "NW": "lower",
+      "NE": "lower",
+      "SW": "upper",
+      "SE": "lower"
+    },
+    {
+      "NW": "lower",
+      "NE": "upper",
+      "SW": "lower",
+      "SE": "upper"
+    },
+    {
+      "NW": "upper",
+      "NE": "upper",
+      "SW": "upper",
+      "SE": "upper"
+    },
+    {
+      "NW": "upper",
+      "NE": "upper",
+      "SW": "upper",
+      "SE": "lower"
+    },
+    {
+      "NW": "upper",
+      "NE": "lower",
+      "SW": "lower",
+      "SE": "upper"
+    },
+    {
+      "NW": "lower",
+      "NE": "upper",
+      "SW": "upper",
+      "SE": "upper"
+    }
+  ]
+}

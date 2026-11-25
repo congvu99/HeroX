@@ -792,13 +792,103 @@
     "modified": "không chỉnh (tilemap_packed.png)"
   },
   {
+    "path": "tiles/pixellab/castle-gate.png",
+    "title": "Cổng thành bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 64x64, cắt ô 32 px thay ô Kenney cùng tên"
+  },
+  {
+    "path": "tiles/pixellab/castle-tower.png",
+    "title": "Tháp thành bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 96x96, cắt ô 32 px thay ô Kenney cùng tên"
+  },
+  {
+    "path": "tiles/pixellab/castle-wall-tileset.png",
+    "title": "Tileset tường thành - cỏ bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "tileset Wang 16 ô 32 px, ghép sheet 4 cột + bảng góc .json"
+  },
+  {
+    "path": "tiles/pixellab/chapel-front.png",
+    "title": "Mặt tiền nhà nguyện bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 384x128, cắt ô 32 px thay ô Kenney cùng tên"
+  },
+  {
+    "path": "tiles/pixellab/grass-path-tileset.png",
+    "title": "Tileset cỏ - đường đất bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "tileset Wang 16 ô 32 px, ghép sheet 4 cột + bảng góc .json"
+  },
+  {
+    "path": "tiles/pixellab/house-grey.png",
+    "title": "Nhà đá mái xám bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 96x96, cắt ô 32 px thay ô Kenney cùng tên"
+  },
+  {
+    "path": "tiles/pixellab/house-orange.png",
+    "title": "Nhà mái cam bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 96x96, cắt ô 32 px thay ô Kenney cùng tên"
+  },
+  {
+    "path": "tiles/pixellab/tree-autumn.png",
+    "title": "Cây lá thu bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 32x32, cắt ô 32 px thay ô Kenney cùng tên"
+  },
+  {
+    "path": "tiles/pixellab/tree-cone-autumn.png",
+    "title": "Cây thông lá thu bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 32x32, cắt ô 32 px thay ô Kenney cùng tên"
+  },
+  {
+    "path": "tiles/pixellab/tree-pine.png",
+    "title": "Cây thông bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 32x32, cắt ô 32 px thay ô Kenney cùng tên"
+  },
+  {
     "path": "tilesets/chapter-1.png",
     "title": "Atlas tile chương 1 (ghép)",
     "source": "Ghép: Kenney Tiny Town + Tiny Dungeon (CC0)",
     "url": "https://kenney.nl/assets",
     "authors": "Kenney (www.kenney.nl)",
     "license": "CC0 1.0",
-    "modified": "ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
+    "modified": "ghép bằng client/scripts/generate-chapter-1.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px)"
   },
   {
     "path": "tilesets/chapter-2.png",
@@ -807,7 +897,7 @@
     "url": "https://kenney.nl/assets",
     "authors": "Kenney (www.kenney.nl)",
     "license": "CC0 1.0",
-    "modified": "ghép bằng client/scripts/generate-chapter-2.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
+    "modified": "ghép bằng client/scripts/generate-chapter-2.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px)"
   },
   {
     "path": "tilesets/chapter-3.png",
@@ -816,7 +906,7 @@
     "url": "https://kenney.nl/assets",
     "authors": "Kenney (www.kenney.nl)",
     "license": "CC0 1.0",
-    "modified": "ghép bằng client/scripts/generate-chapter-3.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
+    "modified": "ghép bằng client/scripts/generate-chapter-3.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px)"
   },
   {
     "path": "tilesets/chapter-4.png",
@@ -825,7 +915,7 @@
     "url": "https://kenney.nl/assets",
     "authors": "Kenney (www.kenney.nl)",
     "license": "CC0 1.0",
-    "modified": "ghép bằng client/scripts/generate-chapter-4.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
+    "modified": "ghép bằng client/scripts/generate-chapter-4.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px)"
   },
   {
     "path": "tilesets/chapter-5.png",
@@ -834,7 +924,7 @@
     "url": "https://kenney.nl/assets",
     "authors": "Kenney (www.kenney.nl)",
     "license": "CC0 1.0",
-    "modified": "ghép bằng client/scripts/generate-chapter-5.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (78 tile, phóng nearest ×2 lên 32px)"
+    "modified": "ghép bằng client/scripts/generate-chapter-5.mjs từ tiles/kenney/tiny-town.png, tiles/kenney/tiny-dungeon.png (127 tile, phóng nearest ×2 lên 32px)"
   },
   {
     "path": "tilesets/placeholder-dungeon.png",

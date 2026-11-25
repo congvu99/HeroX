@@ -8,6 +8,7 @@ import { hashNoise } from '../../../tools/lib/image-ops.mjs';
 import { buildLevelJson, buildProjectJson, GRID, writeJson } from '../../../tools/lib/ldtk-project.mjs';
 import { ASSETS_DIR, SOURCES, upsertCredits } from '../../../tools/lib/credits-store.mjs';
 import { ATLAS_COLUMNS, buildKenneyAtlas, KENNEY_SHEETS, KENNEY_TILES } from '../chapter-1/kenney-atlas.mjs';
+import { applyCastleWallAutotile, applyGrassPathAutotile, themeFloorIsPath } from './grass-path-autotile.mjs';
 
 const MAIN_VARIANT_SHARE = 0.7;
 
@@ -75,6 +76,12 @@ function decodeCell(grid, x, y, context, legend) {
   return placeTile(context, floor, pick(entry.tiles, x, y, seed + 1), entry.solid);
 }
 
+/** Nền tileset PixelLab: cỏ ↔ đường trước, rồi tường thành (nhận biết qua ô castle_* do decodeCell đặt). */
+function decodeGround(grid, cells, atlas, theme) {
+  const withPaths = applyGrassPathAutotile(grid, cells, atlas, { floorIsPath: themeFloorIsPath(theme.floor) });
+  return applyCastleWallAutotile(grid, withPaths, atlas);
+}
+
 function decodeLevel(spec, index, atlas, iidTagPrefix, legend) {
   const grid = rasterize(spec);
   const context = { theme: spec.theme, atlas, seed: index * 7 + 3, identifier: spec.identifier };
@@ -87,7 +94,7 @@ function decodeLevel(spec, index, atlas, iidTagPrefix, legend) {
     worldY: spec.worldY,
     widthCells: spec.width,
     heightCells: spec.height,
-    cells: grid.map((row, y) => row.map((_value, x) => decodeCell(grid, x, y, context, legend))),
+    cells: decodeGround(grid, grid.map((row, y) => row.map((_value, x) => decodeCell(grid, x, y, context, legend))), atlas, spec.theme),
     entities: spec.entities,
     ascii: grid.map((row) => row.map((value) => (typeof value === 'object' ? (value.solid ? '@' : '+') : value)).join('')),
   };

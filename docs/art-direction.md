@@ -12,7 +12,7 @@ vàng ngày 2026-11-20; sprite nhân vật (quái, trùm, NPC thoại) chuyển 
   làng (nhà mái cam/xám, nhà nguyện đá), nhà nguyện (sàn đá, ghế, bàn thờ), hầm trùm (đất đỏ, đá vụn, bia mộ).
 - Hero giữ như cũ: thập tự quân áo trắng thập tự đỏ, khiên lớn (sheet LPC, xem mục Hero). Quái, trùm, NPC thoại:
   sprite PixelLab màu trung tính (runtime tint MULTIPLY theo chủ đề level).
-- Hiệu ứng: vệt chém vàng, vòng thánh vàng, vòng huyết đỏ (pixelfx).
+- Hiệu ứng: vệt chém vàng, vòng thánh vàng, vòng huyết đỏ; bộ pixelfx hợp tông fantasy khai ở `assets/fx/fx-manifest.json`, mỗi hiệu ứng gắn một hệ (`element`).
 
 ## Thông số kỹ thuật
 
@@ -74,9 +74,16 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
      `transparent background`. Kích thước: quái thường 64×64, trùm 128×128, chân dung 64×64 hoặc 96×96.
    - Đọc `PIXELLAB_API_KEY` từ env khi gọi API. **Không** đưa token vào repo, chat, log hay báo cáo.
    - Hết quota: dùng tạm asset đã có, bổ sung sau; không đổi hero sang PixelLab.
-2. **Tile map — nguồn chính: Kenney** (https://kenney.nl, CC0): Tiny Town + Tiny Dungeon, ảnh gốc 16 px ở
-   `assets/tiles/kenney/` (kèm `LICENSE-*.txt`).
-   - Asset map mới cùng phong cách 16 px phóng ×2; ưu tiên pack Kenney dòng "Tiny".
+2. **Tile map — khung Kenney, art bản đồ ngoài trời PixelLab** (từ 2026-11-25).
+   - Khung: Kenney (https://kenney.nl, CC0) Tiny Town + Tiny Dungeon, ảnh gốc 16 px ở `assets/tiles/kenney/` (kèm
+     `LICENSE-*.txt`), phóng ×2. Bảng tên ô `KENNEY_TILES` là hợp đồng tên ô; thiếu ảnh PixelLab thì lùi về ô Kenney.
+   - Nhà, cây, tháp, cổng, mặt tiền nhà nguyện: ảnh tĩnh PixelLab pixflux (job `tools/pixellab/jobs-map-structures.mjs`,
+     ảnh ở `assets/tiles/pixellab/`), phong cách high fantasy đổ bóng chi tiết như nền sân trận. Ảnh cắt thành ô 32 px
+     vẽ 1:1, thay ô cùng tên qua `client/scripts/chapter-1/pixellab-tile-overrides.mjs`; vùng sáng cửa sổ/cửa khai bằng
+     `glowRects` theo toạ độ ảnh nguồn. Ảnh trả nền đục thì bật `clearBackground`, không sinh lại.
+   - Nền cỏ ↔ đường đất và tường thành ↔ cỏ: tileset Wang PixelLab v2 `/create-tileset` (16 ô, chọn theo 4 góc, ghép ở
+     `client/scripts/lib/grass-path-autotile.mjs`). Mỗi lần sinh tốn 1 lượt. PixelLab có thể vẽ ngược lower/upper so
+     với mô tả: ghi trường `terrain` trong file `.json` cạnh sheet theo ảnh thật.
    - **Không** chạy `tools/palette-harmonize.mjs` lên asset Kenney (khử bão hoà, làm lệch tông ánh sáng).
 3. **Ngoại lệ được giữ:** hero LPC và hiệu ứng pixelfx (MIT) đang có, vì đã gắn hoạt ảnh trận.
    - Hero giữ LPC: thử PixelLab animate hướng lên/trái mất silhouette (khối áo choàng) và giật, thay sẽ regress chất
@@ -91,6 +98,10 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
 - Map, atlas `assets/tilesets/chapter-1.png`, bảng tên tile `chapter-1-tiles.json`, vùng sáng `chapter-1-glow.json`
   sinh bằng `npm run generate:chapter-1 -w @herox/client`, sau đó `node tools/build-credits.mjs`.
 - Bố cục level: `client/scripts/chapter-1/levels.mjs`; bảng tile Kenney: `client/scripts/chapter-1/kenney-atlas.mjs`.
+- Level ngoài trời dựng bố cục tự nhiên bằng `organicOps` (`client/scripts/chapter-1/organic-layout.mjs`): đường uốn
+  qua điểm mốc, cụm cây, mép rừng răng cưa, tự chừa lề quanh entity và đường. Rải theo `hashNoise` nên vẫn tất định.
+- Tên ô mới chỉ thêm ở cuối `KENNEY_TILES`; ô Kenney dùng ở nhiều nơi (vd. `stone_slab` vừa là sàn vừa là giữa tháp)
+  phải tách tên riêng trước khi ghi đè ảnh.
 - **Không sửa tay file `.ldtkl`**: lần sinh sau ghi đè. Script tất định, chạy lại ra đúng file cũ.
 
 ## Hero

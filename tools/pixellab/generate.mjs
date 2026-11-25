@@ -20,6 +20,7 @@ import {
   generateImage,
   rotateImage,
   animateWithText,
+  createTileset,
   getBalance,
   getSubscriptionBalance,
   remainingGenerations,
@@ -295,6 +296,42 @@ function minDefined(...values) {
   return defined.length ? Math.min(...defined) : null;
 }
 
+const TILESET_COLUMNS = 4;
+
+/**
+ * Tileset Wang: ghép các ô thành sheet TILESET_COLUMNS cột (theo thứ tự API trả) và ghi bảng góc NW/NE/SW/SE
+ * cạnh ảnh (cùng tên, đuôi .json) để máy sinh map chọn ô theo 4 góc. Số lượt thật đo bằng balance trước/sau.
+ */
+async function runTilesetJob(job, usage) {
+  const before = remainingGenerations(await getSubscriptionBalance());
+  const { tileSize, tiles } = await createTileset({ ...job.tileset, seed: job.seed });
+  const after = remainingGenerations(await getSubscriptionBalance());
+  const spent = before !== null && after !== null ? before - after : 1;
+  usage.generations += spent;
+  console.log(`  tileset tốn ${spent} lượt (còn ${after ?? 'không rõ'}).`);
+  const sheet = createImage(TILESET_COLUMNS * tileSize, Math.ceil(tiles.length / TILESET_COLUMNS) * tileSize);
+  tiles.forEach((tile, index) => blit(sheet, tile.image, (index % TILESET_COLUMNS) * tileSize, Math.floor(index / TILESET_COLUMNS) * tileSize));
+  const fsPath = assetFsPath(job.path);
+  ensureDir(fsPath);
+  writePng(fsPath, sheet);
+  const cornersPath = fsPath.replace(/.png$/, '.json');
+  writeFileSync(cornersPath, `${JSON.stringify({ tileSize, columns: TILESET_COLUMNS, terrain: job.terrain, tiles: tiles.map((tile) => tile.corners) }, null, 2)}
+`);
+  upsertRecipe({
+    id: job.id,
+    path: job.path,
+    prompt: `lower: ${job.tileset.lower} | upper: ${job.tileset.upper}`,
+    seed: job.seed,
+    size: { width: sheet.width, height: sheet.height },
+    directions: job.directions ?? 4,
+    animations: ['still'],
+    reference: job.reference,
+    createdAt: TODAY,
+  });
+  upsertCredits([{ ...job.credit, path: job.path }]);
+  usage.written.push(job.path);
+}
+
 async function main() {
   const { force, dry, ids, maxGenerations } = parseArgs(process.argv.slice(2));
   const jobs = ASSET_JOBS.filter((job) => ids.length === 0 || ids.includes(job.id));
@@ -341,6 +378,7 @@ async function main() {
       console.log(`→ ${job.id} (${job.kind}, ~${cost} lượt)…`);
       if (job.kind === 'hero-sheet') await runHeroSheetJob(job, usage);
       else if (job.kind === 'hero-battle') await runHeroBattleJob(job, usage, budget);
+      else if (job.kind === 'tileset') await runTilesetJob(job, usage);
       else await runSingleJob(job, usage);
     } catch (error) {
       if (error instanceof PixelLabApiError && QUOTA_STATUSES.has(error.status)) {

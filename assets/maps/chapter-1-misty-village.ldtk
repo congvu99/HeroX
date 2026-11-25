@@ -706,13 +706,13 @@
 		"tilesets": [
 			{
 				"__cWid": 8,
-				"__cHei": 10,
+				"__cHei": 20,
 				"identifier": "Chapter_1",
 				"uid": 1,
 				"relPath": "../tilesets/chapter-1.png",
 				"embedAtlas": null,
 				"pxWid": 256,
-				"pxHei": 320,
+				"pxHei": 640,
 				"tileGridSize": 32,
 				"spacing": 0,
 				"padding": 0,

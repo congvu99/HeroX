@@ -22,11 +22,11 @@ export class PixelLabApiError extends Error {
   }
 }
 
-async function postJson(path, body) {
+async function postJson(path, body, baseUrl = BASE_URL) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await fetch(`${BASE_URL}${path}`, {
+    const res = await fetch(`${baseUrl}${path}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${requireApiKey()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -147,4 +147,54 @@ export async function animateWithText(referenceImage, opts, encodePng) {
     throw new PixelLabApiError(`animate(${opts.action}): phản hồi không có mảng images`, 0);
   }
   return images.map((img, index) => decodePng(Buffer.from(img.base64, 'base64'), `animate(${opts.action})#${index}`));
+}
+
+const TILESET_POLL_MS = 5_000;
+const TILESET_TIMEOUT_MS = 6 * 60_000;
+const TILESET_PENDING_STATUS = 423;
+
+/**
+ * Sinh tileset top-down Wang 2 địa hình (lower/upper) qua v2, chờ xử lý nền xong rồi trả từng ô kèm 4 góc.
+ * @param {{lower:string,upper:string,transition?:string,tileSize:number,transitionSize?:number,seed?:number,
+ *   shading?:string,detail?:string,lowerBaseTileId?:string}} opts
+ * `lowerBaseTileId`: id ô của tileset trước để dùng lại đúng mảng nền đó (cỏ khớp màu giữa các tileset).
+ * @returns {Promise<{tileSize:number,tiles:{corners:{NW:string,NE:string,SW:string,SE:string},image:object}[]}>}
+ */
+export async function createTileset(opts) {
+  const body = {
+    lower_description: opts.lower,
+    upper_description: opts.upper,
+    transition_description: opts.transition ?? '',
+    tile_size: { width: opts.tileSize, height: opts.tileSize },
+    transition_size: opts.transitionSize ?? 0,
+    view: 'high top-down',
+  };
+  if (opts.lowerBaseTileId) body.lower_base_tile_id = opts.lowerBaseTileId;
+  if (opts.shading) body.shading = opts.shading;
+  if (opts.detail) body.detail = opts.detail;
+  if (typeof opts.seed === 'number') body.seed = opts.seed;
+  const queued = await postJson('/create-tileset', body, BASE_URL_V2);
+  const tilesetId = queued?.tileset_id;
+  if (typeof tilesetId !== 'string') throw new PixelLabApiError('create-tileset: phản hồi không có tileset_id', 0);
+  const json = await pollTileset(tilesetId);
+  const tiles = json?.tileset?.tiles;
+  if (!Array.isArray(tiles) || tiles.length === 0) throw new PixelLabApiError('tileset: phản hồi không có tiles', 0);
+  return {
+    tileSize: opts.tileSize,
+    tiles: tiles.map((tile, index) => ({ corners: tile.corners, image: decodePng(Buffer.from(tile.image.base64, 'base64'), `tileset#${index}`) })),
+  };
+}
+
+/** Chờ tileset xử lý nền xong: 423 nghĩa là đang sinh, thử lại sau mỗi TILESET_POLL_MS. */
+async function pollTileset(tilesetId) {
+  const deadline = Date.now() + TILESET_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    try {
+      return await getJson(`${BASE_URL_V2}/tilesets/${tilesetId}`, '/v2/tilesets/{id}');
+    } catch (error) {
+      if (!(error instanceof PixelLabApiError) || error.status !== TILESET_PENDING_STATUS) throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, TILESET_POLL_MS));
+  }
+  throw new PixelLabApiError(`tileset ${tilesetId}: quá ${TILESET_TIMEOUT_MS / 1000}s chưa xong`, 0);
 }
