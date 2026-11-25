@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { attachDisplayZoom, BACKGROUND_COLOR, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './config/display';
+import { attachDisplayZoom, BACKGROUND_COLOR, computeViewSize } from './config/display';
 import { attachIosViewport } from './platform/ios-viewport';
 import { QualityController, REDUCED_MOTION_QUERY, watchReducedMotion } from './platform/quality-settings';
 import { BattleScene } from './scenes/battle-scene';
@@ -14,11 +14,14 @@ const GAME_ROOT_ID = 'game-root';
 const container = document.getElementById(GAME_ROOT_ID);
 if (!container) throw new Error(`Thiếu phần tử #${GAME_ROOT_ID}`);
 
+// Khung nhìn theo tỉ lệ màn ngay từ đầu để scene dựng đúng cỡ; `attachDisplayZoom` cập nhật khi xoay, đổi cỡ.
+const initialView = computeViewSize(container.clientWidth, container.clientHeight);
+
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: container,
-  width: LOGICAL_WIDTH,
-  height: LOGICAL_HEIGHT,
+  width: initialView.width,
+  height: initialView.height,
   backgroundColor: BACKGROUND_COLOR,
   pixelArt: true,
   roundPixels: true,

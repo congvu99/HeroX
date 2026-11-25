@@ -8,7 +8,7 @@ import {
   type ArenaLayout,
   type ArenaThemeId,
 } from '../battle/battle-arena-layout';
-import { TILE_SIZE } from '../config/display';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH, MAX_VIEW_HEIGHT, MAX_VIEW_WIDTH, TILE_SIZE } from '../config/display';
 import { hasMapAsset, mapAssetUrl } from '../maps/map-asset-urls';
 import { CHAPTER_1_TILE_INDEX } from './chapter-1-tile-data';
 import { GoldenHourAtmosphere } from './golden-hour-atmosphere';
@@ -39,6 +39,9 @@ const BACKDROP_NAMES: readonly string[] = [...ARENA_THEMES.map((theme) => `battl
 const EMBER_TEXTURE_KEY = 'battle-arena-ember';
 const EMBER_SIZE = 2;
 const EMBER_COLOR = 0xffa040;
+/** Lớp nền tràn phủ phần khung nhìn ngoài sân (màn rộng/cao hơn 360×780); tối hơn để sân chính vẫn nổi. */
+const BACKDROP_BLEED_DEPTH = -1;
+const BACKDROP_BLEED_TINT = 0x8a8a8a;
 const GROUND_DEPTH = 0;
 const DECOR_DEPTH = 1;
 /** Hạt lửa trên nhân vật, dưới lớp ánh sáng giờ vàng (độ sâu 9000 của `GoldenHourAtmosphere`). */
@@ -92,11 +95,27 @@ export class BattleArena {
 
   /** Vẽ nền chung: ảnh 192x352 phóng theo ARENA_TILE_SCALE, gốc trên-trái tại ARENA_ORIGIN, dưới nhân vật. */
   private paintBackdrop(scene: Phaser.Scene, textureKey: string): void {
+    this.paintBackdropBleed(scene, textureKey);
     scene.add
       .image(ARENA_ORIGIN.x, ARENA_ORIGIN.y, textureKey)
       .setOrigin(0, 0)
       .setScale(ARENA_TILE_SCALE)
       .setDepth(GROUND_DEPTH);
+  }
+
+  /**
+   * Cùng ảnh nền phóng phủ khung nhìn lớn nhất, căn giữa khung thiết kế: khung nhìn đổi cỡ (xoay máy, thanh Safari)
+   * không phải vẽ lại.
+   */
+  private paintBackdropBleed(scene: Phaser.Scene, textureKey: string): void {
+    const source = scene.textures.get(textureKey).getSourceImage();
+    if (source.width <= 0 || source.height <= 0) return;
+    const scale = Math.max(MAX_VIEW_WIDTH / source.width, MAX_VIEW_HEIGHT / source.height);
+    scene.add
+      .image(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2, textureKey)
+      .setScale(scale)
+      .setTint(BACKDROP_BLEED_TINT)
+      .setDepth(BACKDROP_BLEED_DEPTH);
   }
 
   private paintTiles(scene: Phaser.Scene, layout: ArenaLayout): void {

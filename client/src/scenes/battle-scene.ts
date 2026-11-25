@@ -16,7 +16,7 @@ import { arenaThemeFor, buildArenaLayout } from '../battle/battle-arena-layout';
 import { BattleCueMapper, type BattleCue, type CueTarget, type FxAnchor } from '../battle/battle-cues';
 import { BattleSession } from '../battle/battle-session';
 import { devBattleSetup } from '../battle/dev-battle-fixture';
-import { BACKGROUND_COLOR, LOGICAL_WIDTH } from '../config/display';
+import { BACKGROUND_COLOR, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
 import {
   loadSettings,
   otherInputMode,
@@ -147,6 +147,8 @@ export class BattleScene extends Phaser.Scene {
     this.inputMode = resolveInputMode(this.settings, isTouchPrimaryDevice());
     this.cueMapper = new BattleCueMapper();
     this.cameras.main.setBackgroundColor(BACKGROUND_COLOR).fadeIn(INTRO_FADE_MS);
+    this.centerOnDesignFrame();
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.centerOnDesignFrame);
     this.actors = new BattleActors(this);
     this.createArena();
     this.fx = new FxPlayer(this);
@@ -239,7 +241,13 @@ export class BattleScene extends Phaser.Scene {
     if (this.inputMode === 'typing' && !this.ended) this.typing.focus();
   };
 
+  /** Khung nhìn có thể rộng/cao hơn khung thiết kế 360×780: giữ khung thiết kế ở giữa, phần thừa hiện nền sân. */
+  private readonly centerOnDesignFrame = (): void => {
+    this.cameras.main.centerOn(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2);
+  };
+
   private readonly cleanup = (): void => {
+    this.scale.off(Phaser.Scale.Events.RESIZE, this.centerOnDesignFrame);
     this.input.off(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDown);
     this.input.keyboard?.off(Phaser.Input.Keyboard.Events.ANY_KEY_DOWN, this.unlockSound);
     this.typing.destroy();

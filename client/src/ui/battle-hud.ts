@@ -228,18 +228,22 @@ export class BattleHud {
 }
 
 /**
- * Giữ `frame` trùng khung canvas (canvas căn giữa, đổi cỡ khi zoom); ghi `--u` = 1 pixel logic tính theo px CSS
- * để cỡ chữ, khoảng cách của HUD co giãn cùng canvas. Trả hàm huỷ theo dõi.
+ * Giữ `frame` trùng khung thiết kế 360×780 nằm giữa canvas (canvas có thể rộng/cao hơn, căn giữa, đổi cỡ khi zoom);
+ * ghi `--u` = 1 pixel logic tính theo px CSS để cỡ chữ, khoảng cách của HUD co giãn cùng canvas. Trả hàm huỷ theo dõi.
  */
 function trackCanvasFrame(canvas: HTMLCanvasElement, container: HTMLElement, frame: HTMLElement): () => void {
   const sync = (): void => {
     const canvasBox = canvas.getBoundingClientRect();
     const containerBox = container.getBoundingClientRect();
-    frame.style.left = `${canvasBox.left - containerBox.left}px`;
-    frame.style.top = `${canvasBox.top - containerBox.top}px`;
-    frame.style.width = `${canvasBox.width}px`;
-    frame.style.height = `${canvasBox.height}px`;
-    frame.style.setProperty('--u', `${canvasBox.width / LOGICAL_WIDTH}px`);
+    // `canvas.width` là bề rộng khung nhìn logic (Phaser đặt bằng cỡ game), không phải px thiết bị.
+    const unit = canvas.width > 0 ? canvasBox.width / canvas.width : 1;
+    const offsetX = ((canvas.width - LOGICAL_WIDTH) / 2) * unit;
+    const offsetY = ((canvas.height - LOGICAL_HEIGHT) / 2) * unit;
+    frame.style.left = `${canvasBox.left - containerBox.left + offsetX}px`;
+    frame.style.top = `${canvasBox.top - containerBox.top + offsetY}px`;
+    frame.style.width = `${LOGICAL_WIDTH * unit}px`;
+    frame.style.height = `${LOGICAL_HEIGHT * unit}px`;
+    frame.style.setProperty('--u', `${unit}px`);
   };
   sync();
   const observer = new ResizeObserver(sync);

@@ -243,6 +243,12 @@ export class WorldScene extends Phaser.Scene {
 
     const camera = this.cameras.main;
     camera.setBounds(...cameraBoundsFor(level, this.scale.gameSize)).startFollow(hero, true);
+    // Khung nhìn đổi cỡ theo tỉ lệ màn (xoay máy, thanh Safari): tính lại biên để level nhỏ vẫn nằm giữa.
+    const refitCameraBounds = (gameSize: Phaser.Structs.Size): void => {
+      camera.setBounds(...cameraBoundsFor(level, gameSize));
+    };
+    this.scale.on(Phaser.Scale.Events.RESIZE, refitCameraBounds);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off(Phaser.Scale.Events.RESIZE, refitCameraBounds));
     camera.fadeIn(FADE_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);
 
     const quality = this.registry.get(REGISTRY_KEYS.quality) as QualityController | undefined;
