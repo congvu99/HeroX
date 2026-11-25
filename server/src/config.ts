@@ -7,10 +7,14 @@ export interface ServerConfig {
   readonly pgSsl: boolean;
   /** File CA xác thực chứng chỉ Postgres khi `pgSsl` bật; trống thì dùng CA hệ thống. */
   readonly pgSslRootCert: string | undefined;
+  /** Số kết nối DB tối đa; E2E PGlite dùng 1 vì backend nhúng không cô lập transaction giữa nhiều socket như Postgres thật. */
+  readonly pgPoolMaxConnections: number;
 }
 
 export const DEFAULT_PORT = 3180;
+export const DEFAULT_PG_POOL_MAX_CONNECTIONS = 5;
 const MAX_PORT = 65_535;
+const MAX_PG_POOL_CONNECTIONS = 100;
 
 type Env = Readonly<Record<string, string | undefined>>;
 
@@ -27,6 +31,12 @@ function readNonNegativeInteger(env: Env, name: string, fallback: number, max: n
   if (!/^\d+$/.test(raw)) throw new ConfigError(name, 'phải là số nguyên không âm');
   const value = Number(raw);
   if (value > max) throw new ConfigError(name, `phải không lớn hơn ${max}`);
+  return value;
+}
+
+function readPositiveInteger(env: Env, name: string, fallback: number, max: number): number {
+  const value = readNonNegativeInteger(env, name, fallback, max);
+  if (value === 0) throw new ConfigError(name, 'phải lớn hơn 0');
   return value;
 }
 
@@ -51,5 +61,11 @@ export function loadConfig(env: Env = process.env): ServerConfig {
     trustProxyHops: readNonNegativeInteger(env, 'TRUST_PROXY_HOPS', 0, Number.MAX_SAFE_INTEGER),
     pgSsl: readBoolean(env, 'PGSSL', false),
     pgSslRootCert: readOptionalString(env, 'PGSSLROOTCERT'),
+    pgPoolMaxConnections: readPositiveInteger(
+      env,
+      'PGPOOL_MAX_CONNECTIONS',
+      DEFAULT_PG_POOL_MAX_CONNECTIONS,
+      MAX_PG_POOL_CONNECTIONS,
+    ),
   };
 }

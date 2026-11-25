@@ -155,9 +155,15 @@ export function registerCitadelRoutes(scope: FastifyInstance, services: CitadelR
     const parsed: ParsedMutation = { rowVersion: readRowVersion(fields), action: parse(fields) };
     const today = localDayKey(now(), utcOffsetMinutes);
     const [learning, story] = await Promise.all([readLearning(user.userId, utcOffsetMinutes), services.citadel.readStory(user.userId)]);
-    // Lò rèn khoá tới khi cứu thợ rèn trong truyện chương 1.
-    const context = { stats: learning.stats, today, learnedWordIds: learning.learnedWordIds, lockedBuildings: lockedBuildings(new StoryProgress(story)) };
+    const progress = new StoryProgress(story);
     const update = await services.citadel.updateCitadel(user.userId, parsed.rowVersion, (state) => {
+      // Lò rèn khoá tới khi cứu thợ rèn (chương 1); người chơi cũ đã nâng lò rèn thì không khoá lại.
+      const context = {
+        stats: learning.stats,
+        today,
+        learnedWordIds: learning.learnedWordIds,
+        lockedBuildings: lockedBuildings(progress, state.forgeLevel),
+      };
       const result = applyCitadelAction(state, context, parsed.action);
       if (result.ok) return result.state;
       request.log.info({ code: API_ERROR_CODES.citadelRejected, action: parsed.action.type, reason: result.reason }, 'Từ chối thao tác thành trì');

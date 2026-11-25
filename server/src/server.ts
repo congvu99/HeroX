@@ -29,6 +29,7 @@ const database = createPgDatabase(
     connectionString: config.databaseUrl,
     ssl: config.pgSsl,
     sslRootCertFile: config.pgSslRootCert,
+    maxConnections: config.pgPoolMaxConnections,
   },
   databaseLogger,
 );

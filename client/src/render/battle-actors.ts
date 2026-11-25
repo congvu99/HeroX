@@ -48,14 +48,6 @@ const MONSTER_SPRITES: Readonly<Record<string, string>> = {
   'broken-seraph': 'broken-seraph',
   'fallen-angel': 'fallen-angel',
 };
-const BOSS_KINDS: ReadonlySet<string> = new Set([
-  'scarecrow-demon',
-  'ash-stag',
-  'nameless-bishop',
-  'antonym-demon',
-  'fallen-angel',
-]);
-
 const ELITE_TINT = 0xffa060;
 /** Khiên lửa của trùm: quái ánh cam đỏ tới khi bị xuyên. */
 const FIRE_SHIELD_TINT = 0xff5a1f;
@@ -87,6 +79,14 @@ function monsterTextureKey(file: string): string {
 /** Khoá loader của sprite quái, để bản đồ bỏ qua lỗi tải quái (quái lang thang chỉ là trang trí phụ). */
 export function isMonsterTextureKey(key: string): boolean {
   return key.startsWith(MONSTER_KEY_PREFIX);
+}
+
+/**
+ * Khoá texture cho một file sprite quái (tên không đuôi). Dùng để map và trận chia sẻ cùng một texture
+ * khi cùng dùng ảnh trong `sprites/monsters/` (vd trùm Quỷ Bù Nhìn), tránh tải hai bản lên GPU.
+ */
+export function monsterTextureKeyForFile(file: string): string {
+  return monsterTextureKey(file);
 }
 
 /** Khoá texture sprite của loại quái đã tải; `undefined` khi loại đó chưa có sprite hoặc chưa tải xong. */
@@ -141,12 +141,12 @@ export class BattleActors {
     return { get x() { return root.x; }, get y() { return root.y - 40; } };
   }
 
-  showEnemy(kind: string, elite: boolean): void {
+  showEnemy(kind: string, elite: boolean, boss: boolean): void {
     this.scene.tweens.killTweensOf([this.enemyRoot, this.enemy]);
     const file = MONSTER_SPRITES[kind];
     const textureKey = file === undefined ? undefined : monsterTextureKey(file);
     const hasSprite = textureKey !== undefined && this.scene.textures.exists(textureKey);
-    this.enemy.setTexture(hasSprite ? textureKey : TEXTURE_KEYS.enemy).setScale(BOSS_KINDS.has(kind) ? BOSS_SCALE : ACTOR_SCALE).setY(0);
+    this.enemy.setTexture(hasSprite ? textureKey : TEXTURE_KEYS.enemy).setScale(boss ? BOSS_SCALE : ACTOR_SCALE).setY(0);
     this.enemyRoot.setPosition(ENEMY_FEET.x, ENEMY_FEET.y).setAlpha(0);
     this.setEnemyTint(elite ? 'elite' : 'none');
     this.scene.tweens.add({ targets: this.enemyRoot, alpha: 1, duration: TIMING.enemyFadeMs });

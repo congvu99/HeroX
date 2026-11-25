@@ -14,6 +14,7 @@ export const API_ERROR_CODES = {
   heroMissing: 'HEROX_HERO_MISSING',
   battleNotFound: 'HEROX_BATTLE_NOT_FOUND',
   battleRejected: 'HEROX_BATTLE_REJECTED',
+  battleLocked: 'HEROX_BATTLE_LOCKED',
   battleSettled: 'HEROX_BATTLE_SETTLED',
   citadelConflict: 'HEROX_CITADEL_CONFLICT',
   citadelRejected: 'HEROX_CITADEL_REJECTED',

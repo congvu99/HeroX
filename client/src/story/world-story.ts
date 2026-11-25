@@ -10,7 +10,7 @@ import {
 } from '@herox/shared';
 import { DialogRunner, type WordChallenge } from './dialog-runner';
 import type { QuestTracker } from './quest-tracker';
-import type { JournalResult, StoryJournal } from './story-journal';
+import { journalFailureMessage, type StoryJournal } from './story-journal';
 
 /** Việc bản đồ làm hộ khi truyện cần: dừng/chạy tiếp bản đồ, mở trận, đổi hình rương. */
 export interface StoryHost {
@@ -24,15 +24,9 @@ export interface StoryHost {
   markChestOpened(itemId: string): void;
 }
 
-const SESSION_EXPIRED_MESSAGE = 'Phiên đăng nhập đã hết, hãy đăng nhập lại LingoBrain';
 const COLLECTED_MESSAGE = 'Nhặt được mảnh Thánh Ngôn';
 const EMPTY_CHEST_MESSAGE = 'Rương đã trống';
 const LOCKED_CHEST_MESSAGE = 'Rương bị phong ấn, chưa mở được';
-
-function failureMessage(result: JournalResult): string | null {
-  if (result.kind === 'ok') return null;
-  return result.kind === 'unauthenticated' ? SESSION_EXPIRED_MESSAGE : result.message;
-}
 
 /**
  * Điều phối truyện trên bản đồ: hội thoại NPC, rương thánh tích, khoá trận và cổng theo mốc.
@@ -56,6 +50,8 @@ export class WorldStory {
   /** Vẽ lại bảng nhiệm vụ và mở hội thoại tự động (mở đầu, kết chương) nếu tới lúc. */
   refresh(): void {
     this.quests.render(this.journal.progress);
+    // Hội thoại đang mở thì giữ bảng nhiệm vụ ẩn, tránh đè lên hộp thoại (vd mở rương xong mới vào NPC).
+    if (this.isDialogOpen) return;
     this.quests.setVisible(true);
     const auto = pendingAutoDialog(this.journal.progress);
     const key = auto === null ? null : `${auto.chapter}:${auto.script.id}:${auto.variant.completesBeat ?? ''}`;
@@ -96,7 +92,7 @@ export class WorldStory {
       return;
     }
     const result = await this.journal.complete(chapter, beat.id);
-    const error = failureMessage(result);
+    const error = journalFailureMessage(result);
     if (error !== null) {
       this.quests.toast(error);
       return;
@@ -143,7 +139,7 @@ export class WorldStory {
   private async completeDialogBeat(active: ActiveDialog, viaChallenge: boolean): Promise<void> {
     const beatId = active.variant.completesBeat;
     if (beatId === undefined || viaChallenge) return;
-    const error = failureMessage(await this.journal.complete(active.chapter, beatId));
+    const error = journalFailureMessage(await this.journal.complete(active.chapter, beatId));
     if (error !== null) this.quests.toast(error);
   }
 
@@ -156,7 +152,7 @@ export class WorldStory {
       word,
       meaning,
       emoji,
-      submit: async (answer) => failureMessage(await this.journal.complete(active.chapter, beat.id, answer)),
+      submit: async (answer) => journalFailureMessage(await this.journal.complete(active.chapter, beat.id, answer)),
     };
   }
 }

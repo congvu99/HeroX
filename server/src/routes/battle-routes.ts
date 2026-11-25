@@ -2,9 +2,11 @@ import { randomInt, randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import {
   apiPath,
+  encounterGateState,
   findEncounter,
   MAX_BATTLE_LOG_ENTRIES,
   replayBattle,
+  StoryProgress,
   type BattleLog,
   type BattleLogEntry,
   type BattleResultResponse,
@@ -104,11 +106,12 @@ export function registerBattleRoutes(scope: FastifyInstance, services: BattleRou
   scope.post(apiPath('battles'), async (request, reply): Promise<StartBattleResponse> => {
     const user = await authorize(request);
     const encounter = parseEncounter(request.body);
-    const [progressData, deckWords, citadel, wordMisses] = await Promise.all([
+    const [progressData, deckWords, citadel, wordMisses, story] = await Promise.all([
       services.learning.readProgressData(user.userId),
       services.learning.readDeckWords(),
       services.citadel.readCitadel(user.userId),
       services.battles.readWordMisses(user.userId),
+      services.citadel.readStory(user.userId),
     ]);
     if (citadel === null) throw new HttpError(409, 'Cần tạo nhân vật trước khi vào trận', API_ERROR_CODES.heroMissing);
 
@@ -120,6 +123,18 @@ export function registerBattleRoutes(scope: FastifyInstance, services: BattleRou
       citadel,
       seed: newBattleSeed(),
     });
+
+    // Chặn vào trận truyện khi chưa đủ mốc (tránh gọi thẳng API lách khoá rồi dùng chiến thắng đó ghi mốc).
+    // Bỏ qua khi người chơi mới được chuyển vào trận tập (tutorial): họ chưa có mốc là bình thường.
+    if (!prepared.tutorial) {
+      const gate = encounterGateState(encounter.id, new StoryProgress(story));
+      if (gate === 'finished') {
+        throw new HttpError(409, 'Trận truyện này đã hoàn thành', API_ERROR_CODES.battleLocked);
+      }
+      if (!gate.open) {
+        throw new HttpError(409, gate.message, API_ERROR_CODES.battleLocked);
+      }
+    }
     const battleId = newBattleId();
     const startedAtMs = now();
     await services.battles.createBattle(user.userId, battleId, prepared.setup, startedAtMs);

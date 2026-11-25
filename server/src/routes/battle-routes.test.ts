@@ -2,8 +2,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import {
   apiPath,
+  CHAPTER_1_BEATS,
   createBattle,
   FIELD_ENCOUNTER_ID,
+  FIELD_ROAM_ENCOUNTER_ID,
+  SCARECROW_BOSS_ENCOUNTER_ID,
   MIN_REACTION_MS,
   step,
   TUTORIAL_ENCOUNTER_ID,
@@ -137,6 +140,8 @@ describe('battle routes on embedded Postgres', () => {
     for (const [userId, name] of [[knightId, 'Knight'], [noviceId, 'Novice']] as const) {
       await db.query("INSERT INTO herox.heroes (user_id, name, gender) VALUES ($1, $2, 'male')", [userId, name]);
     }
+    // Knight đã đạt mốc tới làng nên trận dã ngoại chương 1 mở (novice chưa, để kiểm trận bị khoá).
+    await db.query('INSERT INTO herox.story_progress (user_id, chapter, beat) VALUES ($1, 1, $2)', [knightId, 'village-arrival']);
 
     app = buildApp(loadConfig({}), {
       logger: false,
@@ -185,6 +190,37 @@ describe('battle routes on embedded Postgres', () => {
     it('requires a hero', async () => {
       const response = await app.inject({ method: 'POST', url: BATTLES_PATH, headers: bearer(NO_HERO_TOKEN), payload: { encounterId: FIELD_ENCOUNTER_ID } });
       expect(response.statusCode).toBe(409);
+    });
+
+    it('allows a roaming battle after village arrival', async () => {
+      const response = await app.inject({ method: 'POST', url: BATTLES_PATH, headers: bearer(KNIGHT_TOKEN), payload: { encounterId: FIELD_ROAM_ENCOUNTER_ID } });
+      expect(response.statusCode).toBe(201);
+    });
+
+    it('rejects a story battle whose milestones are not met', async () => {
+      // Knight mới tới làng, chưa giúp làng xong nên trận trùm còn khoá.
+      const response = await app.inject({ method: 'POST', url: BATTLES_PATH, headers: bearer(KNIGHT_TOKEN), payload: { encounterId: SCARECROW_BOSS_ENCOUNTER_ID } });
+      expect(response.statusCode).toBe(409);
+      expect(response.json<{ error: string }>().error).toContain('Khiên lửa');
+    });
+
+    it('rejects replaying a completed story battle through the API', async () => {
+      await db.query('INSERT INTO herox.story_progress (user_id, chapter, beat) VALUES ($1, 1, $2)', [knightId, CHAPTER_1_BEATS.scarecrowDefeated]);
+      try {
+        const response = await app.inject({
+          method: 'POST',
+          url: BATTLES_PATH,
+          headers: bearer(KNIGHT_TOKEN),
+          payload: { encounterId: SCARECROW_BOSS_ENCOUNTER_ID },
+        });
+        expect(response.statusCode).toBe(409);
+        expect(response.json<{ error: string }>().error).toContain('đã hoàn thành');
+      } finally {
+        await db.query('DELETE FROM herox.story_progress WHERE user_id = $1 AND chapter = 1 AND beat = $2', [
+          knightId,
+          CHAPTER_1_BEATS.scarecrowDefeated,
+        ]);
+      }
     });
 
     it.each([[{ encounterId: 'no-such-fight' }], [{}], [[]]])('rejects an unknown encounter %j', async (payload) => {

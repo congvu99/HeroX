@@ -99,7 +99,7 @@ export class DevCitadelGateway implements CitadelGateway {
       stats: this.seed.stats,
       today: this.today(),
       learnedWordIds: this.learnedWordIds,
-      ...(this.story === undefined ? {} : { lockedBuildings: lockedBuildings(new StoryProgress(this.story())) }),
+      ...(this.story === undefined ? {} : { lockedBuildings: lockedBuildings(new StoryProgress(this.story()), this.state.forgeLevel) }),
     };
     const result = applyCitadelAction(this.state, context, action);
     if (!result.ok) return Promise.resolve({ kind: 'failed', message: CITADEL_REJECTION_MESSAGES[result.reason] });

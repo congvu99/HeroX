@@ -1,7 +1,8 @@
 # Định hướng hình ảnh HeroX
 
 Nguồn chuẩn cho mọi asset nhân vật, quái, map, UI. Chốt lần đầu 2026-11-12; phong cách map đổi sang làng hiệp sĩ giờ
-vàng ngày 2026-11-20.
+vàng ngày 2026-11-20; sprite nhân vật (quái, trùm, NPC thoại) chuyển sang PixelLab làm nguồn chính ngày 2026-11-23
+(hero giữ ngoại lệ LPC).
 
 ## Đích hình ảnh
 
@@ -9,7 +10,8 @@ vàng ngày 2026-11-20.
   **hoàng hôn đỏ bóng sâu**, **ánh trăng**; tia sáng chéo, cửa sổ/cửa/cổng phát sáng, bóng nhà đổ, vignette.
 - Mỗi level một chất riêng nhưng cùng tông: Lexhold (tường thành, tháp, cổng), cánh đồng (cây, rào, nghĩa trang),
   làng (nhà mái cam/xám, nhà nguyện đá), nhà nguyện (sàn đá, ghế, bàn thờ), hầm trùm (đất đỏ, đá vụn, bia mộ).
-- Nhân vật giữ như cũ: thập tự quân áo trắng thập tự đỏ, khiên lớn; quái DCSS/LPC đang có.
+- Hero giữ như cũ: thập tự quân áo trắng thập tự đỏ, khiên lớn (sheet LPC, xem mục Hero). Quái, trùm, NPC thoại:
+  sprite PixelLab màu trung tính (runtime tint MULTIPLY theo chủ đề level).
 - Hiệu ứng: vệt chém vàng, vòng thánh vàng, vòng huyết đỏ (pixelfx).
 
 ## Thông số kỹ thuật
@@ -61,15 +63,26 @@ Danh từ dùng `#6aa8e8`. Màu từ loại phải giống nhau ở mọi màn (
 
 ## Nguồn asset
 
-1. **Nguồn chính: Kenney** (https://kenney.nl, CC0): Tiny Town + Tiny Dungeon, ảnh gốc 16 px ở `assets/tiles/kenney/`
-   (kèm `LICENSE-*.txt`).
-   - Asset mới cùng phong cách 16 px phóng ×2; ưu tiên pack Kenney dòng "Tiny".
+1. **Sprite nhân vật (quái, trùm, NPC thoại) — nguồn chính: PixelLab** (AI pixel art, api.pixellab.ai), tài khoản
+   HeroX. PNG đơn, màu trung tính để runtime tint MULTIPLY theo chủ đề level; trùm dùng chung PNG làm chân dung thoại.
+   - Công thức tạo lại nằm trong `tools/pixellab/art-recipes.json`: mỗi asset ghi `id`, `path`, `prompt`, `seed`,
+     `size`, `directions`, `animations`, `reference` (ảnh phong cách `style-target.png`), `createdAt`. Seed cố định để
+     sinh lại ra đúng ảnh.
+   - Quy trình: khai báo job trong `tools/pixellab/jobs.mjs` / `jobs-chapters-2-5.mjs` (dựng qua `job-factory.mjs`),
+     chạy `node tools/pixellab/generate.mjs` (gọi `api-client.mjs`). Lệnh bỏ qua asset đã có; chỉ sinh job mới.
+   - Prompt bắt buộc có: `color-neutral palette`, `top-down 3/4 pixel art`, `clean readable silhouette`,
+     `transparent background`. Kích thước: quái thường 64×64, trùm 128×128, chân dung 64×64 hoặc 96×96.
+   - Đọc `PIXELLAB_API_KEY` từ env khi gọi API. **Không** đưa token vào repo, chat, log hay báo cáo.
+   - Hết quota: dùng tạm asset đã có, bổ sung sau; không đổi hero sang PixelLab.
+2. **Tile map — nguồn chính: Kenney** (https://kenney.nl, CC0): Tiny Town + Tiny Dungeon, ảnh gốc 16 px ở
+   `assets/tiles/kenney/` (kèm `LICENSE-*.txt`).
+   - Asset map mới cùng phong cách 16 px phóng ×2; ưu tiên pack Kenney dòng "Tiny".
    - **Không** chạy `tools/palette-harmonize.mjs` lên asset Kenney (khử bão hoà, làm lệch tông ánh sáng).
-2. **Ngoại lệ được giữ:** hero LPC, quái DCSS (CC0), hiệu ứng pixelfx (MIT) đang có, vì đã gắn hoạt ảnh trận.
+3. **Ngoại lệ được giữ:** hero LPC và hiệu ứng pixelfx (MIT) đang có, vì đã gắn hoạt ảnh trận.
+   - Hero giữ LPC: thử PixelLab animate hướng lên/trái mất silhouette (khối áo choàng) và giật, thay sẽ regress chất
+     lượng (quyết định gate 3, 2026-11-23). Xem mục Hero.
    - Công thức ghép hero ở `prototypes/style-preview/tools/build_style_assets.py`: kiểu "Crusader" của Sorthen.
    - Chỉ dùng layer LPC có ít nhất một license không phải GPL.
-3. PixelLab không còn là nguồn chính. Nếu dùng cho asset lẻ: lưu prompt, seed, ảnh tham chiếu để tạo lại được; token
-   không đưa vào repo, chat hay log.
 4. Mỗi asset có dòng credit (nguồn, license, công cụ, ngày) trong `assets/credits.json`, rồi chạy
    `node tools/build-credits.mjs` để sinh `assets/CREDITS.md`.
 

@@ -148,6 +148,13 @@ describe('gates', () => {
     expect(lockedBuildings(progressOf()).has('forge')).toBe(true);
     expect(lockedBuildings(progressOf(B.smithRescued)).has('forge')).toBe(false);
   });
+
+  it('does not lock the forge for players who already upgraded it', () => {
+    // Người chơi cũ đã nâng lò rèn trên cấp gốc không bị khoá dù chưa có mốc truyện;
+    // người mới ở cấp gốc (1) vẫn khoá theo mốc.
+    expect(lockedBuildings(progressOf(), 2).has('forge')).toBe(false);
+    expect(lockedBuildings(progressOf(), 1).has('forge')).toBe(true);
+  });
 });
 
 describe('beat lookup and quests', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfigError, DEFAULT_PORT, loadConfig } from './config.js';
+import { ConfigError, DEFAULT_PG_POOL_MAX_CONNECTIONS, DEFAULT_PORT, loadConfig } from './config.js';
 
 describe('loadConfig', () => {
   it('uses defaults when variables are absent', () => {
@@ -9,6 +9,7 @@ describe('loadConfig', () => {
       trustProxyHops: 0,
       pgSsl: false,
       pgSslRootCert: undefined,
+      pgPoolMaxConnections: DEFAULT_PG_POOL_MAX_CONNECTIONS,
     });
   });
 
@@ -19,6 +20,7 @@ describe('loadConfig', () => {
       TRUST_PROXY_HOPS: '1',
       PGSSL: 'TRUE',
       PGSSLROOTCERT: '/etc/ssl/postgres-ca.pem',
+      PGPOOL_MAX_CONNECTIONS: '1',
     });
     expect(config).toEqual({
       port: 4000,
@@ -26,6 +28,7 @@ describe('loadConfig', () => {
       trustProxyHops: 1,
       pgSsl: true,
       pgSslRootCert: '/etc/ssl/postgres-ca.pem',
+      pgPoolMaxConnections: 1,
     });
   });
 
@@ -34,6 +37,8 @@ describe('loadConfig', () => {
     ['PORT', '70000'],
     ['TRUST_PROXY_HOPS', '-1'],
     ['PGSSL', 'yes'],
+    ['PGPOOL_MAX_CONNECTIONS', '0'],
+    ['PGPOOL_MAX_CONNECTIONS', 'many'],
   ])('rejects invalid %s=%s', (name, value) => {
     expect(() => loadConfig({ [name]: value })).toThrow(ConfigError);
   });

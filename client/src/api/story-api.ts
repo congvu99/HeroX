@@ -1,6 +1,8 @@
 import { apiPath, type CompleteBeatRequest, type CreateHeroRequest, type HeroState, type StoryResponse } from '@herox/shared';
 import { requestJson, type ApiResult } from './api-request';
 
+const HTTP_CONFLICT = 409;
+
 function isStoryResponse(value: unknown): value is StoryResponse {
   if (typeof value !== 'object' || value === null) return false;
   const { beats } = value as Partial<Record<keyof StoryResponse, unknown>>;
@@ -33,4 +35,9 @@ export function completeStoryBeat(token: string, request: CompleteBeatRequest, f
 /** `PUT /herox/api/hero`: tạo nhân vật lần đầu (tên, giới tính). */
 export function createHero(token: string, request: CreateHeroRequest, fetchImpl: typeof fetch): Promise<ApiResult<HeroState>> {
   return requestJson({ method: 'PUT', url: apiPath('hero'), token, body: request, isExpected: isHeroState }, fetchImpl);
+}
+
+/** 409 nghĩa là lần tạo trước đã tới server: phải tải lại `/me` để nhận nhân vật thật thay vì giữ bản `hero: null` cũ. */
+export function heroCreationNeedsReload(result: ApiResult<HeroState>): boolean {
+  return result.kind === 'failed' && result.status === HTTP_CONFLICT;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BEAT_REJECTION_MESSAGES, CHAPTER_1_BEATS as B, CITADEL_REJECTION_MESSAGES, TUTORIAL_ENCOUNTER_ID, type StoryBeatRecord, type StoryResponse } from '@herox/shared';
-import { completeStoryBeat, createHero, fetchStory } from '../src/api/story-api';
+import { completeStoryBeat, createHero, fetchStory, heroCreationNeedsReload } from '../src/api/story-api';
 import { DevCitadelGateway } from '../src/citadel/citadel-gateway';
 import { isBuildingLocked } from '../src/citadel/citadel-view';
 import { devCitadelSeed } from '../src/citadel/dev-citadel-fixture';
@@ -28,7 +28,10 @@ describe('story-api', () => {
 
   it('tạo nhân vật bằng PUT và báo lỗi server bằng câu tiếng Việt', async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(409, { error: 'Nhân vật đã được tạo' }));
-    expect(await createHero('tok', { name: 'An', gender: 'female' }, fetchImpl)).toMatchObject({ kind: 'failed', message: 'Nhân vật đã được tạo' });
+    const result = await createHero('tok', { name: 'An', gender: 'female' }, fetchImpl);
+    expect(result).toMatchObject({ kind: 'failed', message: 'Nhân vật đã được tạo', status: 409 });
+    expect(heroCreationNeedsReload(result)).toBe(true);
+    expect(heroCreationNeedsReload({ kind: 'failed', message: 'Máy chủ lỗi', status: 503 })).toBe(false);
     expect(fetchImpl.mock.calls[0]?.[1]?.method).toBe('PUT');
   });
 

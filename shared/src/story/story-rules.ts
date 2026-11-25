@@ -5,6 +5,8 @@ import { CHAPTER_2_STORY } from '../data/story/chapter-2.js';
 import { CHAPTER_3_STORY } from '../data/story/chapter-3.js';
 import { CHAPTER_4_STORY } from '../data/story/chapter-4.js';
 import { CHAPTER_5_STORY } from '../data/story/chapter-5.js';
+import { BASE_FORGE_LEVEL } from '../data/citadel-catalog.js';
+import { FORGE_BUILDING_ID } from '../progression/citadel-rules.js';
 import { isChapterUnlocked, type WordCounts } from '../progression/level-curve.js';
 import type { DialogScript, DialogVariant, StoryBeat, StoryChapter, StoryQuest } from './story-types.js';
 
@@ -177,14 +179,21 @@ export function levelGateState(levelId: string, progress: StoryProgress, counts:
   return OPEN;
 }
 
-/** Công trình ở Lexhold đang khoá vì chưa tới mốc truyện mở nó. */
-export function lockedBuildings(progress: StoryProgress): ReadonlySet<string> {
+/**
+ * Công trình ở Lexhold đang khoá vì chưa tới mốc truyện mở nó.
+ * @param forgeLevel Cấp lò rèn hiện tại. Người chơi cũ đã NÂNG lò rèn (cấp > cấp gốc)
+ *   thì không khoá lò rèn dù chưa có mốc truyện, tránh khoá nhầm tiến độ đã có.
+ *   Người mới có cấp gốc (BASE_FORGE_LEVEL) nên vẫn khoá theo mốc truyện.
+ */
+export function lockedBuildings(progress: StoryProgress, forgeLevel = BASE_FORGE_LEVEL): ReadonlySet<string> {
   const locked = new Set<string>();
   for (const chapter of STORY_CHAPTERS) {
     for (const [building, beat] of Object.entries(chapter.buildingUnlocks)) {
       if (!progress.has(chapter.chapter, beat)) locked.add(building);
     }
   }
+  // Giữ tiến độ người chơi cũ: lò rèn đã nâng trên cấp gốc thì không khoá lại.
+  if (forgeLevel > BASE_FORGE_LEVEL) locked.delete(FORGE_BUILDING_ID);
   return locked;
 }
 

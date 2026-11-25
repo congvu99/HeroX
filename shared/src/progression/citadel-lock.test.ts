@@ -29,6 +29,12 @@ describe('story-locked forge', () => {
     expect(applyCitadelAction(STATE, locked, { type: 'upgrade', target: { kind: 'skill', skill: 'attack' } })).toMatchObject({ ok: true });
   });
 
+  it('rejects equipping while the forge is locked', () => {
+    // Trang bị cũng làm ở lò rèn: lò rèn khoá thì chặn, tránh lách khoá bằng equip.
+    const locked = { ...CONTEXT, lockedBuildings: new Set(['forge']) };
+    expect(applyCitadelAction(STATE, locked, { type: 'equip', itemId: 'x' })).toEqual({ ok: false, reason: 'building-locked' });
+  });
+
   it('allows forge work once unlocked or when no lock is given', () => {
     expect(applyCitadelAction(STATE, CONTEXT, { type: 'upgrade', target: { kind: 'forge' } })).toMatchObject({ ok: true });
     expect(applyCitadelAction(STATE, { ...CONTEXT, lockedBuildings: new Set() }, { type: 'upgrade', target: { kind: 'forge' } })).toMatchObject({ ok: true });

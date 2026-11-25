@@ -34,7 +34,7 @@ import { BattleArena, queueArenaTiles } from '../render/battle-arena';
 import { queueHeroBattleSheets } from '../render/hero-battle-animations';
 import { queueHeroSheet } from '../render/hero-sprite';
 import type { QuestTracker } from '../story/quest-tracker';
-import type { StoryJournal } from '../story/story-journal';
+import { journalFailureMessage, SESSION_EXPIRED_MESSAGE, type StoryJournal } from '../story/story-journal';
 import { BattleHud, type BattleHudButton } from '../ui/battle-hud';
 import { TypingInput } from '../ui/typing-input';
 import { WordRing } from '../ui/word-ring';
@@ -68,8 +68,12 @@ const SHOWCASE_MS: Readonly<Record<SkillKind, number>> = { attack: 1500, empower
 const ACTOR_LIGHT_RADIUS = 110;
 const SHAKE = { light: { durationMs: 120, intensity: 0.004 }, strong: { durationMs: 260, intensity: 0.012 } } as const;
 const DEV_HERO_NAME = 'Hiệp sĩ';
-const SESSION_EXPIRED_MESSAGE = 'Phiên đăng nhập LingoBrain đã hết. Đăng nhập lại để vào trận.';
+/** Hết phiên khi đang mở trận: nhắc đăng nhập lại để vào trận (khác câu lúc đã đánh xong, chưa ghi được). */
+const LOGIN_TO_BATTLE_MESSAGE = 'Phiên đăng nhập LingoBrain đã hết. Đăng nhập lại để vào trận.';
 const INVALID_SETUP_MESSAGE = 'Dữ liệu trận không hợp lệ. Thử lại sau.';
+const RESULT_NOT_SAVED_PREFIX = 'Chưa ghi được kết quả';
+const MILESTONE_NOT_SAVED_PREFIX = 'Chưa ghi được mốc truyện';
+const HTTP_CONFLICT = 409;
 const EXIT_LABEL = 'Về bản đồ';
 const INPUT_MODE_LABELS: Readonly<Record<BattleInputMode, string>> = { typing: 'Kiểu nhập: Gõ', ring: 'Kiểu nhập: Vòng từ' };
 
@@ -260,7 +264,7 @@ export class BattleScene extends Phaser.Scene {
     }
     const token = readEngSessionToken(() => window.localStorage);
     if (token === null) {
-      this.showEnd(SESSION_EXPIRED_MESSAGE);
+      this.showEnd(LOGIN_TO_BATTLE_MESSAGE);
       return;
     }
     const run = this.battleRun;
@@ -271,7 +275,7 @@ export class BattleScene extends Phaser.Scene {
       this.startSession(result.value.setup, { token, battleId: result.value.battleId });
       if (result.value.tutorial) this.hud.floatText(LOGICAL_WIDTH / 2, 170, 'Trận hướng dẫn: học thêm từ ở LingoBrain để mạnh hơn', 'info');
     } else if (result.kind === 'unauthenticated') {
-      this.showEnd(SESSION_EXPIRED_MESSAGE);
+      this.showEnd(LOGIN_TO_BATTLE_MESSAGE);
     } else {
       this.showEnd(result.message);
     }
@@ -300,7 +304,7 @@ export class BattleScene extends Phaser.Scene {
 
   private handleEvent(event: BattleEvent): void {
     if (event.type === 'prompt') this.showPrompt(event.wordId, event.options);
-    else if (event.type === 'enemySpawn') this.actors.showEnemy(event.kind, event.elite);
+    else if (event.type === 'enemySpawn') this.actors.showEnemy(event.kind, event.elite, event.boss);
     else if (event.type === 'enemyDefeated') this.actors.defeatEnemy();
     else if (event.type === 'defeat') this.actors.fall();
     else if (event.type === 'miss' && event.reason === 'wrong') this.typing.shake();
@@ -423,11 +427,16 @@ export class BattleScene extends Phaser.Scene {
     const result = await submitBattleResult(online.token, online.battleId, session.resultRequest(), window.fetch.bind(window));
     if (this.isStale(run)) return;
     if (result.kind === 'unauthenticated') {
-      this.showEnd(`${title}\nChưa ghi được kết quả: phiên đăng nhập đã hết`);
+      this.showEnd(`${title}\n${RESULT_NOT_SAVED_PREFIX}: ${SESSION_EXPIRED_MESSAGE}`);
       return;
     }
     if (result.kind === 'failed') {
-      this.showEnd(`${title}\nChưa ghi được kết quả: ${result.message}`, () => void this.submitResult(session, online, title));
+      // Trận đã ghi trước đó (409): không gửi lại nữa (sẽ lại 409), nhưng vẫn thử ghi mốc truyện đang thiếu.
+      if (result.status === HTTP_CONFLICT) {
+        await this.showSettledResult(session, run);
+        return;
+      }
+      this.showEnd(`${title}\n${RESULT_NOT_SAVED_PREFIX}: ${result.message}`, () => void this.submitResult(session, online, title));
       return;
     }
     const { goldEarned, missedWordIds, outcome } = result.value;
@@ -439,6 +448,20 @@ export class BattleScene extends Phaser.Scene {
     }
     if (goldEarned > 0) lines.push(`+${goldEarned} vàng`);
     if (missedWordIds.length > 0) lines.push(`${missedWordIds.length} từ cần ôn lại`);
+    this.showEnd(lines.join('\n'));
+  }
+
+  /**
+   * Trận đã được server ghi nhận trước đó (gửi lại gặp 409). Thưởng đã trao ở lần ghi đầu; ở đây chỉ
+   * bù phần mốc truyện có thể chưa ghi được (vd lần trước mất mạng sau khi server đã lưu thắng).
+   */
+  private async showSettledResult(session: BattleSession, run: number): Promise<void> {
+    const lines = ['Trận đã được ghi nhận'];
+    if (session.current.outcome === 'victory') {
+      const storyLine = await this.completeStoryBattle();
+      if (this.isStale(run)) return;
+      if (storyLine !== null) lines.push(storyLine);
+    }
     this.showEnd(lines.join('\n'));
   }
 
@@ -455,8 +478,8 @@ export class BattleScene extends Phaser.Scene {
     const found = journal === undefined ? null : beatForEncounter(this.encounterId, journal.progress);
     if (journal === undefined || found === null) return null;
     const result = await journal.complete(found.chapter, found.beat.id);
-    if (result.kind === 'ok') return `Xong: ${found.beat.objective}`;
-    return result.kind === 'failed' ? `Chưa ghi được mốc truyện: ${result.message}` : 'Chưa ghi được mốc truyện: phiên đăng nhập đã hết';
+    const error = journalFailureMessage(result);
+    return error === null ? `Xong: ${found.beat.objective}` : `${MILESTONE_NOT_SAVED_PREFIX}: ${error}`;
   }
 
   private showEnd(message: string, retry?: () => void): void {

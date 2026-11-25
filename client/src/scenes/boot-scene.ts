@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import type { CreateHeroRequest, MeResponse } from '@herox/shared';
 import { currentUtcOffsetMinutes, fetchMe, readEngSessionToken, waitForEngSession, type MeResult } from '../api/me-api';
-import { createHero } from '../api/story-api';
+import { createHero, heroCreationNeedsReload } from '../api/story-api';
 import { activeChapterMapPath } from '../maps/chapter-maps';
 import { LdtkFormatError, parseLdtkProject } from '../maps/ldtk-loader';
 import { mapAssetUrl } from '../maps/map-asset-urls';
 import { createPlaceholderTextures } from '../render/placeholder-textures';
-import { ApiStoryBackend, DevStoryBackend, StoryJournal } from '../story/story-journal';
+import { ApiStoryBackend, DevStoryBackend, SESSION_EXPIRED_MESSAGE, StoryJournal } from '../story/story-journal';
 import { HeroCreationForm } from '../ui/hero-creation-form';
 import { mapProjectCacheKey, REGISTRY_KEYS, SCENE_KEYS, type LoadedMapProject } from './scene-keys';
 
@@ -107,8 +107,17 @@ export class BootScene extends Phaser.Scene {
     this.resetScreen();
     const form = new HeroCreationForm(document.body, async (request: CreateHeroRequest) => {
       const created = await createHero(token, request, window.fetch.bind(window));
-      if (created.kind === 'unauthenticated') return 'Phiên đăng nhập đã hết, hãy đăng nhập lại LingoBrain';
-      if (created.kind === 'failed') return created.message;
+      if (created.kind === 'unauthenticated') return SESSION_EXPIRED_MESSAGE;
+      // Lần tạo trước có thể đã tới server rồi mới hết giờ chờ (409): nhân vật đã có, mở thẳng truyện.
+      if (created.kind === 'failed') {
+        if (heroCreationNeedsReload(created)) {
+          form.close();
+          // `/me` ban đầu còn `hero: null`; tải lại để registry nhận đúng tên/trạng thái nhân vật đã tạo.
+          void this.authenticate();
+          return null;
+        }
+        return created.message;
+      }
       form.close();
       this.registry.set(REGISTRY_KEYS.me, { ...me, hero: created.value });
       void this.loadStory(token);

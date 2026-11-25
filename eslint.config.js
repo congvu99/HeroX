@@ -25,8 +25,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ['server/**/*.ts', 'server/**/*.mjs', 'client/scripts/**/*.mjs', 'tools/**/*.mjs', 'shared/**/*.ts', '*.js', '*.ts'],
+    files: ['server/**/*.ts', 'server/**/*.mjs', 'client/scripts/**/*.mjs', 'tools/**/*.mjs', 'prototypes/**/*.mjs', 'shared/**/*.ts', '*.js', '*.ts'],
     languageOptions: { globals: globals.node },
+  },
+  {
+    files: ['tools/pixellab/generate.mjs'],
+    rules: { 'no-console': 'off' },
   },
   {
     files: ['client/src/**/*.ts'],

@@ -87,7 +87,7 @@ export interface BattleState {
 export type MissReason = 'wrong' | 'timeout';
 
 export type BattleEvent =
-  | { readonly type: 'enemySpawn'; readonly enemyIndex: number; readonly kind: string; readonly maxHp: number; readonly elite: boolean }
+  | { readonly type: 'enemySpawn'; readonly enemyIndex: number; readonly kind: string; readonly maxHp: number; readonly elite: boolean; readonly boss: boolean }
   | { readonly type: 'prompt'; readonly wordId: string; readonly options: readonly string[]; readonly deadlineMs: number }
   | {
       readonly type: 'cast';
@@ -252,7 +252,8 @@ class BattleDraft {
       weakenedHits: 0,
       shielded: false,
     };
-    this.events.push({ type: 'enemySpawn', enemyIndex, kind: spec.kind, maxHp, elite });
+    // Chỉ trùm mới có khiên lửa; dùng làm nguồn sự thật để render phóng to đúng cỡ trùm.
+    this.events.push({ type: 'enemySpawn', enemyIndex, kind: spec.kind, maxHp, elite, boss: spec.fireShield !== undefined });
     this.showPrompt(eliteWord);
   }
 

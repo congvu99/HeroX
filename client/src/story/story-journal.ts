@@ -22,6 +22,15 @@ export type JournalResult =
   | { readonly kind: 'failed'; readonly message: string }
   | { readonly kind: 'unauthenticated' };
 
+/** Câu báo khi phiên LingoBrain hết hạn (dùng chung cho hội thoại và màn kết trận). */
+export const SESSION_EXPIRED_MESSAGE = 'Phiên đăng nhập đã hết, hãy đăng nhập lại LingoBrain';
+
+/** Chuyển kết quả ghi mốc thành câu lỗi tiếng Việt; `null` khi ghi thành công. */
+export function journalFailureMessage(result: JournalResult): string | null {
+  if (result.kind === 'ok') return null;
+  return result.kind === 'unauthenticated' ? SESSION_EXPIRED_MESSAGE : result.message;
+}
+
 export class ApiStoryBackend implements StoryBackend {
   constructor(
     private readonly token: string,

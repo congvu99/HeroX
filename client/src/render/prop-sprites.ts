@@ -1,6 +1,9 @@
 import type Phaser from 'phaser';
+import { monsterTextureKeyForFile } from './battle-actors';
 import { TEXTURE_KEYS } from './placeholder-textures';
 import { spriteAssetUrl } from './sprite-asset-urls';
+
+const MONSTER_DIR = 'sprites/monsters/';
 
 /** Hình NPC theo `dialogId` trên map (cánh cửa, bàn thờ nhà nguyện cũng là "NPC" vì có hội thoại). */
 const NPC_SPRITES: Readonly<Record<string, string>> = {
@@ -15,6 +18,8 @@ const CHEST_CLOSED_PATH = 'sprites/props/chest-closed.png';
 const CHEST_OPEN_PATH = 'sprites/props/chest-open.png';
 
 function textureKeyFor(path: string): string {
+  // Ảnh quái (vd trùm làm NPC trên map) dùng chung khoá texture với trận để chỉ nạp một bản lên GPU.
+  if (path.startsWith(MONSTER_DIR)) return monsterTextureKeyForFile(path.slice(MONSTER_DIR.length).replace(/\.png$/, ''));
   return `prop:${path}`;
 }
 

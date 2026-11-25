@@ -99,6 +99,8 @@ describe('citadel routes on embedded Postgres', () => {
     }
     // Lò rèn khoá theo truyện; knight đã cứu thợ rèn để thử các luật nâng cấp khác.
     await rescueSmith(knightId);
+    // Mốc tới làng để trận dã ngoại chương 1 mở (POST /battles kiểm cổng khoá theo truyện).
+    await db.query('INSERT INTO herox.story_progress (user_id, chapter, beat) VALUES ($1, 1, $2)', [knightId, CHAPTER_1_BEATS.villageArrival]);
     app = buildApp(loadConfig({}), {
       logger: false,
       services: {

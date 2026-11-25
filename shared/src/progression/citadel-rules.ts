@@ -60,11 +60,16 @@ export interface CitadelActionContext {
   readonly lockedBuildings?: ReadonlySet<string>;
 }
 
-const FORGE_BUILDING_ID: BuildingId = 'forge';
+export const FORGE_BUILDING_ID: BuildingId = 'forge';
 
 /** Nâng lò rèn và rèn trang bị đều làm ở lò rèn. */
 function isForgeWork(target: UpgradeTarget): boolean {
   return target.kind === 'forge' || target.kind === 'item';
+}
+
+/** Lò rèn đang khoá theo cốt truyện (thiếu `lockedBuildings` nghĩa là không khoá). */
+function isForgeLocked(context: CitadelActionContext): boolean {
+  return context.lockedBuildings?.has(FORGE_BUILDING_ID) === true;
 }
 
 const MINUTE_MS = 60_000;
@@ -218,9 +223,11 @@ export function applyCitadelAction(
 ): CitadelActionResult {
   switch (action.type) {
     case 'upgrade':
-      if (isForgeWork(action.target) && context.lockedBuildings?.has(FORGE_BUILDING_ID) === true) return reject('building-locked');
+      if (isForgeWork(action.target) && isForgeLocked(context)) return reject('building-locked');
       return applyUpgrade(state, context.stats, action.target);
     case 'equip':
+      // Trang bị cũng làm ở lò rèn: lò rèn khoá thì không cho trang bị.
+      if (isForgeLocked(context)) return reject('building-locked');
       return applyEquip(state, action.itemId);
     case 'outfit':
       return applyOutfit(state, context.stats, action.outfitId);

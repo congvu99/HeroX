@@ -123,7 +123,7 @@ describe('BattleCueMapper', () => {
 
   it('quái hiện, quái chết, thắng, thua', () => {
     const mapper = new BattleCueMapper();
-    expect(fxOf(mapper.cuesFor({ type: 'enemySpawn', enemyIndex: 0, kind: 'imp', maxHp: 40, elite: false }))).toEqual(['enemy-spawn']);
+    expect(fxOf(mapper.cuesFor({ type: 'enemySpawn', enemyIndex: 0, kind: 'imp', maxHp: 40, elite: false, boss: false }))).toEqual(['enemy-spawn']);
     expect(fxOf(mapper.cuesFor({ type: 'enemyDefeated', enemyIndex: 0, rewardGold: 8 }))).toEqual(['enemy-death']);
     expect(mapper.cuesFor({ type: 'victory', goldEarned: 8 })).toEqual([{ type: 'sound', sound: 'victory' }]);
     expect(mapper.cuesFor({ type: 'defeat' })).toEqual([{ type: 'sound', sound: 'defeat' }]);

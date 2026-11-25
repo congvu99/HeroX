@@ -75,7 +75,7 @@ function toOption(label: string, check: UpgradeCheck): UpgradeOption | null {
 
 /** Công trình còn khoá theo truyện (vd lò rèn tới khi cứu thợ rèn); server cũng chặn thao tác. */
 export function isBuildingLocked(view: CitadelResponse, building: BuildingId): boolean {
-  return lockedBuildings(new StoryProgress(view.story)).has(building);
+  return lockedBuildings(new StoryProgress(view.story), view.state.forgeLevel).has(building);
 }
 
 export function forgeUpgradeOption(view: CitadelResponse): UpgradeOption | null {

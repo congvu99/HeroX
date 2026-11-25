@@ -11,7 +11,7 @@
  *
  * File này không qua bundler: đổi logic thì tăng SW_VERSION để trình duyệt cài lại SW.
  */
-const SW_VERSION = '1';
+const SW_VERSION = '2';
 const CACHE_PREFIX = 'herox-';
 const PAGE_CACHE = `${CACHE_PREFIX}pages-v${SW_VERSION}`;
 const ASSET_CACHE = `${CACHE_PREFIX}assets-v${SW_VERSION}`;
@@ -70,14 +70,12 @@ async function refreshAssetCache(html, pageUrl) {
   for (const assetUrl of assetUrls) {
     if (!(await cache.match(assetUrl))) missing.push(assetUrl);
   }
-  // Index không tham chiếu file mới nào → cùng bản deploy, không dọn: map, atlas do JS nạp động
-  // cũng nằm trong assets/ mà không có trong index, dọn mỗi lần mở trang sẽ bắt tải lại chúng.
   if (missing.length === 0) return;
+  // Chỉ thêm file hash mới của index; KHÔNG xoá file hash cũ ở đây. Map, atlas, sprite do JS nạp động
+  // cũng nằm trong assets/ mà không có trong index: xoá theo danh sách index sẽ bắt tải lại chúng
+  // (kể cả file của chính bản deploy mới vừa tải). Tên file theo hash nội dung nên file thừa không gây
+  // lệch phiên; dọn triệt để để ở 'activate' theo version cache.
   await cache.addAll(missing);
-  // Bản deploy mới: bỏ file hash của bản cũ, file nạp động của bản mới sẽ được cache dần khi dùng.
-  const keep = new Set(assetUrls);
-  const cachedRequests = await cache.keys();
-  await Promise.all(cachedRequests.filter(request => !keep.has(request.url)).map(request => cache.delete(request)));
 }
 
 /** Lưu trang (bỏ query) và đồng bộ cache asset hash theo trang đó. */

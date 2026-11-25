@@ -60,6 +60,9 @@ export default defineConfig({
             TRUST_PROXY_HOPS: '0',
             PGSSL: 'false',
             PGSSLROOTCERT: '',
+            // PGlite dùng chung một engine cho các socket; một kết nối tránh transaction của socket này
+            // xen vào socket khác và làm mất mốc truyện vừa ghi. Postgres thật vẫn dùng mặc định 5.
+            PGPOOL_MAX_CONNECTIONS: '1',
           },
         },
         {

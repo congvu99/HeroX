@@ -29,10 +29,10 @@ test('models a 640 by 360 game screen instead of a web dashboard', async () => {
 
 test('uses dedicated action RPG compositions for all four states', async () => {
   const source = await html();
-  assert.match(source, /class="[^\"]*title-screen/);
-  assert.match(source, /class="[^\"]*combat-hud/);
-  assert.match(source, /class="[^\"]*armory-screen/);
-  assert.match(source, /class="[^\"]*character-sheet/);
+  assert.match(source, /class="[^"]*title-screen/);
+  assert.match(source, /class="[^"]*combat-hud/);
+  assert.match(source, /class="[^"]*armory-screen/);
+  assert.match(source, /class="[^"]*character-sheet/);
   assert.match(source, /equipment-slot/);
   assert.match(source, /command-bar/);
 });

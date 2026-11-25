@@ -20,6 +20,7 @@ export interface Database extends SqlExecutor {
 export interface DatabaseOptions {
   readonly connectionString: string;
   readonly ssl: boolean;
+  readonly maxConnections?: number;
   /** File CA để xác thực chứng chỉ Postgres khi bật TLS; thiếu thì dùng CA hệ thống. */
   readonly sslRootCertFile: string | undefined;
 }
@@ -132,7 +133,7 @@ export function createPgDatabase(options: DatabaseOptions, log: DatabaseLogger):
   const pool = new pg.Pool({
     connectionString: options.connectionString,
     ssl: buildSslOption(options),
-    max: POOL_MAX_CONNECTIONS,
+    max: options.maxConnections ?? POOL_MAX_CONNECTIONS,
     connectionTimeoutMillis: CONNECTION_TIMEOUT_MS,
     statement_timeout: STATEMENT_TIMEOUT_MS,
     query_timeout: QUERY_TIMEOUT_MS,
