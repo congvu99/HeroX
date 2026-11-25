@@ -12,6 +12,13 @@ export interface BattleWord {
   readonly mastered: boolean;
   /** Hay sai (quên ở LingoBrain hoặc gõ sai trong HeroX): ra đề nhiều hơn, có thể sinh quái tinh anh. */
   readonly weak: boolean;
+  /**
+   * Vừa học ở LingoBrain (lượt chấm đầu trong vài ngày qua): vào bộ từ trước và ra đề nhiều hơn để ôn ngay.
+   * Tuỳ chọn vì setup trận cũ đã lưu không có trường này.
+   */
+  readonly fresh?: boolean;
+  /** Lâu chưa gặp trong HeroX (hoặc chưa gặp lần nào): ra đề nhiều hơn một chút để không bị quên. Tuỳ chọn như `fresh`. */
+  readonly stale?: boolean;
 }
 
 /** Khiên lửa pha 2 của trùm: dựng khi máu xuống tới ngưỡng, chỉ chiêu trong combo đủ dài mới xuyên qua. */

@@ -39,9 +39,15 @@ export const WORD_MIX_QUOTAS: Record<WordMix, Record<WordTier, number>> = {
 /** Thứ tự dồn slot thừa khi một nhóm thiếu từ: ưu tiên ôn (đến hạn, khó) trước mở rộng. */
 const SPILL_ORDER: readonly WordTier[] = ['due', 'hard', 'new', 'familiar', 'mastered'];
 
-// Từ yếu và từ vừa sai trong trận ra đề nhiều gấp 3 để người chơi ôn đúng chỗ hổng.
-const WEAK_WORD_WEIGHT = 3;
-const NORMAL_WORD_WEIGHT = 1;
+/** Từ vừa học chiếm tối đa chừng này phần trăm bộ từ (sau vòng từ), để vẫn còn chỗ cho ôn từ khó, đến hạn. */
+export const FRESH_POOL_SHARE_PERCENT = 50;
+
+// Trọng số ra đề cộng dồn: từ hay sai/vừa sai và từ vừa học ra nhiều gấp 3, từ lâu chưa gặp gấp 2;
+// từ vừa học mà hay sai ra gấp 5. Ôn đúng chỗ hổng và củng cố từ mới trước khi quên.
+const BASE_WORD_WEIGHT = 1;
+const WEAK_WORD_BONUS = 2;
+const FRESH_WORD_BONUS = 2;
+const STALE_WORD_BONUS = 1;
 // Thỉnh thoảng mở đầu một chuỗi cụm, hoặc giữ cùng từ loại, để combo đạt được mà không lộ quy luật.
 const CHAIN_START_CHANCE = 0.3;
 const SAME_POS_FOLLOW_CHANCE = 0.4;
@@ -73,7 +79,7 @@ function allocateQuota(quotas: Record<WordTier, number>, total: number): Record<
 
 /**
  * Chọn tối đa `limit` từ cho trận theo hạn ngạch nhóm. Thuần, không cần rng (`buckets` đã được sắp thứ tự ưu tiên).
- * Trước hết thêm từ vòng từ (luôn có mặt), rồi chia số slot còn lại theo `WORD_MIX_QUOTAS[mix]`, lấy từ đầu mỗi nhóm;
+ * Trước hết thêm từ vòng từ (luôn có mặt), rồi từ vừa học (tối đa FRESH_POOL_SHARE_PERCENT), rồi chia số slot còn lại theo `WORD_MIX_QUOTAS[mix]`, lấy từ đầu mỗi nhóm;
  * slot thừa do nhóm thiếu từ dồn theo `SPILL_ORDER`. Từ chuỗi cụm chỉ vào bộ nếu tự nó thuộc một nhóm — không kéo thêm.
  */
 export function selectBattleWords(
@@ -93,6 +99,7 @@ export function selectBattleWords(
 
   // Vòng từ luôn vào bộ trước (người chơi tự chọn các từ này để lên combo).
   for (const id of loadout) add(byId.get(id));
+  addFreshWords(buckets, add, Math.floor(((limit - selected.size) * FRESH_POOL_SHARE_PERCENT) / 100));
 
   // Lấy từ tiếp theo chưa chọn của một nhóm; `null` khi nhóm đã cạn.
   const takeFrom = (tier: WordTier): BattleWord | null => {
@@ -125,6 +132,21 @@ export function selectBattleWords(
   return [...selected.values()];
 }
 
+/** Thêm tối đa `max` từ vừa học, theo thứ tự nhóm rồi thứ tự ưu tiên trong nhóm (đã xếp sẵn ở `buckets`). */
+function addFreshWords(
+  buckets: Record<WordTier, readonly BattleWord[]>,
+  add: (word: BattleWord) => boolean,
+  max: number,
+): void {
+  let added = 0;
+  for (const tier of WORD_TIERS) {
+    for (const word of buckets[tier]) {
+      if (added >= max) return;
+      if (word.fresh === true && add(word)) added += 1;
+    }
+  }
+}
+
 export interface PromptContext {
   readonly words: readonly BattleWord[];
   readonly recentWordIds: readonly string[];
@@ -146,7 +168,10 @@ function excludeRecent(context: PromptContext): readonly BattleWord[] {
 
 function pickWeighted(words: readonly BattleWord[], retry: ReadonlySet<string>, rng: SeededRandom): BattleWord {
   const weightOf = (word: BattleWord): number =>
-    word.weak || retry.has(word.id) ? WEAK_WORD_WEIGHT : NORMAL_WORD_WEIGHT;
+    BASE_WORD_WEIGHT +
+    (word.weak || retry.has(word.id) ? WEAK_WORD_BONUS : 0) +
+    (word.fresh === true ? FRESH_WORD_BONUS : 0) +
+    (word.stale === true ? STALE_WORD_BONUS : 0);
   const total = words.reduce((sum, word) => sum + weightOf(word), 0);
   let roll = rng.next() * total;
   for (const word of words) {

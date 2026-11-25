@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeLearningStats,
+  listLearnedWords,
   UnsupportedProgressVersionError,
   type DeckWord,
 } from './learning-stats.js';
@@ -160,5 +161,16 @@ describe('streakDays', () => {
   it('keeps the stored streak when the stored day is in the future', () => {
     const payload = { v: 1, srs: {}, day: dayData('2026-11-20', 6, { t1: NOW }) };
     expect(computeLearningStats(payload, deck, NOW, VIETNAM_UTC_OFFSET).streakDays).toBe(6);
+  });
+});
+
+describe('listLearnedWords', () => {
+  it('reads the earliest grade time as the study time, null when there is no grade', () => {
+    const words = listLearnedWords(readFixture('progress-all-states.json'), deck);
+    const byId = new Map(words.map((learned) => [learned.word.id, learned]));
+    // w-run có hai lượt chấm; mốc học là lượt sớm hơn.
+    expect(byId.get('w-run')?.firstStudiedAt).toBe(1791003600000);
+    expect(byId.get('w-cat')?.firstStudiedAt).toBe(1794456000000);
+    expect(byId.get('w-give-up')?.firstStudiedAt).toBeNull();
   });
 });
