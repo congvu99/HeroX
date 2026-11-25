@@ -37,9 +37,9 @@ export interface ComboResult {
 
 export const EMPTY_COMBO: ComboState = { count: 0, links: [], lastCastAtMs: null };
 
-/** Mốc combo hết hạn; `null` khi chưa có combo. */
-export function comboExpiresAtMs(combo: ComboState): number | null {
-  return combo.lastCastAtMs === null || combo.count === 0 ? null : combo.lastCastAtMs + COMBO_WINDOW_MS;
+/** Mốc combo hết hạn; `null` khi chưa có combo. `windowMs`: cửa sổ nối combo hiện tại (tăng tốc kéo dài thêm). */
+export function comboExpiresAtMs(combo: ComboState, windowMs: number = COMBO_WINDOW_MS): number | null {
+  return combo.lastCastAtMs === null || combo.count === 0 ? null : combo.lastCastAtMs + windowMs;
 }
 
 function endsWith(links: readonly ComboLink[], words: readonly string[]): boolean {

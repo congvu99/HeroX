@@ -1,7 +1,9 @@
+import type { SkillMove } from '../data/skill-moves.js';
 import { WORD_CHAINS, type WordChain } from '../data/word-chains.js';
 import { matchAnswer, normalizeAnswer } from './answer-matching.js';
 import type { BattleInput, BattleOutcome, BattleSetup, BattleWord } from './battle-types.js';
 import {
+  COMBO_WINDOW_MS,
   comboExpiresAtMs,
   EMPTY_COMBO,
   extendCombo,
@@ -16,9 +18,36 @@ import {
   maxShieldFor,
   type CastAccuracy,
 } from './damage-formula.js';
+import { comboTierFor, raiseComboTier, type ComboTier } from './combo-tier.js';
 import { buildRingOptions } from './ring-options.js';
 import { SeededRandom } from './seeded-random.js';
 import { skillKindForPartOfSpeech, type SkillKind } from './skill-kind.js';
+import { buildBattleDeck, initialMoveRngState, pickSkillMove, rollMoveStatus, type StatusRoll } from './skill-move-picker.js';
+import {
+  DAMAGE_OVER_TIME_MIN_HP,
+  DAMAGE_OVER_TIME_STATUSES,
+  damageOverTimeTick,
+  HERO_TIMED_STATUSES,
+  decrementStatuses,
+  findStatus,
+  freezeDamageFactor,
+  hasteComboWindowBonusMs,
+  healAmount,
+  isEnemyStatus,
+  isEnemyTargeted,
+  isPreventingStatus,
+  lifestealAmount,
+  needsLandedHit,
+  removeStatus,
+  statusTurns,
+  upsertStatus,
+  type ActiveStatus,
+  type DamageOverTimeKind,
+  type EnemyStatusKind,
+  type HeroStatusKind,
+  type PreventingStatusKind,
+  type StatusKind,
+} from './status-effects.js';
 import { availableChains, pickPromptWord, RECENT_PROMPT_MEMORY } from './word-pool.js';
 
 // Quái tinh anh: thỉnh thoảng một từ hay sai hoá thành quái nhiều máu hơn, thưởng gấp đôi.
@@ -36,6 +65,8 @@ export interface HeroBattleState {
   readonly shield: number;
   /** Số đòn quái sắp tới được né hoàn toàn. */
   readonly evadeCharges: number;
+  /** Trạng thái đang có trên hiệp sĩ (tăng tốc). */
+  readonly statuses: readonly ActiveStatus<HeroStatusKind>[];
 }
 
 export interface EnemyBattleState {
@@ -50,6 +81,8 @@ export interface EnemyBattleState {
   readonly weakenedHits: number;
   /** Khiên lửa pha 2 đang dựng (chỉ trùm). */
   readonly shielded: boolean;
+  /** Trạng thái đang có trên quái (đốt, độc, đóng băng, choáng). */
+  readonly statuses: readonly ActiveStatus<EnemyStatusKind>[];
 }
 
 export interface PromptState {
@@ -64,12 +97,18 @@ export interface PromptState {
 export interface BattleIndex {
   readonly wordsById: ReadonlyMap<string, BattleWord>;
   readonly chains: readonly WordChain[];
+  /** Bộ chiêu của trận (chọn theo seed), chiêu mỗi đòn bốc trong bộ này. */
+  readonly deck: readonly SkillMove[];
 }
 
 export interface BattleState {
   readonly setup: BattleSetup;
   readonly index: BattleIndex;
   readonly rngState: number;
+  /** Trạng thái luồng ngẫu nhiên bốc chiêu, tách khỏi luồng chọn đề. */
+  readonly moveRngState: number;
+  /** Chiêu vừa dùng của từng loại, để lần sau không bốc lặp. */
+  readonly lastMoveIdByKind: Readonly<Partial<Record<SkillKind, string>>>;
   readonly elapsedMs: number;
   readonly hero: HeroBattleState;
   readonly enemy: EnemyBattleState | null;
@@ -100,6 +139,7 @@ export interface WordResult {
 }
 
 export type MissReason = 'wrong' | 'timeout';
+export type StatusTarget = 'hero' | 'enemy';
 
 export type BattleEvent =
   | { readonly type: 'enemySpawn'; readonly enemyIndex: number; readonly kind: string; readonly maxHp: number; readonly elite: boolean; readonly boss: boolean }
@@ -110,6 +150,10 @@ export type BattleEvent =
       readonly skill: SkillKind;
       readonly accuracy: CastAccuracy;
       readonly mastered: boolean;
+      /** Chiêu bốc được (id trong `SKILL_MOVES`). */
+      readonly moveId: string;
+      /** Bậc chiêu theo combo, đã cộng bậc của từ đã thuộc. */
+      readonly comboTier: ComboTier;
     }
   | {
       readonly type: 'comboUp';
@@ -133,6 +177,12 @@ export type BattleEvent =
   /** Chiêu bị khiên lửa chặn: combo chưa đủ dài; `comboNeeded` là số chiêu đúng nữa cần nối thêm. */
   | { readonly type: 'shieldBlocked'; readonly comboNeeded: number }
   | { readonly type: 'miss'; readonly wordId: string; readonly reason: MissReason }
+  /** Mục tiêu dính trạng thái; `turns` = 0 với trạng thái tức thì. */
+  | { readonly type: 'statusApplied'; readonly target: StatusTarget; readonly status: StatusKind; readonly turns: number }
+  /** Đốt/độc ăn máu quái sau một đòn đúng. */
+  | { readonly type: 'statusTick'; readonly status: DamageOverTimeKind; readonly damage: number; readonly enemyHp: number }
+  | { readonly type: 'statusExpired'; readonly target: StatusTarget; readonly status: StatusKind }
+  | { readonly type: 'heal'; readonly amount: number; readonly heroHp: number; readonly source: 'heal' | 'lifesteal' }
   | { readonly type: 'comboBreak'; readonly count: number }
   | {
       readonly type: 'enemyAttack';
@@ -141,6 +191,8 @@ export type BattleEvent =
       readonly evaded: boolean;
       readonly heroHp: number;
       readonly shield: number;
+      /** Quái mất lượt vì choáng hoặc đóng băng (không gây sát thương). */
+      readonly prevented: PreventingStatusKind | null;
     }
   | { readonly type: 'enemyDefeated'; readonly enemyIndex: number; readonly rewardGold: number }
   | { readonly type: 'victory'; readonly goldEarned: number }
@@ -173,6 +225,8 @@ function assertValidSetup(setup: BattleSetup): void {
  */
 class BattleDraft {
   private readonly rng: SeededRandom;
+  private readonly moveRng: SeededRandom;
+  private lastMoveIdByKind: Readonly<Partial<Record<SkillKind, string>>>;
   private readonly events: BattleEvent[] = [];
   private elapsedMs: number;
   private hero: HeroBattleState;
@@ -188,6 +242,8 @@ class BattleDraft {
 
   constructor(private readonly base: BattleState) {
     this.rng = new SeededRandom(base.rngState);
+    this.moveRng = new SeededRandom(base.moveRngState);
+    this.lastMoveIdByKind = base.lastMoveIdByKind;
     this.elapsedMs = base.elapsedMs;
     this.hero = base.hero;
     this.enemy = base.enemy;
@@ -210,6 +266,8 @@ class BattleDraft {
       setup: this.setup,
       index: this.base.index,
       rngState: this.rng.state,
+      moveRngState: this.moveRng.state,
+      lastMoveIdByKind: this.lastMoveIdByKind,
       elapsedMs: this.elapsedMs,
       hero: this.hero,
       enemy: this.enemy,
@@ -231,7 +289,8 @@ class BattleDraft {
    */
   advanceTo(targetMs: number): void {
     while (this.outcome === 'ongoing') {
-      const comboDeadline = comboExpiresAtMs(this.combo) ?? Number.POSITIVE_INFINITY;
+      const comboWindowMs = COMBO_WINDOW_MS + hasteComboWindowBonusMs(this.hero.statuses);
+      const comboDeadline = comboExpiresAtMs(this.combo, comboWindowMs) ?? Number.POSITIVE_INFINITY;
       const promptDeadline = this.prompt?.deadlineMs ?? Number.POSITIVE_INFINITY;
       const nextDeadline = Math.min(comboDeadline, promptDeadline);
       if (nextDeadline > targetMs) break;
@@ -269,6 +328,7 @@ class BattleDraft {
       elite,
       weakenedHits: 0,
       shielded: false,
+      statuses: [],
     };
     // Chỉ trùm mới có khiên lửa; dùng làm nguồn sự thật để render phóng to đúng cỡ trùm.
     this.events.push({ type: 'enemySpawn', enemyIndex, kind: spec.kind, maxHp, elite, boss: spec.fireShield !== undefined });
@@ -316,7 +376,12 @@ class BattleDraft {
     const combo = extendCombo(this.combo, { word: normalizeAnswer(word.word), pos: word.pos }, this.elapsedMs, this.base.index.chains);
     this.combo = combo.combo;
     this.retryWordIds = this.retryWordIds.filter((id) => id !== word.id);
-    this.events.push({ type: 'cast', wordId: word.id, skill, accuracy, mastered: word.mastered });
+    // Từ đã thuộc hiện chiêu cao hơn một bậc, để người chơi thấy lợi ích của việc ôn đến thuộc.
+    const comboTier = raiseComboTier(comboTierFor(combo.count), word.mastered ? 1 : 0);
+    const move = pickSkillMove(skill, comboTier, this.lastMoveIdByKind[skill], this.moveRng, this.base.index.deck);
+    this.lastMoveIdByKind = { ...this.lastMoveIdByKind, [skill]: move.id };
+    const statusRoll = rollMoveStatus(move, comboTier, this.moveRng);
+    this.events.push({ type: 'cast', wordId: word.id, skill, accuracy, mastered: word.mastered, moveId: move.id, comboTier });
     if (combo.count >= MIN_VISIBLE_COMBO) {
       this.events.push({
         type: 'comboUp',
@@ -336,18 +401,43 @@ class BattleDraft {
       comboMultiplier: combo.multiplier,
     };
     this.applySkillEffect(skill, computeShieldGain(power));
+    this.tickHeroStatuses();
     const minCombo = enemy.shielded ? (this.setup.enemies[enemy.index]?.fireShield?.minCombo ?? 0) : 0;
     if (combo.count < minCombo) {
       // Khiên lửa chặn sát thương, hiệu ứng chiêu (khiên, né, làm yếu) vẫn có; combo vẫn nối để lần sau xuyên được.
       this.events.push({ type: 'shieldBlocked', comboNeeded: minCombo - combo.count });
+      this.tickEnemyStatuses(null);
+      if (statusRoll !== null && !needsLandedHit(statusRoll.kind)) this.applyStatus(statusRoll, 0);
       this.showPrompt();
       return;
     }
-    const finisher = combo.chainId !== null;
-    let damage = Math.min(enemy.hp, computeCastDamage(power));
+    const damage = this.landCastHit(computeCastDamage(power), combo.chainId !== null);
+    // Hồi máu, hút máu, tăng tốc ở hiệp sĩ vẫn có khi đòn này hạ quái; trạng thái lên quái chỉ áp khi quái còn sống.
+    if (statusRoll !== null && !isEnemyTargeted(statusRoll.kind)) this.applyStatus(statusRoll, damage);
+    if (this.currentEnemy().hp === 0) {
+      this.defeatEnemy();
+      return;
+    }
+    this.tickEnemyStatuses(damage);
+    if (statusRoll !== null && isEnemyTargeted(statusRoll.kind)) this.applyStatus(statusRoll, damage);
+    this.raiseFireShieldIfDue();
+    this.showPrompt();
+  }
+
+  /** Đòn chiêu trúng quái: băng vỡ thì mạnh thêm, đòn kết liễu chuỗi cụm hạ luôn quái yếu. Trả sát thương gây ra. */
+  private landCastHit(baseDamage: number, finisher: boolean): number {
+    let enemy = this.currentEnemy();
+    let rawDamage = baseDamage;
+    const freeze = findStatus(enemy.statuses, 'freeze');
+    if (freeze !== undefined) {
+      rawDamage = Math.round(rawDamage * freezeDamageFactor(freeze.power));
+      enemy = { ...enemy, statuses: removeStatus(enemy.statuses, 'freeze') };
+      this.events.push({ type: 'statusExpired', target: 'enemy', status: 'freeze' });
+    }
+    let damage = Math.min(enemy.hp, rawDamage);
     if (finisher && enemy.hp - damage <= enemy.maxHp * FINISHER_EXECUTE_RATIO) damage = enemy.hp;
     const hp = enemy.hp - damage;
-    this.enemy = { ...this.currentEnemy(), hp };
+    this.enemy = { ...enemy, hp };
     this.events.push({
       type: 'hit',
       damage,
@@ -355,14 +445,84 @@ class BattleDraft {
       finisher,
       shield: this.hero.shield,
       evadeCharges: this.hero.evadeCharges,
-      enemyWeakenedHits: this.currentEnemy().weakenedHits,
+      enemyWeakenedHits: enemy.weakenedHits,
     });
-    if (hp === 0) {
-      this.defeatEnemy();
-      return;
+    return damage;
+  }
+
+  private isBoss(enemy: EnemyBattleState): boolean {
+    return this.setup.enemies[enemy.index]?.fireShield !== undefined;
+  }
+
+  /** Áp trạng thái vừa bốc được. `damage`: sát thương đòn vừa gây (cho hút máu). */
+  private applyStatus(roll: StatusRoll, damage: number): void {
+    const { kind, power } = roll;
+    if (kind === 'heal') {
+      this.healHero(healAmount(this.hero.maxHp, power), 'heal');
+    } else if (kind === 'lifesteal') {
+      this.healHero(lifestealAmount(damage, power), 'lifesteal');
+    } else if (kind === 'haste') {
+      this.hero = { ...this.hero, statuses: upsertStatus(this.hero.statuses, { kind, turns: statusTurns(kind), power }) };
+      this.events.push({ type: 'statusApplied', target: 'hero', status: kind, turns: statusTurns(kind) });
+    } else if (kind === 'curse') {
+      const enemy = this.currentEnemy();
+      const weakenedHits = Math.min(MAX_WEAKENED_HITS, enemy.weakenedHits + 1);
+      this.enemy = { ...enemy, weakenedHits };
+      this.events.push({ type: 'statusApplied', target: 'enemy', status: kind, turns: weakenedHits });
+    } else if (isEnemyStatus(kind)) {
+      this.applyEnemyStatus({ kind, turns: statusTurns(kind), power });
     }
-    this.raiseFireShieldIfDue();
-    this.showPrompt();
+  }
+
+  private applyEnemyStatus(status: ActiveStatus<EnemyStatusKind>): void {
+    const enemy = this.currentEnemy();
+    // Trùm không bị choáng mất lượt; đóng băng vẫn dính để đòn kế mạnh hơn, nhưng không chặn đòn trùm.
+    if (status.kind === 'stun' && this.isBoss(enemy)) return;
+    this.enemy = { ...enemy, statuses: upsertStatus(enemy.statuses, status) };
+    this.events.push({ type: 'statusApplied', target: 'enemy', status: status.kind, turns: status.turns });
+  }
+
+  private healHero(amount: number, source: 'heal' | 'lifesteal'): void {
+    const healed = Math.min(amount, this.hero.maxHp - this.hero.hp);
+    this.hero = { ...this.hero, hp: this.hero.hp + healed };
+    this.events.push({ type: 'statusApplied', target: 'hero', status: source, turns: 0 });
+    this.events.push({ type: 'heal', amount: healed, heroHp: this.hero.hp, source });
+  }
+
+  /** Mỗi đòn đúng bớt một lượt tăng tốc của hiệp sĩ. */
+  private tickHeroStatuses(): void {
+    const { statuses, expired } = decrementStatuses(this.hero.statuses, HERO_TIMED_STATUSES);
+    this.hero = { ...this.hero, statuses };
+    for (const status of expired) this.events.push({ type: 'statusExpired', target: 'hero', status });
+  }
+
+  /**
+   * Đốt và độc ăn máu quái sau mỗi đòn đúng rồi bớt một lượt. `hitDamage` = null khi khiên lửa chặn đòn: đốt không
+   * ăn (lửa không xuyên khiên lửa), độc vẫn ăn. Sát thương theo lượt không tự hạ quái.
+   */
+  private tickEnemyStatuses(hitDamage: number | null): void {
+    let enemy = this.currentEnemy();
+    for (const status of enemy.statuses) {
+      const tick = damageOverTimeTick(status, enemy.maxHp, hitDamage);
+      const damage = Math.max(0, Math.min(tick, enemy.hp - DAMAGE_OVER_TIME_MIN_HP));
+      if (damage === 0 || (status.kind !== 'burn' && status.kind !== 'poison')) continue;
+      enemy = { ...enemy, hp: enemy.hp - damage };
+      this.events.push({ type: 'statusTick', status: status.kind, damage, enemyHp: enemy.hp });
+    }
+    const { statuses, expired } = decrementStatuses(enemy.statuses, DAMAGE_OVER_TIME_STATUSES);
+    this.enemy = { ...enemy, statuses };
+    for (const status of expired) this.events.push({ type: 'statusExpired', target: 'enemy', status });
+  }
+
+  /** Choáng (rồi tới đóng băng) làm quái mất lượt đánh này; trùm miễn nhiễm. Trả loại trạng thái đã tiêu. */
+  private consumePreventingStatus(): PreventingStatusKind | null {
+    const enemy = this.currentEnemy();
+    if (this.isBoss(enemy)) return null;
+    const status = findStatus(enemy.statuses, 'stun') ?? findStatus(enemy.statuses, 'freeze');
+    if (status === undefined || !isPreventingStatus(status.kind)) return null;
+    this.enemy = { ...enemy, statuses: removeStatus(enemy.statuses, status.kind) };
+    this.events.push({ type: 'statusExpired', target: 'enemy', status: status.kind });
+    return status.kind;
   }
 
   private raiseFireShieldIfDue(): void {
@@ -434,10 +594,16 @@ class BattleDraft {
   }
 
   private enemyAttack(): void {
+    // Choáng/đóng băng tiêu trước lượt né, để giữ lượt né cho đòn sau.
+    const prevented = this.consumePreventingStatus();
+    if (prevented !== null) {
+      this.events.push({ type: 'enemyAttack', damage: 0, absorbed: 0, evaded: false, heroHp: this.hero.hp, shield: this.hero.shield, prevented });
+      return;
+    }
     const enemy = this.currentEnemy();
     if (this.hero.evadeCharges > 0) {
       this.hero = { ...this.hero, evadeCharges: this.hero.evadeCharges - 1 };
-      this.events.push({ type: 'enemyAttack', damage: 0, absorbed: 0, evaded: true, heroHp: this.hero.hp, shield: this.hero.shield });
+      this.events.push({ type: 'enemyAttack', damage: 0, absorbed: 0, evaded: true, heroHp: this.hero.hp, shield: this.hero.shield, prevented: null });
       return;
     }
     const weakened = enemy.weakenedHits > 0;
@@ -446,7 +612,7 @@ class BattleDraft {
     const absorbed = Math.min(this.hero.shield, damage);
     const hp = Math.max(0, this.hero.hp - (damage - absorbed));
     this.hero = { ...this.hero, hp, shield: this.hero.shield - absorbed };
-    this.events.push({ type: 'enemyAttack', damage, absorbed, evaded: false, heroHp: hp, shield: this.hero.shield });
+    this.events.push({ type: 'enemyAttack', damage, absorbed, evaded: false, heroHp: hp, shield: this.hero.shield, prevented: null });
     if (hp > 0) return;
     this.outcome = 'defeat';
     this.prompt = null;
@@ -462,10 +628,13 @@ export function createBattle(setup: BattleSetup, chains: readonly WordChain[] = 
     index: {
       wordsById: new Map(setup.words.map((word) => [word.id, word])),
       chains: availableChains(setup.words, chains),
+      deck: buildBattleDeck(setup.seed),
     },
     rngState: setup.seed >>> 0,
+    moveRngState: initialMoveRngState(setup.seed),
+    lastMoveIdByKind: {},
     elapsedMs: 0,
-    hero: { hp: setup.hero.maxHp, maxHp: setup.hero.maxHp, shield: 0, evadeCharges: 0 },
+    hero: { hp: setup.hero.maxHp, maxHp: setup.hero.maxHp, shield: 0, evadeCharges: 0, statuses: [] },
     enemy: null,
     prompt: null,
     recentWordIds: [],
