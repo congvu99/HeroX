@@ -16,12 +16,55 @@ const INTEGER_ZOOM_MIN_FILL = 0.995;
 const MIN_ZOOM = 0.25;
 
 /**
- * Zoom (theo px CSS) cho canvas logic trong khung `availableWidth × availableHeight` px CSS.
+ * Trần của khung nhìn mở rộng (pixel logic). Màn quá ngang (desktop, máy tính bảng) hoặc quá dọc vượt mức này
+ * thì chừa viền thay vì kéo dài sân vô hạn.
+ */
+export const MAX_VIEW_WIDTH = 480;
+export const MAX_VIEW_HEIGHT = 1040;
+
+export interface ViewSize {
+  readonly width: number;
+  readonly height: number;
+}
+
+/** Khung thiết kế 360×780: sân trận, HUD, vòng từ đều đặt theo khung này và luôn nằm giữa khung nhìn. */
+export const DESIGN_VIEW: ViewSize = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+/** Làm tròn về số chẵn để phần thừa chia đều hai mép là số nguyên (pixel sắc). */
+function roundToEven(value: number): number {
+  return Math.round(value / 2) * 2;
+}
+
+/**
+ * Kích thước khung nhìn logic để canvas lấp đầy vùng `availableWidth × availableHeight` (px CSS):
+ * giữ tối thiểu khung thiết kế 360×780, nới chiều ngang hoặc chiều dọc theo đúng tỉ lệ màn (trong trần MAX_VIEW_*).
+ * Màn iPhone trong Safari thường "ngang" hơn 360:780 nên khung rộng ra, hết viền hai bên.
+ */
+export function computeViewSize(availableWidth: number, availableHeight: number): ViewSize {
+  const aspect = availableWidth / availableHeight;
+  if (!Number.isFinite(aspect) || aspect <= 0) return DESIGN_VIEW;
+  return {
+    width: clamp(roundToEven(LOGICAL_HEIGHT * aspect), LOGICAL_WIDTH, MAX_VIEW_WIDTH),
+    height: clamp(roundToEven(LOGICAL_WIDTH / aspect), LOGICAL_HEIGHT, MAX_VIEW_HEIGHT),
+  };
+}
+
+/**
+ * Zoom (theo px CSS) cho canvas logic cỡ `view` (mặc định khung thiết kế) trong khung `availableWidth × availableHeight` px CSS.
  * Pixel sắc khi mỗi pixel logic là số nguyên px thiết bị, nên làm tròn theo `devicePixelRatio`
  * (laptop Windows scale 125–150%, iPhone DPR 3).
  */
-export function computeDisplayZoom(availableWidth: number, availableHeight: number, devicePixelRatio = 1): number {
-  const fitZoom = Math.min(availableWidth / LOGICAL_WIDTH, availableHeight / LOGICAL_HEIGHT);
+export function computeDisplayZoom(
+  availableWidth: number,
+  availableHeight: number,
+  devicePixelRatio = 1,
+  view: ViewSize = DESIGN_VIEW,
+): number {
+  const fitZoom = Math.min(availableWidth / view.width, availableHeight / view.height);
   if (!Number.isFinite(fitZoom) || fitZoom <= 0) return 1;
   const pixelRatio = devicePixelRatio > 0 && Number.isFinite(devicePixelRatio) ? devicePixelRatio : 1;
   const deviceFitZoom = fitZoom * pixelRatio;
@@ -33,19 +76,27 @@ export function computeDisplayZoom(availableWidth: number, availableHeight: numb
 }
 
 interface ZoomableGame {
-  readonly scale: { setZoom(value: number): unknown };
+  readonly scale: { setZoom(value: number): unknown; resize(width: number, height: number): unknown };
 }
 
 /**
- * Cập nhật zoom theo kích thước phần tử chứa (đã trừ safe-area bằng CSS trong `index.html`).
+ * Cập nhật cỡ khung nhìn logic (`computeViewSize`) và zoom theo kích thước phần tử chứa (đã trừ safe-area bằng CSS trong `index.html`).
  * Nghe cả `visualViewport` (iOS đổi vùng nhìn khi xoay máy, hiện thanh địa chỉ mà không phát `resize` của window)
  * và thay đổi `devicePixelRatio` (kéo cửa sổ sang màn hình khác, đổi mức zoom trình duyệt). Trả hàm huỷ đăng ký.
  */
 export function attachDisplayZoom(game: ZoomableGame, container: HTMLElement): () => void {
   let lastZoom = 0;
+  let lastView: ViewSize | null = null;
   let pixelRatioQuery: MediaQueryList | null = null;
   const applyZoom = (): void => {
-    const zoom = computeDisplayZoom(container.clientWidth, container.clientHeight, window.devicePixelRatio);
+    const view = computeViewSize(container.clientWidth, container.clientHeight);
+    if (lastView === null || view.width !== lastView.width || view.height !== lastView.height) {
+      lastView = view;
+      game.scale.resize(view.width, view.height);
+      // Đổi cỡ canvas làm Phaser tính lại cỡ hiển thị, nên phải đặt lại zoom dù giá trị không đổi.
+      lastZoom = 0;
+    }
+    const zoom = computeDisplayZoom(container.clientWidth, container.clientHeight, window.devicePixelRatio, view);
     if (zoom === lastZoom) return;
     lastZoom = zoom;
     game.scale.setZoom(zoom);

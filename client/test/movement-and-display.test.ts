@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeDisplayZoom } from '../src/config/display';
+import { computeDisplayZoom, computeViewSize, MAX_VIEW_HEIGHT, MAX_VIEW_WIDTH } from '../src/config/display';
 import {
   combineMovement,
   facingFromVector,
@@ -89,5 +89,37 @@ describe('computeDisplayZoom', () => {
 
   it('kích thước 0 (chưa layout) không làm hỏng zoom', () => {
     expect(computeDisplayZoom(0, 0)).toBe(1);
+  });
+});
+
+describe('computeViewSize', () => {
+  it('iPhone trong Safari (khung ngang hơn 360:780) nới chiều rộng để canvas lấp hết, không viền hai bên', () => {
+    // Vùng game ~440×825 pt (iPhone 16 Pro Max, Safari): giữ cao 780, rộng theo tỉ lệ màn.
+    const view = computeViewSize(440, 825);
+    expect(view).toEqual({ width: 416, height: 780 });
+    expect(computeDisplayZoom(440, 825, 3, view) * view.width).toBeCloseTo(440, 0);
+  });
+
+  it('màn dọc hơn 360:780 nới chiều cao, giữ rộng 360', () => {
+    expect(computeViewSize(360, 900)).toEqual({ width: 360, height: 900 });
+  });
+
+  it('đúng tỉ lệ thiết kế thì giữ nguyên 360×780', () => {
+    expect(computeViewSize(720, 1560)).toEqual({ width: 360, height: 780 });
+  });
+
+  it('desktop ngang chỉ nới tới trần, phần còn lại để viền', () => {
+    expect(computeViewSize(1920, 1080)).toEqual({ width: MAX_VIEW_WIDTH, height: 780 });
+    expect(computeViewSize(300, 2000).height).toBe(MAX_VIEW_HEIGHT);
+  });
+
+  it('chênh lệch luôn chẵn để khung thiết kế căn giữa đúng pixel', () => {
+    const view = computeViewSize(431, 833);
+    expect((view.width - 360) % 2).toBe(0);
+    expect((view.height - 780) % 2).toBe(0);
+  });
+
+  it('chưa layout (0×0) trả khung thiết kế', () => {
+    expect(computeViewSize(0, 0)).toEqual({ width: 360, height: 780 });
   });
 });
