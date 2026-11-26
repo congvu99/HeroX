@@ -1,19 +1,11 @@
 import type Phaser from 'phaser';
 import { monsterTextureKeyForFile } from './battle-actors';
+import { NPC_SPRITE_PATHS } from './npc-sprite-paths';
 import { TEXTURE_KEYS } from './placeholder-textures';
 import { spriteAssetUrl } from './sprite-asset-urls';
 
 const MONSTER_DIR = 'sprites/monsters/';
 
-/** Hình NPC theo `dialogId` trên map (cánh cửa, bàn thờ nhà nguyện cũng là "NPC" vì có hội thoại). */
-const NPC_SPRITES: Readonly<Record<string, string>> = {
-  keeper: 'sprites/npc/keeper.png',
-  smith: 'sprites/npc/smith.png',
-  'hollow-villager': 'sprites/npc/villager.png',
-  'chapel-door': 'sprites/props/chapel-door.png',
-  'chapel-altar': 'sprites/props/altar.png',
-  scarecrow: 'sprites/monsters/scarecrow-demon.png',
-};
 const CHEST_CLOSED_PATH = 'sprites/props/chest-closed.png';
 const CHEST_OPEN_PATH = 'sprites/props/chest-open.png';
 
@@ -25,7 +17,7 @@ function textureKeyFor(path: string): string {
 
 /** Xếp hình NPC, rương vào hàng đợi tải; thiếu file thì nơi dùng rơi về hình tạm. */
 export function queuePropSprites(scene: Phaser.Scene): void {
-  for (const path of [...Object.values(NPC_SPRITES), CHEST_CLOSED_PATH, CHEST_OPEN_PATH]) {
+  for (const path of [...Object.values(NPC_SPRITE_PATHS), CHEST_CLOSED_PATH, CHEST_OPEN_PATH]) {
     const url = spriteAssetUrl(path);
     const key = textureKeyFor(path);
     if (url !== undefined && !scene.textures.exists(key)) scene.load.image(key, url);
@@ -39,7 +31,7 @@ function loadedOr(scene: Phaser.Scene, path: string | undefined, fallback: strin
 }
 
 export function npcTextureKey(scene: Phaser.Scene, dialogId: string): string {
-  return loadedOr(scene, NPC_SPRITES[dialogId], TEXTURE_KEYS.npc);
+  return loadedOr(scene, NPC_SPRITE_PATHS[dialogId], TEXTURE_KEYS.npc);
 }
 
 export function chestTextureKey(scene: Phaser.Scene, opened: boolean): string {

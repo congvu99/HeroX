@@ -29,7 +29,7 @@ export const CHAPTER_5_STORY: StoryChapter = {
       objective: 'Lên Thiên Cung Vỡ, nghe Seraph Giữ Cổng',
       requires: [],
       completion: { kind: 'dialog' },
-      autoDialogId: 'heaven-gate',
+      autoDialogId: 'gate-seraph',
     },
     {
       id: B.hallCleared,
@@ -76,7 +76,7 @@ export const CHAPTER_5_STORY: StoryChapter = {
   buildingUnlocks: {},
   dialogs: [
     {
-      id: 'heaven-gate',
+      id: 'gate-seraph',
       variants: [
         {
           unless: B.arrival,
