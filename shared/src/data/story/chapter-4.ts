@@ -28,7 +28,7 @@ export const CHAPTER_4_STORY: StoryChapter = {
       objective: 'Xuống Vực Lửa, nghe linh hồn bị xích',
       requires: [],
       completion: { kind: 'dialog' },
-      autoDialogId: 'hell-soul',
+      autoDialogId: 'chained-soul',
     },
     {
       id: B.bridgeCleared,
@@ -76,7 +76,7 @@ export const CHAPTER_4_STORY: StoryChapter = {
   buildingUnlocks: {},
   dialogs: [
     {
-      id: 'hell-soul',
+      id: 'chained-soul',
       variants: [
         {
           unless: B.arrival,
