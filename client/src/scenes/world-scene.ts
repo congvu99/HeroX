@@ -93,6 +93,11 @@ const ROAMING_SPAWNS: Readonly<Record<string, RoamingSpawn>> = {
 };
 const HERO_LIGHT_RADIUS = 120;
 const TORCH_LIGHT_RADIUS = 96;
+const PORTAL_LIGHT_RADIUS = 88;
+/** Nhịp thở của lõi cổng không gian: lớp sáng phập phồng và co giãn nhẹ. */
+const PORTAL_PULSE_MS = 1600;
+const PORTAL_GLOW_ALPHA = { min: 0.35, max: 0.85 } as const;
+const PORTAL_GLOW_SCALE = { min: 0.9, max: 1.12 } as const;
 const HERO_LIGHT_OFFSET_Y = -24;
 const CAMERA_FADE_COLOR = { r: 0, g: 0, b: 0 } as const;
 const ERROR_TEXT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
@@ -143,6 +148,7 @@ export class WorldScene extends Phaser.Scene {
   private battleTriggers = new TriggerZones<string>([]);
   private buildingDoors = new TriggerZones<BuildingId>([]);
   private buildingImages: Phaser.GameObjects.Image[] = [];
+  private portalGlows: Phaser.GameObjects.Image[] = [];
   private npcZones = new TriggerZones<string>([]);
   private chestZones = new TriggerZones<string>([]);
   private chestSprites = new Map<string, Phaser.GameObjects.Sprite>();
@@ -183,6 +189,7 @@ export class WorldScene extends Phaser.Scene {
     this.battleTriggers = new TriggerZones<string>([]);
     this.buildingDoors = new TriggerZones<BuildingId>([]);
     this.buildingImages = [];
+    this.portalGlows = [];
     this.npcZones = new TriggerZones<string>([]);
     this.chestZones = new TriggerZones<string>([]);
     this.chestSprites = new Map();
@@ -280,6 +287,7 @@ export class WorldScene extends Phaser.Scene {
     for (const torch of findEntities(level, 'Torch')) {
       this.atmosphere.addLight({ x: torch.x + torch.width / 2, y: torch.y + torch.height / 2 }, TORCH_LIGHT_RADIUS, true);
     }
+    this.createPortalVisuals(level, atmosphere);
 
     const ui = this.scene.get(SCENE_KEYS.ui) as UiScene;
     this.movementInput = new InputController(this, () => ui.movement);
@@ -503,6 +511,35 @@ export class WorldScene extends Phaser.Scene {
       this.buildingImages.push(image.setDepth(building.y + building.height));
       return { rect: buildingDoorRect(building), value: building.buildingId };
     });
+  }
+
+  /**
+   * Cổng không gian: vòm đá cổ (ảnh tĩnh) ôm lõi năng lượng phập phồng (lớp glow blend ADD + tween),
+   * kèm nguồn sáng toả ra nền. Vùng kích hoạt chuyển map vẫn do `this.portals` xử lý.
+   */
+  private createPortalVisuals(level: MapLevel, atmosphere: GoldenHourAtmosphere): void {
+    for (const portal of findEntities(level, 'Portal')) {
+      const centerX = portal.x + portal.width / 2;
+      const centerY = portal.y + portal.height / 2;
+      const frame = this.add.image(portal.x, portal.y, TEXTURE_KEYS.portal).setOrigin(0, 0).setDisplaySize(portal.width, portal.height);
+      frame.setDepth(portal.y + portal.height);
+      // Lớp lõi phát sáng chồng lên, blend cộng; tween cho cảm giác xoáy phập phồng.
+      const glow = this.add.image(centerX, centerY, TEXTURE_KEYS.portal).setDisplaySize(portal.width, portal.height);
+      glow.setBlendMode(Phaser.BlendModes.ADD).setDepth(portal.y + portal.height + 1);
+      glow.setAlpha(PORTAL_GLOW_ALPHA.min).setScale(PORTAL_GLOW_SCALE.min * glow.scaleX, PORTAL_GLOW_SCALE.min * glow.scaleY);
+      this.tweens.add({
+        targets: glow,
+        alpha: PORTAL_GLOW_ALPHA.max,
+        scaleX: glow.scaleX * (PORTAL_GLOW_SCALE.max / PORTAL_GLOW_SCALE.min),
+        scaleY: glow.scaleY * (PORTAL_GLOW_SCALE.max / PORTAL_GLOW_SCALE.min),
+        duration: PORTAL_PULSE_MS,
+        ease: 'Sine.InOut',
+        yoyo: true,
+        repeat: -1,
+      });
+      this.portalGlows.push(frame, glow);
+      atmosphere.addLight({ x: centerX, y: centerY }, PORTAL_LIGHT_RADIUS, true);
+    }
   }
 
   private moveHero(hero: Phaser.Physics.Arcade.Sprite, nowMs: number): void {

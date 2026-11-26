@@ -11,7 +11,14 @@ export const TEXTURE_KEYS = {
   enemy: 'placeholder-enemy',
   light: 'light-radial',
   collisionTile: 'collision-tile',
+  portal: 'placeholder-portal',
 } as const;
+
+/** Cổng không gian: vòm đá cổ bao lõi năng lượng xoáy; khớp entity Portal trong LDtk (1×2 ô). */
+const PORTAL_TEXTURE_WIDTH = TILE_SIZE;
+const PORTAL_TEXTURE_HEIGHT = TILE_SIZE * 2;
+/** Vẽ ở độ phân giải gấp đôi cho nét, Phaser thu về đúng kích thước entity. */
+const PORTAL_SUPERSAMPLE = 2;
 
 /** Công trình ở Lexhold đổi hình theo giai đoạn hồi sinh của thành trì. */
 export const BUILDING_TEXTURE_KEYS: Readonly<Record<CitadelStage, string>> = {
@@ -139,6 +146,75 @@ function paintRestoredBuilding(context: CanvasRenderingContext2D): void {
   context.fillRect(width - 30, BUILDING_TEXTURE_HEIGHT - 4, 20, 4);
 }
 
+/** Bảng màu cổng không gian: đá cổ viền tối, lõi năng lượng tím-lam với tâm sáng trắng. */
+const PORTAL_PALETTE = {
+  stoneOutline: '#2a2320',
+  stone: '#7b7168',
+  stoneShade: '#554d47',
+  stoneLit: '#9a8f84',
+  voidDeep: '#1a0f33',
+  energyOuter: '#5a2a9c',
+  energyMid: '#8a4fe0',
+  energyInner: '#c89bff',
+  core: '#f2e9ff',
+} as const;
+
+/** Trụ đá hai bên và vòm trên: khung đá cổ bao quanh lõi portal. */
+function paintPortalFrame(context: CanvasRenderingContext2D, width: number, height: number): void {
+  const pillar = Math.round(width * 0.2);
+  const archTop = Math.round(height * 0.14);
+  // Nền trụ + vòm vẽ bằng khối viền tối như công trình Kenney.
+  const block = (x: number, y: number, w: number, h: number, fill: string): void => {
+    context.fillStyle = PORTAL_PALETTE.stoneOutline;
+    context.fillRect(x, y, w, h);
+    context.fillStyle = fill;
+    context.fillRect(x + 2, y + 2, w - 4, h - 4);
+  };
+  block(0, archTop, pillar, height - archTop, PORTAL_PALETTE.stone);
+  block(width - pillar, archTop, pillar, height - archTop, PORTAL_PALETTE.stone);
+  block(0, 0, width, archTop + 4, PORTAL_PALETTE.stone);
+  // Mặt trong trụ bắt sáng từ lõi.
+  context.fillStyle = PORTAL_PALETTE.stoneLit;
+  context.fillRect(pillar - 3, archTop, 3, height - archTop);
+  context.fillRect(width - pillar, archTop, 3, height - archTop);
+  // Vết nứt tối trên vòm.
+  context.fillStyle = PORTAL_PALETTE.stoneShade;
+  context.fillRect(Math.round(width * 0.45), 2, 2, archTop);
+}
+
+/** Lõi năng lượng: oval tối sâu rồi loang sáng dần ra tâm trắng, chấm hạt sáng. */
+function paintPortalCore(context: CanvasRenderingContext2D, width: number, height: number): void {
+  const cx = width / 2;
+  const cy = height / 2;
+  const radiusX = width * 0.3;
+  const radiusY = height * 0.38;
+  const layers: readonly [number, string][] = [
+    [1, PORTAL_PALETTE.voidDeep],
+    [0.82, PORTAL_PALETTE.energyOuter],
+    [0.58, PORTAL_PALETTE.energyMid],
+    [0.34, PORTAL_PALETTE.energyInner],
+    [0.16, PORTAL_PALETTE.core],
+  ];
+  for (const [scale, fill] of layers) {
+    context.fillStyle = fill;
+    context.beginPath();
+    context.ellipse(cx, cy, radiusX * scale, radiusY * scale, 0, 0, Math.PI * 2);
+    context.fill();
+  }
+  // Hạt sáng rải trong lõi gợi bụi sao bị cuốn.
+  context.fillStyle = PORTAL_PALETTE.core;
+  const motes: readonly [number, number][] = [[-0.12, -0.2], [0.14, -0.05], [-0.06, 0.18], [0.1, 0.24]];
+  for (const [dx, dy] of motes) {
+    context.fillRect(Math.round(cx + dx * width), Math.round(cy + dy * height), 2, 2);
+  }
+}
+
+/** Cổng không gian: khung đá cổ ôm lõi năng lượng xoáy phát sáng. */
+function paintPortal(context: CanvasRenderingContext2D, width: number, height: number): void {
+  paintPortalCore(context, width, height);
+  paintPortalFrame(context, width, height);
+}
+
 /** Đổ nát: tường đá gãy, không mái; đang dựng: giàn gỗ, mái cam dở; hồi sinh: mái cam đủ, cửa sổ sáng. */
 function paintBuilding(context: CanvasRenderingContext2D, stage: CitadelStage): void {
   const painters: Record<CitadelStage, Painter> = {
@@ -200,6 +276,13 @@ export function createPlaceholderTextures(scene: Phaser.Scene): void {
   for (const stage of CITADEL_STAGES) {
     createCanvasTexture(scene, BUILDING_TEXTURE_KEYS[stage], BUILDING_TEXTURE_WIDTH, BUILDING_TEXTURE_HEIGHT, (context) => paintBuilding(context, stage));
   }
+  createCanvasTexture(
+    scene,
+    TEXTURE_KEYS.portal,
+    PORTAL_TEXTURE_WIDTH * PORTAL_SUPERSAMPLE,
+    PORTAL_TEXTURE_HEIGHT * PORTAL_SUPERSAMPLE,
+    (context) => paintPortal(context, PORTAL_TEXTURE_WIDTH * PORTAL_SUPERSAMPLE, PORTAL_TEXTURE_HEIGHT * PORTAL_SUPERSAMPLE),
+  );
   createCanvasTexture(scene, TEXTURE_KEYS.collisionTile, TILE_SIZE, TILE_SIZE, (context) => {
     context.fillStyle = '#ff00ff';
     context.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
