@@ -44,6 +44,62 @@
 			"gridTiles": [],
 			"entityInstances": [
 				{
+					"__identifier": "Portal",
+					"__grid": [
+						15,
+						0
+					],
+					"__pivot": [
+						0,
+						0
+					],
+					"__tags": [],
+					"__tile": null,
+					"__smartColor": "#C46A2B",
+					"__worldX": 480,
+					"__worldY": 0,
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0000",
+					"width": 64,
+					"height": 32,
+					"defUid": 21,
+					"px": [
+						480,
+						0
+					],
+					"fieldInstances": [
+						{
+							"__identifier": "targetLevel",
+							"__type": "String",
+							"__value": "Lexhold",
+							"__tile": null,
+							"defUid": 41,
+							"realEditorValues": [
+								{
+									"id": "V_String",
+									"params": [
+										"Lexhold"
+									]
+								}
+							]
+						},
+						{
+							"__identifier": "targetSpawn",
+							"__type": "String",
+							"__value": "from-heaven",
+							"__tile": null,
+							"defUid": 42,
+							"realEditorValues": [
+								{
+									"id": "V_String",
+									"params": [
+										"from-heaven"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
 					"__identifier": "PlayerSpawn",
 					"__grid": [
 						15,
@@ -58,7 +114,7 @@
 					"__smartColor": "#3BE06C",
 					"__worldX": 496,
 					"__worldY": 96,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0000",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0001",
 					"width": 32,
 					"height": 32,
 					"defUid": 20,
@@ -99,7 +155,7 @@
 					"__smartColor": "#3BE06C",
 					"__worldX": 496,
 					"__worldY": 576,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0001",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0002",
 					"width": 32,
 					"height": 32,
 					"defUid": 20,
@@ -140,7 +196,7 @@
 					"__smartColor": "#E8D9A8",
 					"__worldX": 400,
 					"__worldY": 128,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0002",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0003",
 					"width": 32,
 					"height": 32,
 					"defUid": 22,
@@ -181,7 +237,7 @@
 					"__smartColor": "#B32D3A",
 					"__worldX": 480,
 					"__worldY": 320,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0003",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0004",
 					"width": 64,
 					"height": 32,
 					"defUid": 24,
@@ -222,7 +278,7 @@
 					"__smartColor": "#C46A2B",
 					"__worldX": 480,
 					"__worldY": 608,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0004",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0005",
 					"width": 64,
 					"height": 32,
 					"defUid": 21,
@@ -278,7 +334,7 @@
 					"__smartColor": "#FFB347",
 					"__worldX": 432,
 					"__worldY": 48,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0005",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0006",
 					"width": 16,
 					"height": 16,
 					"defUid": 25,
@@ -303,7 +359,7 @@
 					"__smartColor": "#FFB347",
 					"__worldX": 592,
 					"__worldY": 48,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0006",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0007",
 					"width": 16,
 					"height": 16,
 					"defUid": 25,
@@ -328,7 +384,7 @@
 					"__smartColor": "#FFB347",
 					"__worldX": 464,
 					"__worldY": 592,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0007",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0008",
 					"width": 16,
 					"height": 16,
 					"defUid": 25,
@@ -353,7 +409,7 @@
 					"__smartColor": "#FFB347",
 					"__worldX": 560,
 					"__worldY": 592,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0008",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0009",
 					"width": 16,
 					"height": 16,
 					"defUid": 25,
@@ -378,7 +434,7 @@
 					"__smartColor": "#FFB347",
 					"__worldX": 80,
 					"__worldY": 176,
-					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e0009",
+					"iid": "c5a7e000-0b5d-4e1f-9a05-c5a7e001e000a",
 					"width": 16,
 					"height": 16,
 					"defUid": 25,
@@ -424,8 +480,8 @@
 				1,
 				1,
 				1,
-				1,
-				1,
+				0,
+				0,
 				1,
 				1,
 				1,
@@ -1414,11 +1470,11 @@
 						0
 					],
 					"src": [
-						160,
-						224
+						96,
+						192
 					],
 					"f": 0,
-					"t": 61,
+					"t": 51,
 					"d": [
 						15
 					],
@@ -1430,11 +1486,11 @@
 						0
 					],
 					"src": [
-						160,
-						224
+						96,
+						192
 					],
 					"f": 0,
-					"t": 61,
+					"t": 51,
 					"d": [
 						16
 					],

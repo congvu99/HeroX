@@ -43,6 +43,8 @@ const ASH_FOREST = {
   width: 32, height: LEVEL_HEIGHT, worldX: 0, worldY: 0,
   ops: [
     ['rect', 0, 0, 32, 20, '#'], ['rect', 1, 1, 30, 18, '.'], forestBand(32, 20),
+    // Mở tường bắc ở ô cổng về Lexhold.
+    ['rect', 15, 0, 2, 1, '.'],
     // Lối mòn đất dọc từ chỗ xuất hiện (bắc) xuống cổng nam (xuyên qua mép dưới ở ô cổng).
     ['rect', 15, 1, 2, 19, '='],
     // Hàng cây chắn ngang, chừa khe giữa (cột 15-16) làm lối duy nhất xuống nam.
@@ -53,6 +55,8 @@ const ASH_FOREST = {
     ['at', 's', [[11, 3]]],
   ],
   entities: [
+    // Cổng về Lexhold (trung tâm nối các chương) ngay trên chỗ xuất hiện.
+    portal([15, 0], GATE_H, 'Lexhold', 'from-ash-forest'),
     spawn([15, 2], 'from-lexhold'), spawn([15, 17], 'from-grove'),
     npc([12, 3], 'ash-warden'),
     // Trận phủ kín khe giữa hàng cây: không thắng thì không xuống nam được.

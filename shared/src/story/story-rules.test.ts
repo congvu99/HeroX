@@ -13,6 +13,7 @@ import {
   beatForEncounter,
   beatForItem,
   checkBeatCompletion,
+  currentStoryChapter,
   encounterGateState,
   isChapterComplete,
   levelGateState,
@@ -171,5 +172,26 @@ describe('beat lookup and quests', () => {
     const quests = activeQuests(progressOf(B.awaken, B.gateImps, B.villageArrival, B.chapelDoor, B.fragment1));
     expect(quests.map((quest) => quest.quest.id)).toEqual(['field', 'chapel', 'smith']);
     expect(quests[1]).toMatchObject({ done: 2, total: 5 });
+  });
+});
+
+describe('currentStoryChapter', () => {
+  const chapter1Done = [{ chapter: 1, beat: CHAPTER_1_STORY.finalBeat }];
+  const words = (learned: number, mastered = 0) => ({ learned, mastered });
+
+  it('chưa xong chương 1 thì vẫn ở chương 1 dù đủ từ', () => {
+    expect(currentStoryChapter(new StoryProgress([]), words(5000, 500))).toBe(1);
+  });
+
+  it('xong chương 1 nhưng chưa đủ từ mở chương 2 thì ở chương 1', () => {
+    expect(currentStoryChapter(new StoryProgress(chapter1Done), words(99))).toBe(1);
+  });
+
+  it('xong chương 1 và đủ từ thì sang chương 2', () => {
+    expect(currentStoryChapter(new StoryProgress(chapter1Done), words(100))).toBe(2);
+  });
+
+  it('đủ từ cho chương 5 nhưng truyện mới xong chương 1 thì chỉ tới chương 2', () => {
+    expect(currentStoryChapter(new StoryProgress(chapter1Done), words(5000, 500))).toBe(2);
   });
 });

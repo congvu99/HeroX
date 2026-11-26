@@ -107,13 +107,19 @@ const forestBand = (width, fromRow) => ['rect', 0, fromRow, width, LEVEL_HEIGHT 
 /** Thành Lexhold: tường thành có ụ lồi, 2 tháp phía bắc, 4 công trình hồi sinh, đường uốn ra cổng nam (qua trận hướng dẫn). */
 const LEXHOLD_ENTITIES = [
   spawn([16, 10], 'start'), spawn([17, 17], 'from-fields'),
+  // Chỗ đứng khi từ các chương sau đi cổng về thành (Lexhold là trung tâm nối mọi chương).
+  spawn([33, 11], 'from-ash-forest'), spawn([8, 2], 'from-catacomb'), spawn([25, 2], 'from-hellmaw'), spawn([2, 8], 'from-heaven'),
   npc([15, 9], 'keeper'),
   building([4, 3], 'forge'), building([11, 3], 'arcane-tower'), building([22, 3], 'tailor'), building([29, 3], 'library'),
   // Trận hướng dẫn chắn kín hành lang cổng nam, nằm trước cổng: không đánh xong thì không ra được cánh đồng.
   battle([17, 19], [64, 64], 'tutorial'),
   portal([17, 21], GATE_H, 'Misty_Fields', 'from-lexhold'),
-  // Rừng Tro thuộc chương sau, cố ý chưa có level; client tự chặn cổng tới khi đủ mốc từ.
+  // Cổng sang chương sau: level nằm ở project chương đó, client nạp project khi qua cổng.
+  // Khoá theo mốc truyện và số từ ở `levelGates` của dữ liệu truyện.
   portal([35, 10], GATE_V, 'Ash_Forest', 'from-lexhold'),
+  portal([8, 0], GATE_H, 'Saint_Catacomb', 'from-fields'),
+  portal([25, 0], GATE_H, 'Hellmaw', 'from-fields'),
+  portal([0, 7], GATE_V, 'Broken_Heaven', 'from-fields'),
   ...torches([[16, 18], [19, 18], [8, 6], [27, 6], [33, 9], [33, 12]]),
 ];
 const LEXHOLD = {
@@ -138,6 +144,7 @@ const LEXHOLD = {
     // Ụ tường lồi vào trong để thành không vuông vức.
     ['rect', 1, 4, 1, 3, '#'], ['rect', 9, 18, 4, 1, '#'], ['rect', 23, 18, 3, 1, '#'], ['rect', 34, 4, 1, 3, '#'], ['rect', 34, 15, 1, 3, '#'],
     ['rect', 17, 19, 2, 2, '='], ['rect', 35, 10, 1, 2, 'R'],
+    ['rect', 8, 0, 2, 1, 'R'], ['rect', 25, 0, 2, 1, 'R'], ['rect', 0, 7, 1, 2, 'R'],
     ['rect', 4, 3, 3, 2, 'b'], ['rect', 11, 3, 3, 2, 'b'], ['rect', 22, 3, 3, 2, 'b'], ['rect', 29, 3, 3, 2, 'b'],
     ['at', 'S', [[14, 8], [21, 8]]], ['at', 'U', [[11, 11]]],
     ['at', 'o', [[1, 1], [34, 1], [9, 9], [26, 14], [9, 15]]],

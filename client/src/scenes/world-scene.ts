@@ -15,6 +15,8 @@ import {
   type MapLevelRef,
 } from '../maps/ldtk-loader';
 import { buildLevelTilemap } from '../maps/ldtk-tilemap-builder';
+import { chapterOfLevel } from '../maps/chapter-maps';
+import { loadChapterProject } from '../maps/chapter-project-loader';
 import { mapAssetUrl } from '../maps/map-asset-urls';
 import type { QualityController } from '../platform/quality-settings';
 import { CHAPTER_1_ATLAS_FILE, CHAPTER_1_TILE_GLOW, CHAPTER_1_TILE_INDEX } from '../render/chapter-1-tile-data';
@@ -693,12 +695,33 @@ export class WorldScene extends Phaser.Scene {
       this.portalsArmed = false;
       return;
     }
-    if (!this.map.project.levels.some((level) => level.identifier === portal.targetLevel)) return;
+    const next: WorldSceneData = { levelId: portal.targetLevel, spawnId: portal.targetSpawn };
+    if (this.map.project.levels.some((level) => level.identifier === portal.targetLevel)) {
+      this.fadeOutThen(() => this.scene.restart(next));
+      return;
+    }
+    // Level đích thuộc chương khác (mỗi chương một project LDtk): nạp project đó rồi vào level đích.
+    const chapter = chapterOfLevel(portal.targetLevel);
+    if (chapter !== undefined) this.fadeOutThen(() => void this.enterOtherChapter(chapter, next));
+  }
+
+  private fadeOutThen(onFaded: () => void): void {
     this.transitioning = true;
     this.cameras.main.fadeOut(FADE_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      const next: WorldSceneData = { levelId: portal.targetLevel, spawnId: portal.targetSpawn };
-      this.scene.restart(next);
-    });
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, onFaded);
+  }
+
+  private async enterOtherChapter(chapter: number, next: WorldSceneData): Promise<void> {
+    try {
+      this.registry.set(REGISTRY_KEYS.mapProject, await loadChapterProject(this, chapter));
+    } catch {
+      // Tải hỏng thì ở lại level hiện tại, báo người chơi; bước ra rồi vào lại cổng để thử lại.
+      this.cameras.main.fadeIn(FADE_MS);
+      this.transitioning = false;
+      this.portalsArmed = false;
+      this.story?.toast('Không tải được vùng đất mới, thử lại sau.');
+      return;
+    }
+    this.scene.restart(next);
   }
 }

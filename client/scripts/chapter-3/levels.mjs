@@ -42,6 +42,8 @@ const SAINT_CATACOMB = {
   width: 32, height: LEVEL_HEIGHT, worldX: 0, worldY: 0,
   ops: [
     ['rect', 0, 0, 32, 20, '#'], ['rect', 1, 1, 30, 18, '.'], wallBand(32, 20),
+    // Mở tường bắc ở ô cổng về Lexhold.
+    ['rect', 15, 0, 2, 1, '.'],
     ['rect', 15, 1, 2, 19, '_'],
     // Hàng cột + mộ chắn ngang, chừa khe giữa (cột 15-16).
     ['rect', 1, 10, 14, 1, 'g'], ['rect', 17, 10, 14, 1, 'g'],
@@ -51,6 +53,8 @@ const SAINT_CATACOMB = {
     ['at', 'x', [[12, 5], [20, 6], [11, 15], [21, 14]]], ['at', 'n', [[12, 2], [19, 2]]],
   ],
   entities: [
+    // Cổng về Lexhold (trung tâm nối các chương) ngay trên chỗ xuất hiện.
+    portal([15, 0], GATE_H, 'Lexhold', 'from-catacomb'),
     spawn([15, 2], 'from-fields'), spawn([15, 17], 'from-sanctum'),
     npc([12, 3], 'crypt-warden'),
     battle([15, 10], [64, 32], 'ch3-field'),

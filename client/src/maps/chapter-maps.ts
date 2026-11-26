@@ -84,3 +84,41 @@ export function presentChapterMapPaths(): { readonly chapter: number; readonly p
     return path === undefined ? [] : [{ chapter, path }];
   });
 }
+
+/** Điểm người chơi xuất hiện khi vào một chương (lúc mở game ở chương đang chơi). */
+export interface ChapterEntry {
+  readonly levelId: string;
+  readonly spawnId: string;
+}
+
+/**
+ * Level của từng chương. Bảng tĩnh để tra chương của cổng mà không phải tải mọi project lúc chạy;
+ * test `chapter-transition.test.ts` đối chiếu bảng này với file map thật nên không lệch được.
+ * Phần tử đầu là level vào chương.
+ */
+const CHAPTER_LEVELS: Readonly<Record<number, readonly string[]>> = {
+  1: ['Lexhold', 'Misty_Fields', 'Misty_Village', 'Misty_Chapel', 'Scarecrow_Lair'],
+  2: ['Ash_Forest', 'Ash_Stag_Grove'],
+  3: ['Saint_Catacomb', 'Bishop_Sanctum'],
+  4: ['Hellmaw', 'Antonym_Throne'],
+  5: ['Broken_Heaven', 'Fallen_Sanctum'],
+};
+
+/** Điểm vào mỗi chương; chương 2–5 vào từ cổng ở Lexhold nên dùng spawn nhận người từ Lexhold. */
+export const CHAPTER_ENTRIES: Readonly<Record<number, ChapterEntry>> = {
+  1: { levelId: 'Lexhold', spawnId: 'start' },
+  2: { levelId: 'Ash_Forest', spawnId: 'from-lexhold' },
+  3: { levelId: 'Saint_Catacomb', spawnId: 'from-fields' },
+  4: { levelId: 'Hellmaw', spawnId: 'from-fields' },
+  5: { levelId: 'Broken_Heaven', spawnId: 'from-fields' },
+};
+
+/** Danh sách level của chương (rỗng nếu chương không khai báo). */
+export function chapterLevelIds(chapter: number): readonly string[] {
+  return CHAPTER_LEVELS[chapter] ?? [];
+}
+
+/** Chương chứa level `levelId`, `undefined` nếu không level nào khớp. */
+export function chapterOfLevel(levelId: string): number | undefined {
+  return CHAPTER_NUMBERS.find((chapter) => chapterLevelIds(chapter).includes(levelId));
+}

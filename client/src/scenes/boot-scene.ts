@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
-import type { CreateHeroRequest, MeResponse } from '@herox/shared';
+import { currentStoryChapter, type CreateHeroRequest, type MeResponse } from '@herox/shared';
 import { currentUtcOffsetMinutes, fetchMe, readEngSessionToken, waitForEngSession, type MeResult } from '../api/me-api';
 import { createHero, heroCreationNeedsReload } from '../api/story-api';
-import { activeChapterMapPath } from '../maps/chapter-maps';
+import { activeChapterMapPath, CHAPTER_ENTRIES, FIRST_CHAPTER, getActiveChapter } from '../maps/chapter-maps';
+import { loadChapterProject } from '../maps/chapter-project-loader';
 import { LdtkFormatError, parseLdtkProject } from '../maps/ldtk-loader';
 import { mapAssetUrl } from '../maps/map-asset-urls';
 import { createPlaceholderTextures } from '../render/placeholder-textures';
@@ -141,7 +142,7 @@ export class BootScene extends Phaser.Scene {
       return;
     }
     this.registry.set(REGISTRY_KEYS.story, journal);
-    this.enterWorld();
+    void this.enterWorld(journal);
   }
 
   /** Dev vào map không có phiên LingoBrain: truyện chạy cục bộ theo đúng luật server. */
@@ -149,13 +150,29 @@ export class BootScene extends Phaser.Scene {
     const journal = new StoryJournal(new DevStoryBackend());
     void journal.load().then(() => {
       this.registry.set(REGISTRY_KEYS.story, journal);
-      this.enterWorld();
+      void this.enterWorld(journal);
     });
   }
 
-  /** UI chạy song song, không restart khi đổi level, nên joystick giữ được ngón tay đang kéo. */
-  private enterWorld(): void {
-    this.scene.start(SCENE_KEYS.world);
+  /**
+   * Vào map ở chương đang chơi theo tiến độ truyện và số từ đã học; chương khác bản đã nạp ở `preload`
+   * thì nạp project chương đó trước. UI chạy song song, không restart khi đổi level, nên joystick giữ được ngón tay.
+   */
+  private async enterWorld(journal: StoryJournal): Promise<void> {
+    const me = this.registry.get(REGISTRY_KEYS.me) as MeResponse | undefined;
+    const counts = { learned: me?.learning.learned ?? 0, mastered: me?.learning.mastered ?? 0 };
+    const chapter = currentStoryChapter(journal.progress, counts);
+    if (chapter !== getActiveChapter()) {
+      try {
+        this.registry.set(REGISTRY_KEYS.mapProject, await loadChapterProject(this, chapter));
+      } catch {
+        this.showUnavailable(`Không tải được bản đồ chương ${chapter}`, () => void this.enterWorld(journal));
+        return;
+      }
+      if (!this.scene.isActive()) return;
+    }
+    // Chương 1 giữ cách vào cũ (spawn mặc định của level đầu) để người chơi chương 1 không đổi gì.
+    this.scene.start(SCENE_KEYS.world, chapter === FIRST_CHAPTER ? undefined : CHAPTER_ENTRIES[chapter]);
     this.scene.launch(SCENE_KEYS.ui);
   }
 
