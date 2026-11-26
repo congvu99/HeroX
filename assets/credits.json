@@ -423,6 +423,15 @@
     "modified": "ghép thân + đầu, cắt sát, khung 64 chân chạm đáy; palette-harmonize"
   },
   {
+    "path": "sprites/npc/chained-soul-figure.png",
+    "title": "NPC chained-soul - dáng toàn thân trên bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 64x64, đặt khung 64 chân chạm đáy"
+  },
+  {
     "path": "sprites/npc/chained-soul.png",
     "title": "Chân dung/NPC chained-soul (PixelLab)",
     "source": "PixelLab (AI pixel art, api.pixellab.ai)",
@@ -448,6 +457,15 @@
     "authors": "HeroX qua PixelLab",
     "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
     "modified": "sinh tĩnh 64x64"
+  },
+  {
+    "path": "sprites/npc/gate-seraph-figure.png",
+    "title": "NPC gate-seraph - dáng toàn thân trên bản đồ (PixelLab)",
+    "source": "PixelLab (AI pixel art, api.pixellab.ai)",
+    "url": "https://www.pixellab.ai/",
+    "authors": "HeroX qua PixelLab",
+    "license": "Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX)",
+    "modified": "sinh tĩnh 64x64, đặt khung 64 chân chạm đáy"
   },
   {
     "path": "sprites/npc/gate-seraph.png",

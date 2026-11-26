@@ -1,6 +1,6 @@
 // Asset PixelLab cho chương 2–5 (quái/trùm + NPC thoại). Tách khỏi jobs.mjs để dễ theo dõi.
 // Trùm (boss: true) đồng thời là chân dung thoại (dialog-runner trỏ về cùng PNG sprites/monsters/*).
-import { battleMonster, monster, portrait } from './job-factory.mjs';
+import { battleMonster, monster, npcFigure, portrait } from './job-factory.mjs';
 
 // Chương 2 — Rừng Tro: xám tro, cây cháy.
 const CHAPTER_2 = [
@@ -36,6 +36,13 @@ const CHAPTER_2_5_NPCS = [
   portrait('crypt-warden', 'crypt-warden', 'hooded crypt warden, pale robes, lantern, keyring', 32001),
   portrait('chained-soul', 'chained-soul', 'gaunt tormented soul wrapped in heavy chains, faint glow', 42001),
   portrait('gate-seraph', 'gate-seraph', 'radiant guardian seraph, folded wings, gleaming gate keys', 52001),
+  // Ảnh bán thân đứng trên bản đồ trông như tượng: vẽ thêm dáng toàn thân cho bản đồ, seed khác để không ra lại dáng bán thân.
+  npcFigure('chained-soul', 'gaunt tormented man in tattered grey robes, wrapped in heavy iron chains, faint pale glow', 42011),
+  npcFigure(
+    'gate-seraph',
+    'radiant guardian seraph in ivory plate armor and long white robes, folded feathered wings, holding gleaming gate keys',
+    52011,
+  ),
 ];
 
 const CHAPTER_2_5_MONSTERS = [...CHAPTER_2, ...CHAPTER_3, ...CHAPTER_4, ...CHAPTER_5];

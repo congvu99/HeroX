@@ -610,6 +610,22 @@
       "createdAt": "2026-11-23"
     },
     {
+      "id": "chained-soul-figure",
+      "path": "sprites/npc/chained-soul-figure.png",
+      "prompt": "full body standing figure, legs visible, fully clothed, fully shaded, not a silhouette, no pedestal, gaunt tormented man in tattered grey robes, wrapped in heavy iron chains, faint pale glow, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 42011,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-26"
+    },
+    {
       "id": "portrait-chained-soul",
       "path": "sprites/npc/chained-soul.png",
       "prompt": "portrait bust of gaunt tormented soul wrapped in heavy chains, faint glow, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
@@ -656,6 +672,22 @@
       ],
       "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
       "createdAt": "2026-11-23"
+    },
+    {
+      "id": "gate-seraph-figure",
+      "path": "sprites/npc/gate-seraph-figure.png",
+      "prompt": "full body standing figure, legs visible, fully clothed, fully shaded, not a silhouette, no pedestal, radiant guardian seraph in ivory plate armor and long white robes, folded feathered wings, holding gleaming gate keys, top-down 3/4 pixel art, dark fantasy, clean readable silhouette, transparent background",
+      "seed": 52011,
+      "size": {
+        "width": 64,
+        "height": 64
+      },
+      "directions": 4,
+      "animations": [
+        "still"
+      ],
+      "reference": "prototypes/style-preview/public/assets/reference/style-target.png",
+      "createdAt": "2026-11-26"
     },
     {
       "id": "portrait-gate-seraph",

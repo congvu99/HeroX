@@ -66,3 +66,23 @@ export function portrait(id, speaker, prompt, seed) {
     credit: CREDIT(`Chân dung/NPC ${speaker} (PixelLab)`, 'sinh tĩnh 64x64'),
   };
 }
+
+/**
+ * Dáng toàn thân của NPC để đứng trên bản đồ (64 px, chân chạm đáy); ảnh bán thân `portrait()` vẫn làm chân dung hộp thoại.
+ * Tiền tố prompt né các lỗi pixflux đã gặp: tượng trên bệ, bóng đen không chi tiết, hình người không áo.
+ */
+export function npcFigure(speaker, prompt, seed) {
+  return {
+    kind: 'single',
+    id: `${speaker}-figure`,
+    path: `sprites/npc/${speaker}-figure.png`,
+    prompt: `full body standing figure, legs visible, fully clothed, fully shaded, not a silhouette, no pedestal, ${prompt}, ${BASE_STYLE}`,
+    seed,
+    size: { width: 64, height: 64 },
+    frameSize: 64,
+    directions: 4,
+    animations: ['still'],
+    reference: STYLE_REF,
+    credit: CREDIT(`NPC ${speaker} - dáng toàn thân trên bản đồ (PixelLab)`, 'sinh tĩnh 64x64, đặt khung 64 chân chạm đáy'),
+  };
+}

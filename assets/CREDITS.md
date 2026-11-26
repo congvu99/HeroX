@@ -129,9 +129,11 @@ Trang nguồn: https://www.pixellab.ai/
 | `sprites/monsters/mute-cherub.png` | Quái mute-cherub (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
 | `sprites/monsters/nameless-bishop.png` | Quái nameless-bishop (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 128 chân chạm đáy; màu trung tính cho MULTIPLY |
 | `sprites/monsters/red-cleric.png` | Quái red-cleric (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh, đặt khung 64 chân chạm đáy; màu trung tính cho MULTIPLY |
+| `sprites/npc/chained-soul-figure.png` | NPC chained-soul - dáng toàn thân trên bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64, đặt khung 64 chân chạm đáy |
 | `sprites/npc/chained-soul.png` | Chân dung/NPC chained-soul (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
 | `sprites/npc/crypt-warden.png` | Chân dung/NPC crypt-warden (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
 | `sprites/npc/forest-warden.png` | Chân dung/NPC forest-warden (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
+| `sprites/npc/gate-seraph-figure.png` | NPC gate-seraph - dáng toàn thân trên bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64, đặt khung 64 chân chạm đáy |
 | `sprites/npc/gate-seraph.png` | Chân dung/NPC gate-seraph (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64 |
 | `tiles/pixellab/castle-gate.png` | Cổng thành bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 64x64, cắt ô 32 px thay ô Kenney cùng tên |
 | `tiles/pixellab/castle-tower.png` | Tháp thành bản đồ (PixelLab) | HeroX qua PixelLab | Thuộc dự án HeroX (sinh bằng PixelLab, tài khoản HeroX) | sinh tĩnh 96x96, cắt ô 32 px thay ô Kenney cùng tên |
@@ -199,9 +201,11 @@ Trang nguồn: https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Ch
 | `sprites/monsters/mute-cherub.png` | mute-cherub | 64x64 | 4 | still | 2026-11-23 |
 | `sprites/monsters/nameless-bishop.png` | nameless-bishop | 128x128 | 4 | still | 2026-11-23 |
 | `sprites/monsters/red-cleric.png` | red-cleric | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/npc/chained-soul-figure.png` | chained-soul-figure | 64x64 | 4 | still | 2026-11-26 |
 | `sprites/npc/chained-soul.png` | portrait-chained-soul | 64x64 | 4 | still | 2026-11-23 |
 | `sprites/npc/crypt-warden.png` | portrait-crypt-warden | 64x64 | 4 | still | 2026-11-23 |
 | `sprites/npc/forest-warden.png` | portrait-forest-warden | 64x64 | 4 | still | 2026-11-23 |
+| `sprites/npc/gate-seraph-figure.png` | gate-seraph-figure | 64x64 | 4 | still | 2026-11-26 |
 | `sprites/npc/gate-seraph.png` | portrait-gate-seraph | 64x64 | 4 | still | 2026-11-23 |
 | `tiles/pixellab/castle-gate.png` | castle-gate | 64x64 | 4 | still | 2026-11-25 |
 | `tiles/pixellab/castle-tower.png` | castle-tower | 96x96 | 4 | still | 2026-11-25 |
