@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { presentChapterMapPaths } from '../src/maps/chapter-maps';
+import { chapterLevelIds, presentChapterMapPaths } from '../src/maps/chapter-maps';
 import {
   findBrokenPortalLinks,
   findEntities,
@@ -16,8 +16,6 @@ import {
 
 const ASSETS_DIR = join(import.meta.dirname, '..', '..', 'assets');
 const CHAPTER_1_PROJECT_FILE = 'maps/chapter-1-misty-village.ldtk';
-/** Rừng Tro thuộc chương sau: cổng đông Lexhold cố ý trỏ tới level chưa có. */
-const FUTURE_LEVEL = 'Ash_Forest';
 const LEVEL_IDS = ['Lexhold', 'Misty_Fields', 'Misty_Village', 'Misty_Chapel', 'Scarecrow_Lair'];
 const LEVEL_SIZE_CELLS = { minWidth: 30, maxWidth: 44, minHeight: 18, maxHeight: 26 };
 const ATLAS_MAX_PX = 2048;
@@ -29,11 +27,17 @@ type Kind = MapEntity['kind'];
 /** Id bắt buộc theo từng level của chương 1 (spawnId, dialogId, itemId, encounterId, buildingId, đích cổng). */
 const CHAPTER_1_EXPECTED: Record<string, Partial<Record<Kind, readonly string[]>>> = {
   Lexhold: {
-    PlayerSpawn: ['from-fields', 'start'],
+    PlayerSpawn: ['from-ash-forest', 'from-catacomb', 'from-fields', 'from-heaven', 'from-hellmaw', 'start'],
     Npc: ['keeper'],
     Building: ['arcane-tower', 'forge', 'library', 'tailor'],
     BattleTrigger: ['tutorial'],
-    Portal: ['Ash_Forest/from-lexhold', 'Misty_Fields/from-lexhold'],
+    Portal: [
+      'Ash_Forest/from-lexhold',
+      'Broken_Heaven/from-fields',
+      'Hellmaw/from-fields',
+      'Misty_Fields/from-lexhold',
+      'Saint_Catacomb/from-fields',
+    ],
   },
   Misty_Fields: {
     PlayerSpawn: ['from-lexhold', 'from-village'],
@@ -139,7 +143,7 @@ const presentChapters = presentChapterMapPaths();
 const chapter1Present = presentChapters.some(({ path }) => path === CHAPTER_1_PROJECT_FILE);
 
 // Bất biến cấu trúc chung cho MỌI chương đang có file map.
-describe.each(presentChapters)('cấu trúc map chương $chapter', ({ path }: { chapter: number; path: string }) => {
+describe.each(presentChapters)('cấu trúc map chương $chapter', ({ chapter, path }: { chapter: number; path: string }) => {
   const { project, levels } = loadChapter(path);
 
   it('level tách file .ldtkl, không có level nhúng trong project', () => {
@@ -177,8 +181,9 @@ describe.each(presentChapters)('cấu trúc map chương $chapter', ({ path }: {
     }
   });
 
-  it('cổng trỏ tới level và spawn có thật (trừ Rừng Tro chương sau)', () => {
-    const broken = findBrokenPortalLinks(levels).filter((problem) => !problem.includes(`"${FUTURE_LEVEL}"`));
+  it('cổng trong chương trỏ tới level và spawn có thật (cổng sang chương khác kiểm ở chapter-transition.test.ts)', () => {
+    const otherChapterLevels = presentChapters.filter((entry) => entry.chapter !== chapter).flatMap((entry) => chapterLevelIds(entry.chapter));
+    const broken = findBrokenPortalLinks(levels).filter((problem) => !otherChapterLevels.some((levelId) => problem.includes(`"${levelId}"`)));
     expect(broken).toEqual([]);
   });
 

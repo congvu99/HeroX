@@ -55,6 +55,18 @@ function isChapterStarted(chapter: StoryChapter, progress: StoryProgress): boole
   return previous === undefined || progress.has(previous.chapter, previous.finalBeat);
 }
 
+/**
+ * Chương người chơi đang ở: chương cao nhất vừa bắt đầu theo truyện vừa đã mở theo số từ đã học.
+ * Dùng để chọn map khi vào game; cả hai điều kiện khớp với luật khoá cổng chương sau ở `levelGateState`.
+ */
+export function currentStoryChapter(progress: StoryProgress, counts: WordCounts): number {
+  return STORY_CHAPTERS.reduce(
+    (current, chapter) =>
+      isChapterStarted(chapter, progress) && isChapterUnlocked(chapter.chapter, counts) ? chapter.chapter : current,
+    STORY_CHAPTERS[0]?.chapter ?? 1,
+  );
+}
+
 export function findBeat(chapter: number, beatId: string): StoryBeat | undefined {
   return findChapter(chapter)?.beats.find((beat) => beat.id === beatId);
 }

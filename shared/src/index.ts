@@ -240,6 +240,7 @@ export {
   beatForItem,
   beatKey,
   checkBeatCompletion,
+  currentStoryChapter,
   encounterGateState,
   findBeat,
   findChapter,

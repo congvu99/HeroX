@@ -68,6 +68,11 @@ export class WorldStory {
     return gate.open;
   }
 
+  /** Báo ngắn ở ô nhiệm vụ (vd lỗi tải vùng đất mới khi qua cổng). */
+  toast(message: string): void {
+    this.quests.toast(message);
+  }
+
   canUsePortal(targetLevel: string): boolean {
     const gate = levelGateState(targetLevel, this.journal.progress, this.host.wordCounts());
     if (!gate.open) this.quests.toast(gate.message);

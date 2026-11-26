@@ -39,6 +39,8 @@ const HELLMAW = {
   width: 32, height: LEVEL_HEIGHT, worldX: 0, worldY: 0,
   ops: [
     ['rect', 0, 0, 32, 20, '#'], ['rect', 1, 1, 30, 18, '.'], wallBand(32, 20),
+    // Mở tường bắc ở ô cổng về Lexhold.
+    ['rect', 15, 0, 2, 1, '.'],
     ['rect', 15, 1, 2, 19, '_'],
     // Đá đổ chắn ngang, chừa nhịp cầu giữa (cột 15-16).
     ['rect', 1, 10, 14, 1, 'L'], ['rect', 17, 10, 14, 1, 'L'],
@@ -48,6 +50,8 @@ const HELLMAW = {
     ['at', 'x', [[12, 5], [20, 6], [11, 15], [21, 14]]], ['at', 'l', [[8, 12], [24, 7]]],
   ],
   entities: [
+    // Cổng về Lexhold (trung tâm nối các chương) ngay trên chỗ xuất hiện.
+    portal([15, 0], GATE_H, 'Lexhold', 'from-hellmaw'),
     spawn([15, 2], 'from-fields'), spawn([15, 17], 'from-throne'),
     npc([12, 3], 'chained-soul'),
     battle([15, 10], [64, 32], 'ch4-field'),
