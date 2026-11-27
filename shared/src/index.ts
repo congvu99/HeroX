@@ -138,6 +138,8 @@ export {
   MIN_LEARNED_WORDS_FOR_BATTLE,
   pickPromptWord,
   RECENT_PROMPT_MEMORY,
+  RECENT_PROMPT_SHARE_PERCENT,
+  recentPromptMemory,
   selectBattleWords,
   TUTORIAL_WORD_IDS,
   WORD_MIX_QUOTAS,

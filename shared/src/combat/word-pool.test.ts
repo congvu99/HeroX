@@ -8,6 +8,7 @@ import {
   FRESH_POOL_SHARE_PERCENT,
   pickPromptWord,
   RECENT_PROMPT_MEMORY,
+  recentPromptMemory,
   selectBattleWords,
   WORD_MIX_QUOTAS,
   type PromptContext,
@@ -105,6 +106,28 @@ describe('selectBattleWords', () => {
   it('returns everything when there are fewer words than the limit', () => {
     const few = bucketsOf({ new: 3, due: 2, hard: 2, familiar: 1, mastered: 1 });
     expect(selectBattleWords(few, 'field', [], 40)).toHaveLength(9);
+  });
+});
+
+describe('recentPromptMemory', () => {
+  it('scales with the battle pool and never drops below the minimum', () => {
+    expect(recentPromptMemory(0)).toBe(RECENT_PROMPT_MEMORY);
+    expect(recentPromptMemory(4)).toBe(RECENT_PROMPT_MEMORY);
+    expect(recentPromptMemory(20)).toBe(12);
+    expect(recentPromptMemory(40)).toBe(24);
+  });
+
+  it('keeps every word of a 20-word pool from returning within 12 prompts', () => {
+    const pool = Array.from({ length: 20 }, (_, index) => battleWord(`word${index}`, 'noun', { weak: index < 4, fresh: index === 5 }));
+    const memory = recentPromptMemory(pool.length);
+    const rng = new SeededRandom(7);
+    const recent: string[] = [];
+    for (let round = 0; round < 300; round += 1) {
+      const word = pickPromptWord(context({ words: pool, recentWordIds: recent }), rng);
+      expect(recent).not.toContain(word.id);
+      recent.push(word.id);
+      if (recent.length > memory) recent.shift();
+    }
   });
 });
 

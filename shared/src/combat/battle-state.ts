@@ -48,7 +48,7 @@ import {
   type PreventingStatusKind,
   type StatusKind,
 } from './status-effects.js';
-import { availableChains, pickPromptWord, RECENT_PROMPT_MEMORY } from './word-pool.js';
+import { availableChains, pickPromptWord, recentPromptMemory } from './word-pool.js';
 
 // Quái tinh anh: thỉnh thoảng một từ hay sai hoá thành quái nhiều máu hơn, thưởng gấp đôi.
 export const ELITE_CHANCE = 0.25;
@@ -363,7 +363,7 @@ class BattleDraft {
     const options = buildRingOptions(word, this.setup.words, this.setup.loadout, this.rng);
     const deadlineMs = this.elapsedMs + this.setup.promptTimeMs;
     this.prompt = { wordId: word.id, options, shownAtMs: this.elapsedMs, deadlineMs };
-    this.recentWordIds = [...this.recentWordIds, word.id].slice(-RECENT_PROMPT_MEMORY);
+    this.recentWordIds = [...this.recentWordIds, word.id].slice(-recentPromptMemory(this.setup.words.length));
     this.bumpWordResult(word.id, (prev) => ({ ...prev, prompted: prev.prompted + 1 }));
     this.events.push({ type: 'prompt', wordId: word.id, options, deadlineMs });
   }

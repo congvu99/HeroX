@@ -20,8 +20,18 @@ export const TUTORIAL_WORD_IDS: readonly string[] = [
 ];
 /** Số từ tối đa mang vào một trận (giữ setup nhỏ khi người chơi đã học hàng nghìn từ). */
 export const BATTLE_POOL_SIZE = 40;
-/** Không ra lại một từ trong số đề gần nhất này. */
+/** Số đề gần nhất tối thiểu không được ra lại (bộ từ nhỏ). */
 export const RECENT_PROMPT_MEMORY = 3;
+/**
+ * Phần trăm bộ từ của trận bị tạm khoá sau khi ra đề: bộ 40 từ thì 24 đề gần nhất không lặp, người chơi gặp
+ * đủ từ trước khi một từ quay lại; vẫn chừa 40% để trọng số ưu tiên từ yếu, từ mới có chỗ chọn.
+ */
+export const RECENT_PROMPT_SHARE_PERCENT = 60;
+
+/** Số đề gần nhất không ra lại, theo cỡ bộ từ của trận (ít nhất `RECENT_PROMPT_MEMORY`). */
+export function recentPromptMemory(poolSize: number): number {
+  return Math.max(RECENT_PROMPT_MEMORY, Math.floor((poolSize * RECENT_PROMPT_SHARE_PERCENT) / 100));
+}
 
 /** Cách trộn bộ từ theo loại trận: hạn ngạch phần trăm mỗi nhóm SRS, cộng lại đúng 100. */
 export type WordMix = 'field' | 'boss';
