@@ -11,6 +11,7 @@ import {
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH, MAX_VIEW_HEIGHT, MAX_VIEW_WIDTH, TILE_SIZE } from '../config/display';
 import { hasMapAsset, mapAssetUrl } from '../maps/map-asset-urls';
 import { CHAPTER_1_TILE_INDEX } from './chapter-1-tile-data';
+import { arenaWeatherFor } from './ambient-weather';
 import { GoldenHourAtmosphere } from './golden-hour-atmosphere';
 import { lightingForArena } from './lighting-presets';
 import type { LightSource } from './scene-atmosphere';
@@ -71,6 +72,8 @@ export interface BattleArenaOptions {
   readonly lightingEnabled: boolean;
   /** Vùng sáng đi theo hiệp sĩ và quái (đọc toạ độ mỗi khung). */
   readonly actorLights: readonly { readonly source: LightSource; readonly radius: number }[];
+  /** Hệ số mật độ hạt theo quality (máy yếu &lt; 1); mặc định 1. */
+  readonly particleDensity?: number;
 }
 
 /**
@@ -91,6 +94,12 @@ export class BattleArena {
     }
     for (const light of options.actorLights) this.atmosphere.addLight(light.source, light.radius);
     if (layout.embers && options.lightingEnabled) this.addEmbers(scene, layout);
+    // Hạt môi trường theo theme (lá/đốm sáng); bảng trả `null` cho theme đã có ember nên không chồng.
+    // Vùng phát phủ khung thiết kế dọc, cuộn theo world để hạt bám sân; tạo mới mỗi arena, không dùng chung.
+    if (options.lightingEnabled) {
+      const zone = new Phaser.Geom.Rectangle(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+      this.atmosphere.addWeather(arenaWeatherFor(layout.theme), zone, options.particleDensity ?? 1);
+    }
   }
 
   /** Vẽ nền chung: ảnh 192x352 phóng theo ARENA_TILE_SCALE, gốc trên-trái tại ARENA_ORIGIN, dưới nhân vật. */

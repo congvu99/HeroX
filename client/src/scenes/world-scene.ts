@@ -22,9 +22,11 @@ import type { QualityController } from '../platform/quality-settings';
 import { CHAPTER_1_ATLAS_FILE, CHAPTER_1_TILE_GLOW, CHAPTER_1_TILE_INDEX } from '../render/chapter-1-tile-data';
 import { GoldenHourAtmosphere } from '../render/golden-hour-atmosphere';
 import { lightingForLevel } from '../render/lighting-presets';
+import { mapWeatherForPreset } from '../render/ambient-weather';
 import { findTileGlows, glowByTileIndex } from '../render/golden-hour-layout';
 import { prepareHeroLook, queueHeroSheet, walkAnimationKey, type HeroLook } from '../render/hero-sprite';
 import { chestTextureKey, npcTextureKey, queuePropSprites } from '../render/prop-sprites';
+import { SwayingTrees } from '../render/swaying-trees';
 import { BUILDING_TEXTURE_KEYS, TEXTURE_KEYS } from '../render/placeholder-textures';
 import {
   DASH_SPEED,
@@ -93,6 +95,11 @@ const ROAMING_SPAWNS: Readonly<Record<string, RoamingSpawn>> = {
 };
 const HERO_LIGHT_RADIUS = 120;
 const TORCH_LIGHT_RADIUS = 96;
+/** Nhún camera theo bước chân khi hero đi: biên độ vài px (rất nhẹ để không say xe), tần số rad/ms. */
+const HERO_BOB_AMPLITUDE = 2.2;
+const HERO_BOB_SPEED = 0.012;
+/** Tốc độ kéo offset về 0 khi dừng (hệ số lerp mỗi khung) để không giật khi vừa dừng. */
+const HERO_BOB_DECAY = 0.2;
 const PORTAL_LIGHT_RADIUS = 88;
 /** Nhịp thở của lõi cổng không gian: lớp sáng phập phồng và co giãn nhẹ. */
 const PORTAL_PULSE_MS = 1600;
@@ -166,6 +173,11 @@ export class WorldScene extends Phaser.Scene {
   private dashGhosts: Phaser.GameObjects.Image[] = [];
   private nextGhostAtMs = 0;
   private ghostIndex = 0;
+  /** Hero đang di chuyển trong khung này (để camera nhún theo bước chân). */
+  private heroMoving = false;
+  /** Offset dọc hiện tại của camera cho nhịp bước; lerp về 0 khi dừng. */
+  private bobOffsetY = 0;
+  private quality: QualityController | undefined;
 
   constructor() {
     super(SCENE_KEYS.world);
@@ -230,8 +242,9 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     this.cameras.main.setBackgroundColor(level.backgroundColor);
+    const tilesetTextureKey = tilesetTextureKeyFor(this.map.sourcePath);
     const built = buildLevelTilemap(this, this.map.project, level, {
-      tilesetTextureKey: tilesetTextureKeyFor(this.map.sourcePath),
+      tilesetTextureKey,
       collisionTextureKey: TEXTURE_KEYS.collisionTile,
     });
 
@@ -262,14 +275,28 @@ export class WorldScene extends Phaser.Scene {
     camera.fadeIn(FADE_MS, CAMERA_FADE_COLOR.r, CAMERA_FADE_COLOR.g, CAMERA_FADE_COLOR.b);
 
     const quality = this.registry.get(REGISTRY_KEYS.quality) as QualityController | undefined;
+    this.quality = quality;
+    const preset = lightingForLevel(level.identifier);
     const atmosphere = new GoldenHourAtmosphere(this, {
       enabled: quality?.profile.dynamicLightingEnabled ?? true,
-      preset: lightingForLevel(level.identifier),
+      preset,
     });
     this.atmosphere = atmosphere;
     this.decorateLevelLighting(atmosphere, level);
+    // Chuyển động nền (hạt theo tông ánh sáng, nền xa parallax, cây đung đưa) chỉ khi quality cho phép.
+    const profile = quality?.profile;
+    let swayingTrees: SwayingTrees | null = null;
+    if (profile?.ambientWeatherEnabled ?? false) {
+      atmosphere.addWeather(mapWeatherForPreset(preset.name), undefined, profile?.particleDensity ?? 1);
+      atmosphere.addParallaxBackdrop();
+      swayingTrees = new SwayingTrees(this, { tilemap: built.tilemap, project: this.map.project, level, tilesetTextureKey });
+    }
     const unsubscribeQuality = quality?.subscribe((profile) => {
       if (!profile.dynamicLightingEnabled) atmosphere.disable();
+      if (!profile.ambientWeatherEnabled) {
+        swayingTrees?.disable();
+        atmosphere.removeParallaxBackdrop();
+      }
     });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => unsubscribeQuality?.());
     // Nguồn sáng đọc vị trí hero mỗi frame nên dùng getter thay vì chép toạ độ.
@@ -284,8 +311,11 @@ export class WorldScene extends Phaser.Scene {
       },
       HERO_LIGHT_RADIUS,
     );
+    const torchDensity = profile?.particleDensity ?? 1;
     for (const torch of findEntities(level, 'Torch')) {
-      this.atmosphere.addLight({ x: torch.x + torch.width / 2, y: torch.y + torch.height / 2 }, TORCH_LIGHT_RADIUS, true);
+      const at = { x: torch.x + torch.width / 2, y: torch.y + torch.height / 2 };
+      this.atmosphere.addLight(at, TORCH_LIGHT_RADIUS, true);
+      this.atmosphere.addFlame(at, torchDensity);
     }
     this.createPortalVisuals(level, atmosphere);
 
@@ -420,6 +450,7 @@ export class WorldScene extends Phaser.Scene {
     if (!this.hero) return;
     this.useMovementSkills(this.hero, time);
     this.moveHero(this.hero, time);
+    this.updateCameraBob(time);
     this.checkPortals(this.hero);
     this.checkBattleTriggers(this.hero);
     this.checkRoamers(this.hero);
@@ -542,11 +573,32 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Camera nhún dọc rất nhẹ theo nhịp bước khi hero đi; đứng yên thì lerp offset về 0.
+   * Dùng `setFollowOffset` (cộng vào follow) thay vì `shake` để chuyển động mượt, không giật.
+   * Tôn trọng `screenShakeEnabled`: người bật giảm chuyển động không thấy nhún.
+   */
+  private updateCameraBob(timeMs: number): void {
+    const allowed = this.quality?.profile.screenShakeEnabled ?? true;
+    const target = this.heroMoving && allowed ? Math.sin(timeMs * HERO_BOB_SPEED) * HERO_BOB_AMPLITUDE : 0;
+    // Đứng yên và offset đã về ~0: thôi ghi mỗi khung (tránh cập nhật dư khi không nhún).
+    if (target === 0 && Math.abs(this.bobOffsetY) < 0.05) {
+      if (this.bobOffsetY !== 0) {
+        this.bobOffsetY = 0;
+        this.cameras.main.setFollowOffset(0, 0);
+      }
+      return;
+    }
+    this.bobOffsetY += (target - this.bobOffsetY) * HERO_BOB_DECAY;
+    this.cameras.main.setFollowOffset(0, this.bobOffsetY);
+  }
+
   private moveHero(hero: Phaser.Physics.Arcade.Sprite, nowMs: number): void {
     const body = hero.body as Phaser.Physics.Arcade.Body;
     // Đang chuyển cảnh vào trận/panel (`overlayOpen` bật trước khi bản đồ dừng): hero đứng yên.
     if (this.transitioning || this.overlayOpen) {
       body.setVelocity(0, 0);
+      this.heroMoving = false;
       return;
     }
     if (this.movementSkills?.isDashing(nowMs) === true) {
@@ -554,12 +606,14 @@ export class WorldScene extends Phaser.Scene {
       body.setVelocity(this.dashVector.x * DASH_SPEED, this.dashVector.y * DASH_SPEED);
       this.dropDashGhost(hero, nowMs);
       hero.setDepth(body.bottom);
+      this.heroMoving = true;
       return;
     }
     const movement = this.movementInput.readMovement();
     body.setVelocity(movement.x * HERO_SPEED, movement.y * HERO_SPEED);
     const facing = facingFromVector(movement, this.facing);
     const moving = movement.x !== 0 || movement.y !== 0;
+    this.heroMoving = moving;
     if (this.heroLook.animated && moving) {
       hero.anims.play(walkAnimationKey(facing), true);
     } else if (facing !== this.facing || hero.anims.isPlaying) {

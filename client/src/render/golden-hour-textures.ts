@@ -178,3 +178,52 @@ export function createShadowTexture(
   texture.refresh();
   return true;
 }
+
+/** Ô lặp của nền parallax (lặp cả hai chiều khi cuộn). */
+export const BACKDROP_TILE_SIZE = 256;
+/** Nền xa: vài mảng sương mờ lớn và đốm sáng nhỏ; hạt giống cố định để mỗi lần mở giống nhau. */
+const BACKDROP_SEED = 23;
+const BACKDROP_MIST_COUNT = 6;
+const BACKDROP_MIST_RADIUS = { min: 28, max: 70 } as const;
+const BACKDROP_MIST_ALPHA = { min: 0.12, max: 0.28 } as const;
+const BACKDROP_SPECK_COUNT = 26;
+const BACKDROP_SPECK_SIZE = { min: 1, max: 2 } as const;
+const BACKDROP_SPECK_ALPHA = { min: 0.25, max: 0.6 } as const;
+
+const between = (random: () => number, range: { readonly min: number; readonly max: number }): number =>
+  range.min + random() * (range.max - range.min);
+
+/**
+ * Hoạ tiết nền xa cho lớp parallax: sương và đốm sáng màu tia nắng của preset trên nền trong suốt.
+ * Mỗi mảng vẽ lặp ở 9 vị trí dời ±ô để mép ô nối liền khi TileSprite lặp.
+ */
+export function createBackdropTexture(scene: Phaser.Scene, key: string, preset: LightingPreset): void {
+  if (scene.textures.exists(key)) return;
+  const size = BACKDROP_TILE_SIZE;
+  const texture = canvasTexture(scene, key, size, size);
+  const context = texture.getContext();
+  const random = seededRandom(BACKDROP_SEED);
+  const rgb = preset.shaftRgb.join(', ');
+  const wrapOffsets = [-size, 0, size];
+  for (let index = 0; index < BACKDROP_MIST_COUNT; index++) {
+    const x = random() * size;
+    const y = random() * size;
+    const radius = between(random, BACKDROP_MIST_RADIUS);
+    const alpha = between(random, BACKDROP_MIST_ALPHA);
+    for (const dx of wrapOffsets) {
+      for (const dy of wrapOffsets) {
+        const gradient = context.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, radius);
+        gradient.addColorStop(0, rgba(rgb, alpha));
+        gradient.addColorStop(1, rgba(rgb, 0));
+        context.fillStyle = gradient;
+        context.fillRect(x + dx - radius, y + dy - radius, radius * 2, radius * 2);
+      }
+    }
+  }
+  for (let index = 0; index < BACKDROP_SPECK_COUNT; index++) {
+    const speck = Math.round(between(random, BACKDROP_SPECK_SIZE));
+    context.fillStyle = rgba(rgb, between(random, BACKDROP_SPECK_ALPHA));
+    context.fillRect(Math.floor(random() * (size - speck)), Math.floor(random() * (size - speck)), speck, speck);
+  }
+  texture.refresh();
+}
