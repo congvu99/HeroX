@@ -83,6 +83,11 @@ const RING_CENTER = { x: HERO_FEET.x, y: HERO_FEET.y + RING_CENTER_OFFSET_Y } as
 /** Sân trận mờ dần vào sau màn tối của chuyển cảnh trên bản đồ. */
 const INTRO_FADE_MS = 450;
 const WAITING_NOTICE_DELAY_MS = 700;
+/**
+ * Chờ atlas bộ chiêu tối đa chừng này trước khi bắt đầu tính giờ. Giải mã + đẩy atlas lên GPU chặn luồng chính,
+ * làm trong lúc chơi thì khựng; mạng chậm quá mức này thì vào trận luôn, phần còn lại tải tiếp ở nền.
+ */
+const DECK_FX_WAIT_LIMIT_MS = 4000;
 /** Hiệu ứng pixelfx phát chậm hơn fps gốc để chiêu không loé qua trong chớp mắt. */
 const FX_TIME_SCALE = 0.6;
 /** Thời gian dừng nhịp trận sau mỗi chiêu đúng để người chơi xem trọn động tác, đường bay và hiệu ứng trúng. */
@@ -344,7 +349,7 @@ export class BattleScene extends Phaser.Scene {
     });
     // Dev vào map bằng nút thử (không có phiên LingoBrain): chơi bộ từ thử, không gửi kết quả.
     if (import.meta.env.DEV && this.registry.get(REGISTRY_KEYS.me) === undefined) {
-      this.startSession(devBattleSetup(this.encounterId, devBattleSeed(window.location.search)), null);
+      await this.startSession(devBattleSetup(this.encounterId, devBattleSeed(window.location.search)), null);
       return;
     }
     const token = readEngSessionToken(() => window.localStorage);
@@ -357,7 +362,7 @@ export class BattleScene extends Phaser.Scene {
     // Người chơi có thể đã rời trận (hoặc đã sang trận khác) trong lúc chờ mạng.
     if (this.isStale(run)) return;
     if (result.kind === 'ok') {
-      this.startSession(result.value.setup, { token, battleId: result.value.battleId });
+      await this.startSession(result.value.setup, { token, battleId: result.value.battleId });
       if (result.value.tutorial) this.hud.floatText(LOGICAL_WIDTH / 2, 170, 'Trận hướng dẫn: học thêm từ ở LingoBrain để mạnh hơn', 'info');
     } else if (result.kind === 'unauthenticated') {
       this.showEnd(LOGIN_TO_BATTLE_MESSAGE);
@@ -370,7 +375,10 @@ export class BattleScene extends Phaser.Scene {
     return run !== this.battleRun || !this.scene.isActive();
   }
 
-  private startSession(setup: BattleSetup, online: OnlineBattle | null): void {
+  private async startSession(setup: BattleSetup, online: OnlineBattle | null): Promise<void> {
+    const run = this.battleRun;
+    await this.loadDeckFx(setup.seed);
+    if (this.isStale(run)) return;
     let session: BattleSession;
     // Hiệu ứng chiêu theo bậc đã nâng ở tháp phép (server ghi trong setup).
     // Atlas chiêu chưa sẵn (đang tải, lỗi tải) thì cue dùng hiệu ứng dự phòng trong bộ nạp sẵn.
@@ -384,22 +392,36 @@ export class BattleScene extends Phaser.Scene {
     }
     this.online = online;
     this.session = session;
-    this.loadDeckFx(setup.seed);
     this.hud.hideCenter();
     this.refreshHud(session);
   }
 
   /**
-   * Nạp nền atlas riêng của bộ chiêu trận (cùng seed với `battle-state`), chiêu bậc thấp trước. Không chặn trận:
-   * lỗi tải chỉ làm chiêu đó dùng hiệu ứng dự phòng.
+   * Nạp atlas riêng của bộ chiêu trận (cùng seed với `battle-state`), chiêu bậc thấp trước, xong trước khi đồng hồ trận chạy.
+   * Xong khi loader hết hàng, quá `DECK_FX_WAIT_LIMIT_MS` hoặc scene tắt; lỗi tải chỉ làm chiêu đó dùng hiệu ứng dự phòng.
    */
-  private loadDeckFx(seed: number): void {
+  private loadDeckFx(seed: number): Promise<void> {
     const names = deckFxNames(buildBattleDeck(seed));
     // Atlas của trận trước về muộn (sau khi đã rời trận) thì gỡ ở đây nếu bộ chiêu mới không dùng.
     releaseFxAssets(this, this.deckFx.filter((name) => !names.includes(name)));
     this.deckFx = names;
     queueFxAssets(this, names);
-    if (this.load.list.size > 0) this.load.start();
+    if (this.load.list.size === 0 && !this.load.isLoading()) return Promise.resolve();
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (): void => {
+        if (settled) return;
+        settled = true;
+        timer.remove();
+        this.load.off(Phaser.Loader.Events.COMPLETE, finish);
+        this.events.off(Phaser.Scenes.Events.SHUTDOWN, finish);
+        resolve();
+      };
+      const timer = this.time.delayedCall(DECK_FX_WAIT_LIMIT_MS, finish);
+      this.load.once(Phaser.Loader.Events.COMPLETE, finish);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, finish);
+      this.load.start();
+    });
   }
 
   private handleEvent(event: BattleEvent): void {
