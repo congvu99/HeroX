@@ -89,6 +89,8 @@ const FX_TIME_SCALE = 0.6;
 const SHOWCASE_MS: Readonly<Record<SkillKind, number>> = { attack: 1500, empower: 1800, guard: 1300, evade: 1100 };
 const ACTOR_LIGHT_RADIUS = 110;
 const SHAKE = { light: { durationMs: 120, intensity: 0.004 }, strong: { durationMs: 260, intensity: 0.012 } } as const;
+/** Nhấn zoom cho đòn mạnh: phóng nhẹ vào rồi trả về 1, tổng ~230ms để đòn dứt điểm có sức nặng mà không che rìa sân. */
+const PUNCH_ZOOM = { scale: 1.08, inMs: 80, outMs: 150 } as const;
 const DEV_HERO_NAME = 'Hiệp sĩ';
 /** Hết phiên khi đang mở trận: nhắc đăng nhập lại để vào trận (khác câu lúc đã đánh xong, chưa ghi được). */
 const LOGIN_TO_BATTLE_MESSAGE = 'Phiên đăng nhập LingoBrain đã hết. Đăng nhập lại để vào trận.';
@@ -114,6 +116,8 @@ export class BattleScene extends Phaser.Scene {
   private session: BattleSession | null = null;
   private online: OnlineBattle | null = null;
   private ended = false;
+  /** Đang chạy một nhịp zoom-punch (chặn đòn mạnh kế tiếp đè tween zoom đang chạy). */
+  private punchZooming = false;
   private hud!: BattleHud;
   private fx!: FxPlayer;
   private projectiles!: BattleProjectiles;
@@ -194,6 +198,7 @@ export class BattleScene extends Phaser.Scene {
     const quality = this.quality();
     const arena = new BattleArena(this, buildArenaLayout(arenaThemeFor(this.encounterId)), {
       lightingEnabled: quality?.profile.dynamicLightingEnabled ?? true,
+      particleDensity: quality?.profile.particleDensity ?? 1,
       actorLights: [
         { source: this.actors.heroLight, radius: ACTOR_LIGHT_RADIUS },
         { source: this.actors.enemyLight, radius: ACTOR_LIGHT_RADIUS },
@@ -255,6 +260,22 @@ export class BattleScene extends Phaser.Scene {
     this.cameras.main.centerOn(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2);
   };
 
+  /**
+   * Phóng nhanh vào rồi trả về zoom 1; cùng tâm khung thiết kế nên không lệch sân. Gọi khi đòn mạnh.
+   * Cờ `punchZooming` chặn đòn mạnh kế tiếp khởi động punch mới đè tween đang chạy (kẹt ở scale phóng to).
+   */
+  private punchZoom(): void {
+    if (this.punchZooming) return;
+    this.punchZooming = true;
+    const camera = this.cameras.main;
+    camera.zoomTo(PUNCH_ZOOM.scale, PUNCH_ZOOM.inMs, 'Quad.Out', true, (_cam, progress) => {
+      if (progress < 1) return;
+      camera.zoomTo(1, PUNCH_ZOOM.outMs, 'Quad.In', true, (_outCam, outProgress) => {
+        if (outProgress >= 1) this.punchZooming = false;
+      });
+    });
+  }
+
   private readonly cleanup = (): void => {
     this.scale.off(Phaser.Scale.Events.RESIZE, this.centerOnDesignFrame);
     this.input.off(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDown);
@@ -263,6 +284,10 @@ export class BattleScene extends Phaser.Scene {
     this.hud.destroy();
     this.sounds.destroy();
     this.tweens.timeScale = 1;
+    // Rời/đổi trận giữa lúc đang nhấn zoom: dừng hẳn tween zoom rồi trả về 1, để trận sau (dùng lại camera) không kẹt.
+    this.cameras.main.zoomEffect.reset();
+    this.cameras.main.zoom = 1;
+    this.punchZooming = false;
     // Giữ danh sách: atlas đang tải dở có thể về sau khi rời trận, trận sau sẽ gỡ nốt.
     releaseFxAssets(this, this.deckFx);
   };
@@ -487,6 +512,8 @@ export class BattleScene extends Phaser.Scene {
         if (this.quality()?.profile.screenShakeEnabled === false) break;
         const shake = cue.strong ? SHAKE.strong : SHAKE.light;
         this.cameras.main.shake(shake.durationMs, shake.intensity);
+        // Đòn mạnh thêm nhấn zoom ngắn; dùng chính tín hiệu shake.strong để không cần event mới, không double-trigger.
+        if (cue.strong) this.punchZoom();
         break;
       }
     }
