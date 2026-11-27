@@ -15,7 +15,7 @@ import {
 import type { BattleWord } from './battle-types.js';
 import { createBattle, ELITE_HP_MULTIPLIER, InvalidBattleSetupError, step } from './battle-state.js';
 import { COMBO_WINDOW_MS } from './combo-chain.js';
-import { RECENT_PROMPT_MEMORY } from './word-pool.js';
+import { recentPromptMemory } from './word-pool.js';
 
 const STRONG_ENEMY = { ...TEST_ENEMY, maxHp: 10_000 };
 const ONE_SECOND = 1_000;
@@ -306,7 +306,7 @@ describe('elite enemies', () => {
       for (const [index, event] of played.events.entries()) {
         if (event.type === 'prompt') promptIds.push(event.wordId);
         if (event.type !== 'enemySpawn' || !event.elite || event.enemyIndex === 0) continue;
-        const recent = promptIds.slice(-RECENT_PROMPT_MEMORY);
+        const recent = promptIds.slice(-recentPromptMemory(words.length));
         if (weakWords.every((word) => recent.includes(word.id))) continue;
         const opening = played.events.slice(index).find((next) => next.type === 'prompt');
         expect(opening?.type === 'prompt' && recent.includes(opening.wordId), `seed ${seed}`).toBe(false);
