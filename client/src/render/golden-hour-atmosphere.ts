@@ -1,7 +1,15 @@
 import Phaser from 'phaser';
 import type { CollisionGrid } from '../maps/ldtk-loader';
 import { flickerScale, solidRuns, type WorldGlow } from './golden-hour-layout';
-import { createShadowTexture, createShaftTexture, createSunWashTexture, createToneTexture, SHAFT_TILE_WIDTH } from './golden-hour-textures';
+import {
+  BACKDROP_TILE_SIZE,
+  createBackdropTexture,
+  createShadowTexture,
+  createShaftTexture,
+  createSunWashTexture,
+  createToneTexture,
+  SHAFT_TILE_WIDTH,
+} from './golden-hour-textures';
 import type { WeatherSpec } from './ambient-weather';
 import { LIGHTING_PRESETS, type LightingPreset } from './lighting-presets';
 import { LIGHT_TEXTURE_SIZE, TEXTURE_KEYS } from './placeholder-textures';
@@ -14,6 +22,8 @@ const GLOW_DEPTH = 9002;
 const DUST_DEPTH = 9003;
 /** Bóng đổ nằm trên mọi layer nền (≥ -1000) và dưới mọi sprite (depth = y chân ≥ 0). */
 const SHADOW_DEPTH = -1;
+/** Nền parallax nằm dưới mọi layer tile (layer nền bắt đầu từ -1000). */
+const BACKDROP_DEPTH = -2000;
 
 const TEXTURE = {
   tone: 'golden-hour-tone',
@@ -22,6 +32,7 @@ const TEXTURE = {
   dust: 'golden-hour-dust',
   weather: 'golden-hour-weather',
   shadow: 'golden-hour-shadow',
+  backdrop: 'golden-hour-backdrop',
 } as const;
 
 /** Mật độ hạt dưới ngưỡng này thì không phát (máy quá yếu): tránh emitter chạy mà gần như không thấy hạt. */
@@ -41,6 +52,13 @@ const FLAME_DRIFT_X = { min: -5, max: 5 } as const;
 /** Tia nắng cuộn theo camera chậm hơn bản đồ (parallax) và trôi chậm (px/ms). */
 const SHAFT_PARALLAX = 0.35;
 const SHAFT_DRIFT_PX_PER_MS = 0.004;
+
+/**
+ * Nền xa cuộn theo camera chậm hơn lớp chơi để tạo chiều sâu; lộ ra ở dải trống quanh level khi khung nhìn lớn hơn
+ * level (màn dọc). Hệ số nhỏ và alpha thấp để nền không giành mắt với bản đồ.
+ */
+const BACKDROP_PARALLAX = 0.3;
+const BACKDROP_ALPHA = 0.55;
 
 /** Bụi lấp lánh: hạt trắng, màu theo preset (tint); ít hạt để rẻ trên iPhone. */
 const DUST_COLOR = 0xffffff;
@@ -98,6 +116,7 @@ export class GoldenHourAtmosphere implements SceneAtmosphere {
   private tone: Phaser.GameObjects.Image | null = null;
   private sunWash: Phaser.GameObjects.Image | null = null;
   private shafts: Phaser.GameObjects.TileSprite | null = null;
+  private backdrop: Phaser.GameObjects.TileSprite | null = null;
   private dustZone: Phaser.Geom.Rectangle | null = null;
   private vignette: Phaser.Filters.Controller | null = null;
   private shadow: Phaser.GameObjects.Image | null = null;
@@ -171,6 +190,7 @@ export class GoldenHourAtmosphere implements SceneAtmosphere {
     this.tone = null;
     this.sunWash = null;
     this.shafts = null;
+    this.backdrop = null;
     this.dustZone = null;
     if (this.vignette !== null) {
       this.scene.cameras.main.filters.external.remove(this.vignette);
@@ -242,6 +262,7 @@ export class GoldenHourAtmosphere implements SceneAtmosphere {
     this.tone?.setTexture(keys.tone);
     this.sunWash?.setTexture(keys.sunWash);
     this.shafts?.setTexture(keys.shafts).setSize(width, height);
+    this.backdrop?.setSize(width, height);
     this.dustZone?.setSize(width, height);
     for (const name of SCREEN_LAYERS) {
       const oldKey = previous[name];
@@ -311,6 +332,30 @@ export class GoldenHourAtmosphere implements SceneAtmosphere {
   }
 
   /**
+   * Nền xa parallax phủ màn (scrollFactor 0), dịch hoạ tiết theo camera với hệ số `BACKDROP_PARALLAX` mỗi khung.
+   * Nằm dưới mọi layer tile nên chỉ thấy ở phần màn không có tile; caller guard `ambientWeatherEnabled`, tắt theo `disable()`.
+   */
+  addParallaxBackdrop(): void {
+    if (!this.enabled || this.backdrop !== null) return;
+    const { scene } = this;
+    const key = `${TEXTURE.backdrop}-${this.preset.name}`;
+    createBackdropTexture(scene, key, this.preset);
+    const { width, height } = scene.scale.gameSize;
+    this.backdrop = scene.add.tileSprite(0, 0, width, height, key).setOrigin(0).setScrollFactor(0).setDepth(BACKDROP_DEPTH).setAlpha(BACKDROP_ALPHA);
+    this.objects.push(this.backdrop);
+  }
+
+  /** Gỡ nền parallax khi người chơi bật giảm chuyển động giữa chừng (các lớp ánh sáng tĩnh vẫn giữ). */
+  removeParallaxBackdrop(): void {
+    const backdrop = this.backdrop;
+    if (backdrop === null) return;
+    this.backdrop = null;
+    const index = this.objects.indexOf(backdrop);
+    if (index >= 0) this.objects.splice(index, 1);
+    backdrop.destroy();
+  }
+
+  /**
    * Hạt lửa bốc lên tại một điểm (ngọn đuốc), trùng tâm quầng sáng; blend ADD, tắt dần.
    * `densityScale` nhân `particleDensity` để máy yếu phát thưa; dưới ngưỡng thì bỏ. Tắt theo `disable()` như hạt khác.
    */
@@ -341,9 +386,13 @@ export class GoldenHourAtmosphere implements SceneAtmosphere {
   /** Chữ ký sự kiện POST_UPDATE của scene: (systems, time, delta). */
   private readonly update = (_systems: Phaser.Scenes.Systems, timeMs: number): void => {
     if (!this.enabled) return;
+    const camera = this.scene.cameras.main;
     if (this.shafts !== null) {
-      const camera = this.scene.cameras.main;
       this.shafts.tilePositionX = (camera.scrollX * SHAFT_PARALLAX + timeMs * SHAFT_DRIFT_PX_PER_MS) % SHAFT_TILE_WIDTH;
+    }
+    if (this.backdrop !== null) {
+      this.backdrop.tilePositionX = (camera.scrollX * BACKDROP_PARALLAX) % BACKDROP_TILE_SIZE;
+      this.backdrop.tilePositionY = (camera.scrollY * BACKDROP_PARALLAX) % BACKDROP_TILE_SIZE;
     }
     for (const light of this.lights) {
       const scale = light.flicker ? flickerScale(timeMs, light.phase, FLICKER_AMPLITUDE, FLICKER_SPEED) : 1;

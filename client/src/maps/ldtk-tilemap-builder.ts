@@ -26,15 +26,19 @@ export interface TilemapBuildOptions {
   readonly collisionTextureKey: string;
 }
 
+/** Tên layer Phaser của một layer tile LDtk: phải duy nhất trong tilemap, lớp con tile chồng thêm hậu tố. */
+export function tilemapLayerName(layer: Pick<MapTileLayer, 'identifier' | 'stackIndex'>): string {
+  return layer.stackIndex === 0 ? layer.identifier : `${layer.identifier}#${layer.stackIndex}`;
+}
+
 function addTileLayer(
   tilemap: Phaser.Tilemaps.Tilemap,
   tileset: Phaser.Tilemaps.Tileset,
   layer: MapTileLayer,
   depth: number,
 ): void {
-  // Tên layer Phaser phải duy nhất trong tilemap; lớp con tile chồng thêm hậu tố.
   const tilemapLayer = tilemap.createBlankLayer(
-    layer.stackIndex === 0 ? layer.identifier : `${layer.identifier}#${layer.stackIndex}`,
+    tilemapLayerName(layer),
     tileset,
     layer.offsetX,
     layer.offsetY,

@@ -24,6 +24,8 @@ vi.mock('phaser', () => {
 vi.mock('../src/render/placeholder-textures', () => ({ LIGHT_TEXTURE_SIZE: 64, TEXTURE_KEYS: { light: 'light' } }));
 vi.mock('../src/render/golden-hour-textures', () => ({
   SHAFT_TILE_WIDTH: 512,
+  BACKDROP_TILE_SIZE: 256,
+  createBackdropTexture: vi.fn(),
   createToneTexture: vi.fn(),
   createSunWashTexture: vi.fn(),
   createShaftTexture: vi.fn(),
@@ -82,12 +84,12 @@ function fakeScene() {
     scale: Object.assign(new FakeEmitter(), { gameSize: { width: 400, height: 800 } }),
     events: new FakeEmitter(),
     renderer: { type: 1 },
-    cameras: { main: { scrollX: 0, filters: { external: { addVignette: vi.fn(), remove: vi.fn() } } } },
+    cameras: { main: { scrollX: 0, scrollY: 0, filters: { external: { addVignette: vi.fn(), remove: vi.fn() } } } },
     textures: { exists: (key: string) => keys.has(key), remove: vi.fn((key: string) => keys.delete(key)) },
     make: { graphics: () => graphics },
     add: {
       image: (_x: number, _y: number, key: string) => track(key),
-      tileSprite: (_x: number, _y: number, _w: number, _h: number, key: string) => track(key),
+      tileSprite: (_x: number, _y: number, _w: number, _h: number, key: string) => Object.assign(track(key), { tilePositionX: 0, tilePositionY: 0 }),
       particles: (_x: number, _y: number, key: string) => track(key),
     },
   };
@@ -127,6 +129,47 @@ describe('GoldenHourAtmosphere', () => {
     const before = created.length;
     atmosphere.addShadows(COLLISION, 32, 32);
     expect(created).toHaveLength(before);
+  });
+
+  it('nền parallax: dưới mọi layer tile, cuộn chậm hơn camera, gọi lại không tạo thêm', () => {
+    const { scene, created } = fakeScene();
+    const atmosphere = new GoldenHourAtmosphere(scene as never, { enabled: true });
+    atmosphere.addParallaxBackdrop();
+    atmosphere.addParallaxBackdrop();
+    const backdrops = created.filter((object) => object.textureKey === 'golden-hour-backdrop-sunny');
+    expect(backdrops).toHaveLength(1);
+    const backdrop = backdrops[0] as Record<string, unknown>;
+    expect(backdrop.setScrollFactor).toHaveBeenCalledWith(0);
+    expect(backdrop.setDepth).toHaveBeenCalledWith(-2000);
+    Object.assign(scene.cameras.main, { scrollX: 100, scrollY: 40 });
+    scene.events.emit('postupdate', {}, 0);
+    expect(backdrop.tilePositionX).toBeCloseTo(30);
+    expect(backdrop.tilePositionY).toBeCloseTo(12);
+    atmosphere.disable();
+    expect(backdrop.destroyed).toBe(true);
+  });
+
+  it('gỡ riêng nền parallax: huỷ object, không còn cập nhật, các lớp khác giữ nguyên', () => {
+    const { scene, created } = fakeScene();
+    const atmosphere = new GoldenHourAtmosphere(scene as never, { enabled: true });
+    atmosphere.addParallaxBackdrop();
+    const backdrop = created.find((object) => object.textureKey === 'golden-hour-backdrop-sunny') as Record<string, unknown>;
+    atmosphere.removeParallaxBackdrop();
+    atmosphere.removeParallaxBackdrop();
+    expect(backdrop.destroy).toHaveBeenCalledTimes(1);
+    Object.assign(scene.cameras.main, { scrollX: 100 });
+    scene.events.emit('postupdate', {}, 0);
+    expect(backdrop.tilePositionX).toBe(0);
+    expect(created.filter((object) => object !== backdrop).every((object) => !object.destroyed)).toBe(true);
+    atmosphere.disable();
+    expect(backdrop.destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('nền parallax không tạo khi atmosphere tắt', () => {
+    const { scene, created } = fakeScene();
+    new GoldenHourAtmosphere(scene as never, { enabled: false }).addParallaxBackdrop();
+    expect(created).toHaveLength(0);
+    expect(textures.createBackdropTexture).not.toHaveBeenCalled();
   });
 
   it('đổi cỡ màn hình: chuyển object sang texture cỡ mới rồi gỡ texture cũ; SHUTDOWN bỏ listener', () => {

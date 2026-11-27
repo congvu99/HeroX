@@ -26,6 +26,7 @@ import { mapWeatherForPreset } from '../render/ambient-weather';
 import { findTileGlows, glowByTileIndex } from '../render/golden-hour-layout';
 import { prepareHeroLook, queueHeroSheet, walkAnimationKey, type HeroLook } from '../render/hero-sprite';
 import { chestTextureKey, npcTextureKey, queuePropSprites } from '../render/prop-sprites';
+import { SwayingTrees } from '../render/swaying-trees';
 import { BUILDING_TEXTURE_KEYS, TEXTURE_KEYS } from '../render/placeholder-textures';
 import {
   DASH_SPEED,
@@ -241,8 +242,9 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     this.cameras.main.setBackgroundColor(level.backgroundColor);
+    const tilesetTextureKey = tilesetTextureKeyFor(this.map.sourcePath);
     const built = buildLevelTilemap(this, this.map.project, level, {
-      tilesetTextureKey: tilesetTextureKeyFor(this.map.sourcePath),
+      tilesetTextureKey,
       collisionTextureKey: TEXTURE_KEYS.collisionTile,
     });
 
@@ -281,13 +283,20 @@ export class WorldScene extends Phaser.Scene {
     });
     this.atmosphere = atmosphere;
     this.decorateLevelLighting(atmosphere, level);
-    // Hạt môi trường theo tông ánh sáng (lá/tro/đốm sáng), ngoài lớp bụi sẵn có; chỉ khi quality cho phép.
+    // Chuyển động nền (hạt theo tông ánh sáng, nền xa parallax, cây đung đưa) chỉ khi quality cho phép.
     const profile = quality?.profile;
+    let swayingTrees: SwayingTrees | null = null;
     if (profile?.ambientWeatherEnabled ?? false) {
       atmosphere.addWeather(mapWeatherForPreset(preset.name), undefined, profile?.particleDensity ?? 1);
+      atmosphere.addParallaxBackdrop();
+      swayingTrees = new SwayingTrees(this, { tilemap: built.tilemap, project: this.map.project, level, tilesetTextureKey });
     }
     const unsubscribeQuality = quality?.subscribe((profile) => {
       if (!profile.dynamicLightingEnabled) atmosphere.disable();
+      if (!profile.ambientWeatherEnabled) {
+        swayingTrees?.disable();
+        atmosphere.removeParallaxBackdrop();
+      }
     });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => unsubscribeQuality?.());
     // Nguồn sáng đọc vị trí hero mỗi frame nên dùng getter thay vì chép toạ độ.
